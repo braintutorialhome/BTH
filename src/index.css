@@ -1,0 +1,35 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+}
+
+@layer base {
+  body {
+    @apply bg-[#0f172a] text-slate-100 antialiased font-sans;
+    background: radial-gradient(circle at top left, #1e293b, #0f172a), radial-gradient(circle at bottom right, #334155, #0f172a);
+    background-attachment: fixed;
+    min-height: 100vh;
+  }
+}
+
+.glass {
+  @apply bg-white/5 backdrop-blur-xl border border-white/10 shadow-xl shadow-black/20;
+}
+
+.glass-card {
+  @apply bg-white/5 backdrop-blur-lg border border-white/10 rounded-3xl shadow-lg;
+}
+
+.glass-button {
+  @apply bg-white/10 border border-white/10 hover:bg-white/20 transition-all rounded-xl;
+}
+
+.indigo-button {
+  @apply bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl shadow-lg shadow-indigo-600/30 transition-all active:scale-95;
+}
+
+.input-glass {
+  @apply bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500/50 outline-none transition-all placeholder:text-slate-500;
+}
