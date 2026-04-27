@@ -98,8 +98,13 @@ export const StorageProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [resultLinks, setResultLinks] = useState<ResultLink[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [currentUser, setCurrentUser] = useState<User | null>(() => {
-    const saved = localStorage.getItem('utc_current_user');
-    return saved ? JSON.parse(saved) : null;
+    try {
+      const saved = localStorage.getItem('utc_current_user');
+      return saved ? JSON.parse(saved) : null;
+    } catch (e) {
+      console.error('Failed to parse current user from local storage', e);
+      return null;
+    }
   });
   const [syncError, setSyncError] = useState<string | null>(null);
   const [isInitialSyncing, setIsInitialSyncing] = useState(true);
@@ -362,8 +367,12 @@ export const StorageProvider: React.FC<{ children: React.ReactNode }> = ({ child
   // Load from localStorage for initial offline access
   useEffect(() => {
     const load = (key: string, setter: any) => {
-      const data = localStorage.getItem(key);
-      if (data) setter(JSON.parse(data));
+      try {
+        const data = localStorage.getItem(key);
+        if (data) setter(JSON.parse(data));
+      } catch (e) {
+        console.error(`Failed to load ${key} from localStorage`, e);
+      }
     };
 
     load('utc_students', setStudents);

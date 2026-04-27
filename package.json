@@ -1,8 +1,8 @@
 {
-  "name": "utc-computra-management",
+  "name": "BTH",
   "private": false,
   "version": "1.0.0",
-  "homepage": "https://braintutorialhome.github.io/Computra/",
+  "homepage": "https://braintutorialhome.github.io/BTH/",
   "type": "module",
   "scripts": {
     "dev": "vite --port=3000 --host=0.0.0.0",
