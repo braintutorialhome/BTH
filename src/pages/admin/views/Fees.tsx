@@ -6,6 +6,7 @@ import { safeFormat } from '../../../lib/utils';
 export default function FeeManagement() {
   const { students, fees, addFee, deleteFee } = useStorage();
   const [showAdd, setShowAdd] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [classFilter, setClassFilter] = useState('all');
   const [monthFilter, setMonthFilter] = useState('all');
@@ -39,6 +40,7 @@ export default function FeeManagement() {
     });
     
     setShowAdd(false);
+    setDropdownOpen(false);
     setNewFee({ studentId: '', amount: '', month: safeFormat(new Date(), 'MMMM yyyy'), date: new Date().toISOString().split('T')[0] });
     setStudentSearch('');
   };
@@ -143,30 +145,71 @@ export default function FeeManagement() {
               </button>
             </div>
             <form onSubmit={handleSubmit} className="p-10 space-y-8">
-              <div className="space-y-3">
+              <div className="space-y-3 relative">
                 <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Search & Select Student</label>
-                <div className="space-y-2">
-                  <input
-                    type="text"
-                    placeholder="Search name or roll number..."
-                    value={studentSearch}
-                    onChange={(e) => setStudentSearch(e.target.value)}
-                    className="input-glass w-full py-3 px-4 text-sm rounded-xl border-indigo-500/20 focus:border-indigo-500 transition-all"
-                  />
-                  <select 
-                    required
-                    value={newFee.studentId}
-                    onChange={(e) => setNewFee({...newFee, studentId: e.target.value})}
-                    className="input-glass w-full py-4 rounded-2xl appearance-none cursor-pointer"
+                <div className="relative">
+                  <div 
+                    onClick={() => setDropdownOpen(!dropdownOpen)}
+                    className="input-glass w-full py-4 px-6 rounded-2xl flex items-center justify-between cursor-pointer group hover:border-indigo-500/50 transition-all border border-white/5"
                   >
-                    <option value="" className="bg-slate-900">
-                      {approved.length === 0 ? 'No students match' : 'Choose Approved Student...'}
-                    </option>
-                    {approved.map(s => (
-                      <option key={s.id} value={s.id} className="bg-slate-900">{s.name} ({s.rollNumber})</option>
-                    ))}
-                  </select>
+                    <span className={`text-sm font-bold ${newFee.studentId ? 'text-white' : 'text-slate-500'}`}>
+                      {newFee.studentId 
+                        ? students.find(s => s.id === newFee.studentId)?.name 
+                        : 'Choose Approved Student...'}
+                    </span>
+                    <Plus className={`w-4 h-4 text-slate-500 transition-transform ${dropdownOpen ? 'rotate-45' : ''}`} />
+                  </div>
+
+                  {dropdownOpen && (
+                    <div className="absolute top-full left-0 right-0 mt-3 glass rounded-3xl shadow-2xl border border-white/10 z-[70] overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+                      <div className="p-4 border-b border-white/5">
+                        <input
+                          autoFocus
+                          type="text"
+                          placeholder="Search name or roll..."
+                          value={studentSearch}
+                          onChange={(e) => setStudentSearch(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Escape') setDropdownOpen(false);
+                          }}
+                          className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
+                        />
+                      </div>
+                      <div className="max-h-60 overflow-y-auto">
+                        {approved.length > 0 ? (
+                          approved.map(s => (
+                            <div
+                              key={s.id}
+                              onClick={() => {
+                                setNewFee({...newFee, studentId: s.id});
+                                setDropdownOpen(false);
+                                setStudentSearch('');
+                              }}
+                              className="px-6 py-4 hover:bg-indigo-600 cursor-pointer transition-colors group border-b border-white/5 last:border-0"
+                            >
+                              <p className="font-bold text-white group-hover:text-white">{s.name}</p>
+                              <div className="flex justify-between items-center mt-1">
+                                <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest group-hover:text-indigo-200">{s.rollNumber || 'No ROll'}</p>
+                                <p className="text-[10px] font-black text-indigo-400 bg-indigo-400/10 px-2 py-0.5 rounded group-hover:bg-white/20 group-hover:text-white">{s.class}</p>
+                              </div>
+                            </div>
+                          ))
+                        ) : (
+                          <div className="px-6 py-8 text-center">
+                            <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">No matching students</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
+                {/* Backdrop to close dropdown when clicking outside */}
+                {dropdownOpen && (
+                  <div 
+                    className="fixed inset-0 z-[65]" 
+                    onClick={() => setDropdownOpen(false)}
+                  />
+                )}
               </div>
               <div className="grid md:grid-cols-2 gap-8">
                 <div className="space-y-3">
