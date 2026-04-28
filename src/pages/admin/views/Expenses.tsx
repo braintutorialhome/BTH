@@ -6,6 +6,9 @@ import { safeFormat } from '../../../lib/utils';
 export default function ExpenseManagement() {
   const { expenses, addExpense, deleteExpense } = useStorage();
   const [showAdd, setShowAdd] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState('all');
+  const [monthFilter, setMonthFilter] = useState('all');
   
   const [newExpense, setNewExpense] = useState({
     title: '',
@@ -33,6 +36,19 @@ export default function ExpenseManagement() {
     setNewExpense({ title: '', amount: '', category: 'Others', date: new Date().toISOString().split('T')[0], description: '' });
   };
 
+  const filteredExpenses = expenses.filter(e => {
+    const matchesSearch = e.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                          (e.description || '').toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesCategory = categoryFilter === 'all' || e.category === categoryFilter;
+
+    const expenseDate = new Date(e.date);
+    const matchesMonth = monthFilter === 'all' || 
+      `${expenseDate.getFullYear()}-${(expenseDate.getMonth() + 1).toString().padStart(2, '0')}` === monthFilter;
+
+    return matchesSearch && matchesCategory && matchesMonth;
+  });
+
   return (
     <div className="space-y-10 max-w-5xl">
        <div className="flex justify-between items-center bg-white/5 p-6 rounded-[32px] border border-white/5">
@@ -51,6 +67,57 @@ export default function ExpenseManagement() {
         >
           Add Expense
         </button>
+      </div>
+
+      {/* Filters */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 bg-white/5 p-8 rounded-[32px] border border-white/5">
+        <div className="space-y-2">
+          <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Search Expenses</label>
+          <input
+            type="text"
+            placeholder="Search by title or info..."
+            className="input-glass w-full py-3"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+        
+        <div className="space-y-2">
+          <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Category</label>
+          <select
+            className="input-glass w-full py-3"
+            value={categoryFilter}
+            onChange={(e) => setCategoryFilter(e.target.value)}
+          >
+            <option value="all" className="bg-slate-900">All Categories</option>
+            {categories.map(c => (
+              <option key={c} value={c} className="bg-slate-900">{c}</option>
+            ))}
+          </select>
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Filter by Month</label>
+          <input
+            type="month"
+            className="input-glass w-full py-3"
+            value={monthFilter === 'all' ? '' : monthFilter}
+            onChange={(e) => setMonthFilter(e.target.value || 'all')}
+          />
+        </div>
+
+        <div className="flex items-end">
+          <button
+            onClick={() => {
+              setSearchTerm('');
+              setCategoryFilter('all');
+              setMonthFilter('all');
+            }}
+            className="text-[10px] font-black text-slate-400 hover:text-white uppercase tracking-widest transition-colors mb-4 ml-2"
+          >
+            Clear Filters
+          </button>
+        </div>
       </div>
 
       {showAdd && (
@@ -121,7 +188,7 @@ export default function ExpenseManagement() {
 
       {/* History */}
       <div className="grid gap-6">
-        {expenses.slice().reverse().map(e => (
+        {filteredExpenses.slice().reverse().map(e => (
           <div key={e.id} className="glass p-8 rounded-[40px] flex items-center justify-between group hover:bg-white/10 transition-all border border-white/5">
             <div className="flex items-center gap-8">
               <div className="w-16 h-16 bg-rose-500/10 text-rose-400 rounded-3xl flex items-center justify-center font-black border border-rose-500/20 group-hover:scale-110 transition-transform">
@@ -150,7 +217,7 @@ export default function ExpenseManagement() {
             </div>
           </div>
         ))}
-        {expenses.length === 0 && (
+        {filteredExpenses.length === 0 && (
           <div className="py-24 text-center glass rounded-[60px] border-2 border-dashed border-white/5">
              <div className="w-20 h-20 bg-white/5 rounded-3xl flex items-center justify-center mx-auto mb-6">
                <Wallet size={32} className="text-slate-700" />

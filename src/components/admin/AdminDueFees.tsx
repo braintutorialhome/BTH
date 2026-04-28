@@ -5,7 +5,10 @@ import { motion, AnimatePresence } from 'motion/react';
 
 const AdminDueFees: React.FC = () => {
   const { students, dueFees, addDueFee, updateDueFee, deleteDueFee } = useStorage();
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState(''); // Search during adding
+  const [listSearchTerm, setListSearchTerm] = useState(''); // Search in list
+  const [classFilter, setClassFilter] = useState('all');
+  const [monthFilter, setMonthFilter] = useState('all');
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
@@ -16,11 +19,31 @@ const AdminDueFees: React.FC = () => {
     remarks: ''
   });
 
-  const filteredStudents = students.filter(s => 
+  const filteredStudentsForAdding = students.filter(s => 
     s.status === 'approved' &&
     (s.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
      s.rollNumber?.toLowerCase().includes(searchTerm.toLowerCase()))
   );
+
+  const classes = Array.from(new Set(students.map(s => s.class))).filter(Boolean).sort();
+
+  const filteredDueFees = dueFees.filter(fee => {
+    const student = students.find(s => s.id === fee.studentId);
+    if (!student) return false;
+
+    const matchesSearch = 
+      student.name.toLowerCase().includes(listSearchTerm.toLowerCase()) ||
+      student.rollNumber?.toLowerCase().includes(listSearchTerm.toLowerCase()) ||
+      fee.remarks.toLowerCase().includes(listSearchTerm.toLowerCase());
+
+    const matchesClass = classFilter === 'all' || student.class === classFilter;
+
+    const feeDate = new Date(fee.date);
+    const matchesMonth = monthFilter === 'all' || 
+      `${feeDate.getFullYear()}-${(feeDate.getMonth() + 1).toString().padStart(2, '0')}` === monthFilter;
+
+    return matchesSearch && matchesClass && matchesMonth;
+  });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -114,8 +137,8 @@ const AdminDueFees: React.FC = () => {
                   />
                 </div>
                 <div className="mt-2 max-h-40 overflow-y-auto border border-gray-100 rounded-lg bg-gray-50">
-                  {filteredStudents.length > 0 ? (
-                    filteredStudents.map(student => (
+                  {filteredStudentsForAdding.length > 0 ? (
+                    filteredStudentsForAdding.map(student => (
                       <button
                         key={student.id}
                         type="button"
@@ -178,6 +201,58 @@ const AdminDueFees: React.FC = () => {
           </motion.div>
         )}
       </AnimatePresence>
+      
+      {/* Filters */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+        <div className="space-y-1">
+          <label className="text-xs font-semibold text-gray-500 uppercase">Search Records</label>
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search name, roll or remarks..."
+              className="w-full pl-9 pr-4 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+              value={listSearchTerm}
+              onChange={(e) => setListSearchTerm(e.target.value)}
+            />
+          </div>
+        </div>
+        
+        <div className="space-y-1">
+          <label className="text-xs font-semibold text-gray-500 uppercase">Filter by Class</label>
+          <select
+            className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+            value={classFilter}
+            onChange={(e) => setClassFilter(e.target.value)}
+          >
+            <option value="all">All Classes</option>
+            {classes.map(c => (
+              <option key={c} value={c}>{c}</option>
+            ))}
+          </select>
+        </div>
+
+        <div className="space-y-1">
+          <label className="text-xs font-semibold text-gray-500 uppercase">Filter by Month</label>
+          <input
+            type="month"
+            className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+            value={monthFilter === 'all' ? '' : monthFilter}
+            onChange={(e) => setMonthFilter(e.target.value || 'all')}
+          />
+        </div>
+
+        <button
+          onClick={() => {
+            setListSearchTerm('');
+            setClassFilter('all');
+            setMonthFilter('all');
+          }}
+          className="px-4 py-2 text-sm text-gray-500 hover:text-indigo-600 transition-colors font-medium"
+        >
+          Clear All
+        </button>
+      </div>
 
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
         <div className="overflow-x-auto">
@@ -192,8 +267,8 @@ const AdminDueFees: React.FC = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {dueFees.length > 0 ? (
-                dueFees.map((fee) => {
+              {filteredDueFees.length > 0 ? (
+                filteredDueFees.map((fee) => {
                   const student = students.find(s => s.id === fee.studentId);
                   return (
                     <motion.tr 

@@ -6,6 +6,9 @@ import { safeFormat } from '../../../lib/utils';
 export default function FeeManagement() {
   const { students, fees, addFee, deleteFee } = useStorage();
   const [showAdd, setShowAdd] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [classFilter, setClassFilter] = useState('all');
+  const [monthFilter, setMonthFilter] = useState('all');
 
   const [newFee, setNewFee] = useState({
     studentId: '',
@@ -14,7 +17,14 @@ export default function FeeManagement() {
     date: new Date().toISOString().split('T')[0]
   });
 
-  const approved = students.filter(s => s.status === 'approved');
+  const [studentSearch, setStudentSearch] = useState('');
+
+  const approved = students.filter(s => 
+    s.status === 'approved' && (
+      s.name.toLowerCase().includes(studentSearch.toLowerCase()) ||
+      (s.rollNumber?.toLowerCase() || '').includes(studentSearch.toLowerCase())
+    )
+  );
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,7 +40,27 @@ export default function FeeManagement() {
     
     setShowAdd(false);
     setNewFee({ studentId: '', amount: '', month: safeFormat(new Date(), 'MMMM yyyy'), date: new Date().toISOString().split('T')[0] });
+    setStudentSearch('');
   };
+
+  const classes = Array.from(new Set(students.map(s => s.class))).filter(Boolean).sort();
+
+  const filteredFees = fees.filter(f => {
+    const student = students.find(s => s.id === f.studentId);
+    if (!student) return false;
+
+    const matchesSearch = 
+      student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (student.rollNumber?.toLowerCase() || '').includes(searchTerm.toLowerCase());
+
+    const matchesClass = classFilter === 'all' || student.class === classFilter;
+
+    const feeDate = new Date(f.date);
+    const matchesMonth = monthFilter === 'all' || 
+      `${feeDate.getFullYear()}-${(feeDate.getMonth() + 1).toString().padStart(2, '0')}` === monthFilter;
+
+    return matchesSearch && matchesClass && matchesMonth;
+  });
 
   return (
     <div className="space-y-10">
@@ -52,6 +82,57 @@ export default function FeeManagement() {
         </button>
       </div>
 
+      {/* Filters */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 bg-white/5 p-8 rounded-[32px] border border-white/5">
+        <div className="space-y-2">
+          <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Search Students</label>
+          <input
+            type="text"
+            placeholder="Name or Roll Number..."
+            className="input-glass w-full py-3"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+        
+        <div className="space-y-2">
+          <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Filter by Class</label>
+          <select
+            className="input-glass w-full py-3"
+            value={classFilter}
+            onChange={(e) => setClassFilter(e.target.value)}
+          >
+            <option value="all" className="bg-slate-900">All Classes</option>
+            {classes.map(c => (
+              <option key={c} value={c} className="bg-slate-900">{c}</option>
+            ))}
+          </select>
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Filter by Month</label>
+          <input
+            type="month"
+            className="input-glass w-full py-3"
+            value={monthFilter === 'all' ? '' : monthFilter}
+            onChange={(e) => setMonthFilter(e.target.value || 'all')}
+          />
+        </div>
+
+        <div className="flex items-end">
+          <button
+            onClick={() => {
+              setSearchTerm('');
+              setClassFilter('all');
+              setMonthFilter('all');
+            }}
+            className="text-[10px] font-black text-slate-400 hover:text-white uppercase tracking-widest transition-colors mb-4 ml-2"
+          >
+            Clear Filters
+          </button>
+        </div>
+      </div>
+
       {showAdd && (
         <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-md z-[60] flex items-center justify-center p-4">
           <div className="glass rounded-[40px] shadow-2xl w-full max-w-xl overflow-hidden animate-in fade-in zoom-in duration-300">
@@ -63,18 +144,29 @@ export default function FeeManagement() {
             </div>
             <form onSubmit={handleSubmit} className="p-10 space-y-8">
               <div className="space-y-3">
-                <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Select Student</label>
-                <select 
-                  required
-                  value={newFee.studentId}
-                  onChange={(e) => setNewFee({...newFee, studentId: e.target.value})}
-                  className="input-glass w-full py-4 rounded-2xl appearance-none"
-                >
-                  <option value="" className="bg-slate-900">Choose Approved Student...</option>
-                  {approved.map(s => (
-                    <option key={s.id} value={s.id} className="bg-slate-900">{s.name} ({s.rollNumber})</option>
-                  ))}
-                </select>
+                <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Search & Select Student</label>
+                <div className="space-y-2">
+                  <input
+                    type="text"
+                    placeholder="Search name or roll number..."
+                    value={studentSearch}
+                    onChange={(e) => setStudentSearch(e.target.value)}
+                    className="input-glass w-full py-3 px-4 text-sm rounded-xl border-indigo-500/20 focus:border-indigo-500 transition-all"
+                  />
+                  <select 
+                    required
+                    value={newFee.studentId}
+                    onChange={(e) => setNewFee({...newFee, studentId: e.target.value})}
+                    className="input-glass w-full py-4 rounded-2xl appearance-none cursor-pointer"
+                  >
+                    <option value="" className="bg-slate-900">
+                      {approved.length === 0 ? 'No students match' : 'Choose Approved Student...'}
+                    </option>
+                    {approved.map(s => (
+                      <option key={s.id} value={s.id} className="bg-slate-900">{s.name} ({s.rollNumber})</option>
+                    ))}
+                  </select>
+                </div>
               </div>
               <div className="grid md:grid-cols-2 gap-8">
                 <div className="space-y-3">
@@ -125,7 +217,7 @@ export default function FeeManagement() {
       <div className="glass rounded-[40px] overflow-hidden border border-white/5">
         <div className="p-8 border-b border-white/5 flex items-center justify-between">
           <h3 className="font-black text-white tracking-tight uppercase">Collection Stream</h3>
-          <span className="text-[10px] font-black text-indigo-400 bg-indigo-400/10 px-3 py-1 rounded-full uppercase tracking-widest border border-indigo-400/20">{fees.length} Total</span>
+          <span className="text-[10px] font-black text-indigo-400 bg-indigo-400/10 px-3 py-1 rounded-full uppercase tracking-widest border border-indigo-400/20">{filteredFees.length} Results</span>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-left">
@@ -140,7 +232,7 @@ export default function FeeManagement() {
               </tr>
             </thead>
             <tbody className="divide-y divide-white/5 text-sm">
-              {fees.slice().reverse().map(f => {
+              {filteredFees.slice().reverse().map(f => {
                 const student = students.find(s => s.id === f.studentId);
                 return (
                   <tr key={f.id} className="hover:bg-white/[0.03] transition-colors group">
