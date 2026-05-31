@@ -1,35 +1,62 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 @import "tailwindcss";
 
 @theme {
-  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Outfit", "Space Grotesk", "Inter", ui-sans-serif, system-ui, sans-serif;
+  
+  /* Overwrite indigo with the vibrant medical cyan & electric blue tones of the dentition theme */
+  --color-indigo-50: #ecfeff;
+  --color-indigo-100: #cffafe;
+  --color-indigo-200: #a5f3fc;
+  --color-indigo-300: #67e8f9;
+  --color-indigo-400: #22d3ee; /* Electric Cyan */
+  --color-indigo-500: #06b6d4; /* Radiant Turquoise */
+  --color-indigo-600: #0d9488; /* Soft Rich Teal */
+  --color-indigo-700: #14b8a6; /* Ocean Wave Teal */
+  --color-indigo-800: #0077b6; /* Ocean Sapphire */
+  --color-indigo-900: #023e8a; /* Deep Cobalt Navy */
+  --color-indigo-950: #03045e; /* Midnight Space Blue */
+
+  /* Overwrite purple with corresponding vibrant medical deep cyan/blue-emerald accents */
+  --color-purple-50: #f0fdfa;
+  --color-purple-100: #ccfbf1;
+  --color-purple-200: #99f6e4;
+  --color-purple-300: #5eead4;
+  --color-purple-400: #14b8a6;
+  --color-purple-500: #0d9488;
+  --color-purple-600: #0f766e;
+  --color-purple-700: #115e59;
+  --color-purple-800: #134e4a;
+  --color-purple-900: #022c22;
+  --color-purple-950: #001f19;
 }
 
 @layer base {
   body {
-    @apply bg-[#0f172a] text-slate-100 antialiased font-sans;
-    background: radial-gradient(circle at top left, #1e293b, #0f172a), radial-gradient(circle at bottom right, #334155, #0f172a);
+    @apply bg-[#030a16] text-slate-100 antialiased font-sans;
+    background: linear-gradient(135deg, #041026 0%, #020712 35%, #010a14 65%, #011d21 100%), radial-gradient(circle at top left, #0d2a4d, transparent 50%);
     background-attachment: fixed;
     min-height: 100vh;
   }
 }
 
 .glass {
-  @apply bg-white/5 backdrop-blur-xl border border-white/10 shadow-xl shadow-black/20;
+  @apply bg-[#091b30]/40 backdrop-blur-xl border border-cyan-500/10 shadow-2xl shadow-black/25;
 }
 
 .glass-card {
-  @apply bg-white/5 backdrop-blur-lg border border-white/10 rounded-3xl shadow-lg;
+  @apply bg-[#091b30]/50 backdrop-blur-lg border border-cyan-500/15 rounded-3xl shadow-xl transition-all hover:border-cyan-400/30;
 }
 
 .glass-button {
-  @apply bg-white/10 border border-white/10 hover:bg-white/20 transition-all rounded-xl;
+  @apply bg-white/[0.04] border border-white/10 hover:bg-cyan-500/15 hover:border-cyan-400/30 hover:text-white transition-all rounded-xl active:scale-[0.98];
 }
 
 .indigo-button {
-  @apply bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl shadow-lg shadow-indigo-600/30 transition-all active:scale-95;
+  @apply bg-gradient-to-r from-cyan-500 via-indigo-600 to-teal-500 hover:brightness-110 text-white rounded-xl shadow-lg shadow-cyan-500/15 transition-all duration-300 active:scale-95 text-center font-bold;
 }
 
 .input-glass {
-  @apply bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500/50 outline-none transition-all placeholder:text-slate-500;
+  @apply bg-[#041026]/40 border border-white/10 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-400 outline-none transition-all placeholder:text-slate-500;
 }
+

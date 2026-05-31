@@ -62,7 +62,7 @@ export default function StudentDashboard() {
 
   if (!currentStudent) {
     return (
-      <div className="min-h-screen bg-[#0f172a] text-slate-300 flex flex-col items-center justify-center p-6 text-center">
+      <div className="min-h-screen text-slate-300 flex flex-col items-center justify-center p-6 text-center">
         <div className="w-24 h-24 bg-indigo-500/10 rounded-[40px] flex items-center justify-center mb-8 relative group">
            <Compass className="text-indigo-500 group-hover:rotate-180 transition-transform duration-1000" size={40} />
            <div className="absolute inset-0 bg-indigo-500/20 blur-2xl rounded-full" />
@@ -93,7 +93,7 @@ export default function StudentDashboard() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#0f172a] text-slate-300 flex overflow-hidden selection:bg-indigo-500/30 selection:text-indigo-200">
+    <div className="min-h-screen text-slate-300 flex overflow-hidden selection:bg-indigo-500/30 selection:text-indigo-200">
       {/* Background radial highlight */}
       <div className="fixed top-0 left-0 w-full h-full pointer-events-none z-0">
         <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-indigo-600/10 rounded-full blur-[120px]" />
