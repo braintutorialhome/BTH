@@ -82,18 +82,22 @@ const AdminDueFees: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900">Due Fees Management</h2>
-          <p className="text-gray-500">Track and manage student pending payments</p>
+    <div className="space-y-10">
+      <div className="flex justify-between items-center bg-white/5 p-6 rounded-[32px] border border-white/5">
+        <div className="flex items-center gap-4">
+          <div className="p-3 bg-indigo-500/20 text-indigo-400 rounded-xl">
+            <IndianRupee size={24} />
+          </div>
+          <div>
+            <h3 className="font-black text-xl text-white tracking-tight">Due Fees Management</h3>
+            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-0.5">Track and manage student pending payments</p>
+          </div>
         </div>
         {!isAdding && (
           <button
             onClick={() => setIsAdding(true)}
-            className="flex items-center justify-center px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors shadow-sm"
+            className="indigo-button px-8 py-3.5 text-xs font-black uppercase tracking-widest"
           >
-            <Plus className="w-5 h-5 mr-2" />
             Add New Due
           </button>
         )}
@@ -105,10 +109,10 @@ const AdminDueFees: React.FC = () => {
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="bg-white rounded-xl shadow-sm border border-gray-100 p-6"
+            className="bg-white/5 border border-white/5 p-8 rounded-[32px] space-y-6"
           >
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-semibold text-gray-900">
+            <div className="flex items-center justify-between">
+              <h3 className="font-black text-white tracking-tight uppercase">
                 {editingId ? 'Edit Due Record' : 'Record New Due'}
               </h3>
               <button 
@@ -117,7 +121,7 @@ const AdminDueFees: React.FC = () => {
                   setEditingId(null);
                   setFormData({ studentId: '', amount: '', remarks: '' });
                 }}
-                className="text-gray-400 hover:text-gray-600"
+                className="text-xs font-black text-rose-400 hover:text-rose-300 uppercase tracking-widest transition-colors"
               >
                 Cancel
               </button>
@@ -125,18 +129,18 @@ const AdminDueFees: React.FC = () => {
 
             <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="space-y-2">
-                <label className="block text-sm font-medium text-gray-700">Select Student</label>
+                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Select Student</label>
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
                   <input
                     type="text"
                     placeholder="Search name or roll no..."
-                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 transition-all outline-none"
+                    className="input-glass w-full pl-10 py-3 text-sm"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                   />
                 </div>
-                <div className="mt-2 max-h-40 overflow-y-auto border border-gray-100 rounded-lg bg-gray-50">
+                <div className="mt-2 max-h-40 overflow-y-auto border border-white/5 rounded-2xl bg-slate-950/40 divide-y divide-white/5">
                   {filteredStudentsForAdding.length > 0 ? (
                     filteredStudentsForAdding.map(student => (
                       <button
@@ -146,15 +150,15 @@ const AdminDueFees: React.FC = () => {
                           setFormData({ ...formData, studentId: student.id });
                           setSearchTerm(student.name);
                         }}
-                        className={`w-full text-left px-4 py-2 hover:bg-indigo-50 transition-colors text-sm ${
-                          formData.studentId === student.id ? 'bg-indigo-100 text-indigo-700 font-medium' : 'text-gray-600'
+                        className={`w-full text-left px-5 py-3 transition-colors text-sm font-bold block ${
+                          formData.studentId === student.id ? 'bg-indigo-600/30 text-indigo-300' : 'text-slate-300 hover:bg-white/5'
                         }`}
                       >
-                        {student.name} ({student.rollNumber})
+                        {student.name} ({student.rollNumber || 'No Roll'})
                       </button>
                     ))
                   ) : (
-                    <div className="px-4 py-2 text-sm text-gray-500 italic text-center">
+                    <div className="px-4 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest text-center">
                       No approved students found
                     </div>
                   )}
@@ -162,37 +166,34 @@ const AdminDueFees: React.FC = () => {
               </div>
 
               <div className="space-y-2">
-                <label className="block text-sm font-medium text-gray-700">Amount (₹)</label>
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">₹</span>
-                  <input
-                    type="number"
-                    required
-                    className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
-                    placeholder="0.00"
-                    value={formData.amount}
-                    onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-                  />
-                </div>
+                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Amount (₹)</label>
+                <input
+                  type="number"
+                  required
+                  className="input-glass w-full py-3"
+                  placeholder="e.g. 1500"
+                  value={formData.amount}
+                  onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
+                />
               </div>
 
               <div className="space-y-2">
-                <label className="block text-sm font-medium text-gray-700">Remarks / Purpose</label>
+                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Remarks / Purpose</label>
                 <textarea
                   required
                   rows={1}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none resize-none"
+                  className="input-glass w-full py-3 resize-none"
                   placeholder="e.g. Monthly fee for May"
                   value={formData.remarks}
                   onChange={(e) => setFormData({ ...formData, remarks: e.target.value })}
                 />
               </div>
 
-              <div className="md:col-span-3">
+              <div className="md:col-span-3 flex justify-end">
                 <button
                   type="submit"
                   disabled={!formData.studentId}
-                  className="w-full md:w-auto px-8 py-2.5 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-colors shadow-sm disabled:bg-gray-400 disabled:cursor-not-allowed"
+                  className="indigo-button px-8 py-3.5 text-xs font-black uppercase tracking-widest disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {editingId ? 'Update Due Record' : 'Save Record'}
                 </button>
@@ -203,70 +204,76 @@ const AdminDueFees: React.FC = () => {
       </AnimatePresence>
       
       {/* Filters */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-        <div className="space-y-1">
-          <label className="text-xs font-semibold text-gray-500 uppercase">Search Records</label>
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 bg-white/5 p-8 rounded-[32px] border border-white/5">
+        <div className="space-y-2">
+          <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Search Records</label>
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
             <input
               type="text"
               placeholder="Search name, roll or remarks..."
-              className="w-full pl-9 pr-4 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+              className="input-glass w-full pl-10 py-3"
               value={listSearchTerm}
               onChange={(e) => setListSearchTerm(e.target.value)}
             />
           </div>
         </div>
         
-        <div className="space-y-1">
-          <label className="text-xs font-semibold text-gray-500 uppercase">Filter by Class</label>
+        <div className="space-y-2">
+          <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Filter by Class</label>
           <select
-            className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+            className="input-glass w-full py-3"
             value={classFilter}
             onChange={(e) => setClassFilter(e.target.value)}
           >
-            <option value="all">All Classes</option>
+            <option value="all" className="bg-slate-900">All Classes</option>
             {classes.map(c => (
-              <option key={c} value={c}>{c}</option>
+              <option key={c} value={c} className="bg-slate-900">{c}</option>
             ))}
           </select>
         </div>
 
-        <div className="space-y-1">
-          <label className="text-xs font-semibold text-gray-500 uppercase">Filter by Month</label>
+        <div className="space-y-2">
+          <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Filter by Month</label>
           <input
             type="month"
-            className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+            className="input-glass w-full py-3"
             value={monthFilter === 'all' ? '' : monthFilter}
             onChange={(e) => setMonthFilter(e.target.value || 'all')}
           />
         </div>
 
-        <button
-          onClick={() => {
-            setListSearchTerm('');
-            setClassFilter('all');
-            setMonthFilter('all');
-          }}
-          className="px-4 py-2 text-sm text-gray-500 hover:text-indigo-600 transition-colors font-medium"
-        >
-          Clear All
-        </button>
+        <div className="flex items-end">
+          <button
+            onClick={() => {
+              setListSearchTerm('');
+              setClassFilter('all');
+              setMonthFilter('all');
+            }}
+            className="text-[10px] font-black text-slate-400 hover:text-white uppercase tracking-widest transition-colors mb-4 ml-2"
+          >
+            Clear Filters
+          </button>
+        </div>
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+      <div className="glass rounded-[40px] overflow-hidden border border-white/5">
+        <div className="p-8 border-b border-white/5 flex items-center justify-between">
+          <h3 className="font-black text-white tracking-tight uppercase">Collection Stream</h3>
+          <span className="text-[10px] font-black text-indigo-400 bg-indigo-400/10 px-3 py-1 rounded-full uppercase tracking-widest border border-indigo-400/20">{filteredDueFees.length} Results</span>
+        </div>
         <div className="overflow-x-auto">
           <table className="w-full text-left">
             <thead>
-              <tr className="bg-gray-50 border-b border-gray-100">
-                <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Student</th>
-                <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Amount</th>
-                <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Purpose</th>
-                <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Date</th>
-                <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
+              <tr className="border-b border-white/5 text-slate-400 text-xs uppercase font-black tracking-wider">
+                <th className="px-8 py-5">Student</th>
+                <th className="px-8 py-5">Amount</th>
+                <th className="px-8 py-5">Purpose</th>
+                <th className="px-8 py-5">Date</th>
+                <th className="px-8 py-5 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-white/5 text-sm">
               {filteredDueFees.length > 0 ? (
                 filteredDueFees.map((fee) => {
                   const student = students.find(s => s.id === fee.studentId);
@@ -276,39 +283,39 @@ const AdminDueFees: React.FC = () => {
                       layout
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
-                      className="hover:bg-gray-50/50 transition-colors"
+                      className="hover:bg-white/[0.03] transition-colors"
                     >
-                      <td className="px-6 py-4">
+                      <td className="px-8 py-5">
                         <div className="flex flex-col">
-                          <span className="font-medium text-gray-900">{student?.name || 'Unknown Student'}</span>
-                          <span className="text-xs text-gray-500">{student?.rollNumber || 'N/A'}</span>
+                          <span className="font-bold text-white">{student?.name || 'Unknown Student'}</span>
+                          <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest mt-1">Roll: {student?.rollNumber || 'N/A'}</span>
                         </div>
                       </td>
-                      <td className="px-6 py-4 font-semibold text-orange-600">
+                      <td className="px-8 py-5 font-black text-rose-400">
                          ₹{fee.amount.toLocaleString()}
                       </td>
-                      <td className="px-6 py-4">
-                        <span className="text-sm text-gray-600">{fee.remarks}</span>
+                      <td className="px-8 py-5">
+                        <span className="text-slate-300 font-medium">{fee.remarks}</span>
                       </td>
-                      <td className="px-6 py-4 text-sm text-gray-500">
+                      <td className="px-8 py-5 text-slate-400">
                         {new Date(fee.date).toLocaleDateString()}
                       </td>
-                      <td className="px-6 py-4 text-right">
+                      <td className="px-8 py-5 text-right">
                         <div className="flex items-center justify-end space-x-3">
                           {confirmDeleteId === fee.id ? (
-                            <div className="flex items-center bg-red-50 p-1 rounded-lg border border-red-100 animate-pulse">
+                            <div className="flex items-center bg-rose-500/10 p-1.5 rounded-xl border border-rose-500/20">
                               <button 
                                 onClick={() => {
                                   deleteDueFee(fee.id);
                                   setConfirmDeleteId(null);
                                 }}
-                                className="text-[10px] font-bold bg-red-600 text-white px-2 py-1 rounded-md hover:bg-red-700 transition-colors uppercase tracking-tighter"
+                                className="text-[10px] font-black bg-rose-500 hover:bg-rose-600 text-white px-3 py-1.5 rounded-lg transition-colors uppercase tracking-widest"
                               >
                                 Confirm
                               </button>
                               <button 
                                 onClick={() => setConfirmDeleteId(null)}
-                                className="text-[10px] font-bold text-gray-500 px-2 py-1 hover:text-gray-700 uppercase tracking-tighter"
+                                className="text-[10px] font-black text-slate-400 hover:text-white px-3 py-1.5 transition-colors uppercase tracking-widest"
                               >
                                 Cancel
                               </button>
@@ -317,7 +324,7 @@ const AdminDueFees: React.FC = () => {
                             <>
                               <button 
                                 onClick={() => handleEdit(fee)}
-                                className="p-1.5 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                                className="p-2 text-indigo-400 hover:text-indigo-300 hover:bg-white/5 rounded-xl transition-colors"
                               >
                                 <Edit2 className="w-4 h-4" />
                               </button>
@@ -327,7 +334,7 @@ const AdminDueFees: React.FC = () => {
                                   e.preventDefault();
                                   setConfirmDeleteId(fee.id);
                                 }}
-                                className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors flex items-center justify-center"
+                                className="p-2 text-rose-400 hover:text-rose-300 hover:bg-white/5 rounded-xl transition-colors flex items-center justify-center"
                                 title="Delete Record"
                               >
                                 <Trash2 className="w-4 h-4" />
@@ -341,11 +348,11 @@ const AdminDueFees: React.FC = () => {
                 })
               ) : (
                 <tr>
-                  <td colSpan={5} className="px-6 py-12 text-center">
+                  <td colSpan={5} className="px-8 py-16 text-center">
                     <div className="flex flex-col items-center">
-                      <CheckCircle className="w-12 h-12 text-green-100 mb-4" />
-                      <p className="text-gray-500 font-medium">No pending due fees found</p>
-                      <p className="text-sm text-gray-400">All students are up to date with their payments</p>
+                      <CheckCircle className="w-12 h-12 text-teal-400/80 mb-4" />
+                      <p className="text-white font-black uppercase tracking-wider text-sm">No pending due fees found</p>
+                      <p className="text-xs text-slate-500 uppercase tracking-widest mt-1">All students are up to date with their payments</p>
                     </div>
                   </td>
                 </tr>
