@@ -22,6 +22,7 @@ export interface Student {
   admissionDate: string;
   status: 'pending' | 'approved' | 'rejected' | 'deleted';
   rollNumber?: string;
+  dateOfJoining?: string;
 }
 
 export interface Fee {

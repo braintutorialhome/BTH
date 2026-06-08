@@ -241,6 +241,39 @@ export default function StudentManagement() {
               </div>
 
               <div>
+                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 block ml-1">Guardian Name</label>
+                <input 
+                  type="text"
+                  value={editingStudent.fatherName || ''}
+                  onChange={(e) => setEditingStudent({...editingStudent, fatherName: e.target.value})}
+                  className="input-glass w-full px-6 py-4 rounded-2xl"
+                />
+              </div>
+
+              <div>
+                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 block ml-1">Date of Birth</label>
+                <input 
+                  type="date"
+                  value={editingStudent.dob || ''}
+                  onChange={(e) => setEditingStudent({...editingStudent, dob: e.target.value})}
+                  className="input-glass w-full px-6 py-4 rounded-2xl text-white uppercase"
+                />
+              </div>
+
+              <div>
+                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 block ml-1">Gender</label>
+                <select 
+                  value={editingStudent.gender || 'Male'}
+                  onChange={(e) => setEditingStudent({...editingStudent, gender: e.target.value})}
+                  className="input-glass w-full px-6 py-4 rounded-2xl font-bold appearance-none cursor-pointer"
+                >
+                  <option value="Male">Male</option>
+                  <option value="Female">Female</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+
+              <div>
                 <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 block ml-1">Class</label>
                 <input 
                   type="text"
@@ -267,6 +300,38 @@ export default function StudentManagement() {
                   value={editingStudent.subject}
                   onChange={(e) => setEditingStudent({...editingStudent, subject: e.target.value})}
                   className="input-glass w-full px-6 py-4 rounded-2xl"
+                />
+              </div>
+
+              <div>
+                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 block ml-1">Semester</label>
+                <select 
+                  value={editingStudent.semester || 'NA'}
+                  onChange={(e) => setEditingStudent({...editingStudent, semester: e.target.value})}
+                  className="input-glass w-full px-6 py-4 rounded-2xl font-bold appearance-none cursor-pointer"
+                >
+                  <option value="NA">NA</option>
+                  <option value="No Semester">No Semester</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 block ml-1">Date of Joining</label>
+                <input 
+                  type="date"
+                  value={editingStudent.dateOfJoining || ''}
+                  onChange={(e) => setEditingStudent({...editingStudent, dateOfJoining: e.target.value})}
+                  className="input-glass w-full px-6 py-4 rounded-2xl text-white uppercase"
+                />
+              </div>
+
+              <div className="col-span-full">
+                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 block ml-1">Residential Address</label>
+                <textarea 
+                  rows={2}
+                  value={editingStudent.address || ''}
+                  onChange={(e) => setEditingStudent({...editingStudent, address: e.target.value})}
+                  className="input-glass w-full p-6 rounded-2xl resize-none"
                 />
               </div>
 

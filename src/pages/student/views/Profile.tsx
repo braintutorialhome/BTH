@@ -14,6 +14,16 @@ export default function StudentProfile({ student }: { student: Student }) {
       ];
       return `${day} ${monthNames[date.getMonth()]} ${date.getFullYear()}`;
     })(), icon: Calendar, color: 'purple' },
+    { label: 'Date of Joining', value: (() => {
+      if (!student.dateOfJoining) return 'N/A';
+      const date = new Date(student.dateOfJoining);
+      if (isNaN(date.getTime())) return student.dateOfJoining;
+      const day = date.getDate();
+      const monthNames = ["January", "February", "March", "April", "May", "June",
+        "July", "August", "September", "October", "November", "December"
+      ];
+      return `${day} ${monthNames[date.getMonth()]} ${date.getFullYear()}`;
+    })(), icon: Calendar, color: 'indigo' },
     { label: 'Biological Marker', value: student.gender, icon: User, color: 'blue' },
     { label: 'Subjects', value: student.subject, icon: Book, color: 'emerald' },
     { label: 'Present Class', value: student.class, icon: Layers, color: 'orange' },
