@@ -23,6 +23,7 @@ export interface Student {
   status: 'pending' | 'approved' | 'rejected' | 'deleted';
   rollNumber?: string;
   dateOfJoining?: string;
+  avatarUrl?: string;
 }
 
 export interface Fee {

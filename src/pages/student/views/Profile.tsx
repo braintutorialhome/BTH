@@ -1,8 +1,9 @@
 import React from 'react';
 import { Student } from '../../../types';
-import { User, Mail, Phone, MapPin, Calendar, Book, Layers, ShieldCheck, Mail as MailIcon } from 'lucide-react';
+import { User, Phone, MapPin, Calendar, Book, Layers, ShieldCheck } from 'lucide-react';
 
 export default function StudentProfile({ student }: { student: Student }) {
+
   const infoItems = [
     { label: "Guardian's Name", value: student.fatherName, icon: ShieldCheck, color: 'indigo' },
     { label: 'Date of Birth', value: (() => {
@@ -50,12 +51,21 @@ export default function StudentProfile({ student }: { student: Student }) {
         <div className="px-12 pb-16 relative z-10">
           <div className="flex flex-col md:flex-row justify-between items-end gap-8 -mt-20 mb-16">
             <div className="flex flex-col md:flex-row items-end gap-8">
-              <div className="w-48 h-48 rounded-[40px] border-[10px] border-[#0f172a] bg-slate-900 flex items-center justify-center text-7xl font-black text-white shadow-2xl relative group/avatar">
-                {student.name.charAt(0)}
-                <div className="absolute inset-0 bg-indigo-600 opacity-0 group-hover/avatar:opacity-100 transition-opacity rounded-[30px] flex items-center justify-center text-white text-base font-black uppercase tracking-widest cursor-pointer">
-                  Update
-                </div>
+              <div 
+                className="w-48 h-48 rounded-[40px] border-[10px] border-[#0f172a] bg-slate-900 flex items-center justify-center text-7xl font-black text-white shadow-2xl relative overflow-hidden"
+              >
+                {student.avatarUrl ? (
+                  <img 
+                    src={student.avatarUrl} 
+                    alt={student.name} 
+                    referrerPolicy="no-referrer"
+                    className="w-full h-full object-cover rounded-[30px]" 
+                  />
+                ) : (
+                  student.name.charAt(0)
+                )}
               </div>
+
               <div className="pb-4">
                 <div className="flex items-center gap-3 mb-1">
                    <h2 className="text-3xl font-black text-white tracking-tighter uppercase">{student.name}</h2>

@@ -173,15 +173,15 @@ export default function StudentHome({ student }: { student: Student }) {
                 <h4 className="text-xl font-black text-white tracking-tight">Exam Results</h4>
               </div>
            </Link>
-           <Link to="/student/materials" className="lg:col-span-1 glass p-8 rounded-[40px] group hover:bg-slate-400/20 transition-all border border-white/5 flex flex-col justify-between">
+            <Link to="/student/materials" className="lg:col-span-1 glass p-8 rounded-[40px] group hover:bg-slate-400/20 transition-all border border-white/5 flex flex-col justify-between">
               <div className="w-12 h-12 bg-emerald-500/20 text-emerald-400 rounded-2xl flex items-center justify-center group-hover:bg-emerald-500 group-hover:text-white transition-all">
                 <BookMarked size={24} />
               </div>
               <div className="mt-8">
-                <p className="text-xs font-black uppercase tracking-widest text-slate-500 group-hover:text-white/60">Repository</p>
+                <p className="text-xs font-black uppercase tracking-widest text-slate-500 group-hover:text-white/60">Study Materials</p>
                 <h4 className="text-xl font-black text-white tracking-tight">Documents</h4>
               </div>
-           </Link>
+            </Link>
         </div>
       </div>
     </div>

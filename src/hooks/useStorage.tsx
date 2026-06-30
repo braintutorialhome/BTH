@@ -84,19 +84,29 @@ const SCRIPT_URL: string = 'https://script.google.com/macros/s/AKfycbwUIvbJKdfJo
 
 const StorageContext = createContext<StorageContextType | undefined>(undefined);
 
+const loadLocal = <T,>(key: string, defaultValue: T): T => {
+  try {
+    const saved = localStorage.getItem(key);
+    return saved ? JSON.parse(saved) : defaultValue;
+  } catch (e) {
+    console.error(`Failed to load ${key} from localStorage`, e);
+    return defaultValue;
+  }
+};
+
 export const StorageProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [students, setStudents] = useState<Student[]>([]);
-  const [fees, setFees] = useState<Fee[]>([]);
-  const [expenses, setExpenses] = useState<Expense[]>([]);
-  const [attendance, setAttendance] = useState<Attendance[]>([]);
-  const [tests, setTests] = useState<Test[]>([]);
-  const [testResults, setTestResults] = useState<TestResult[]>([]);
-  const [materials, setMaterials] = useState<StudyMaterial[]>([]);
-  const [notices, setNotices] = useState<Notice[]>([]);
-  const [dueFees, setDueFees] = useState<DueFee[]>([]);
-  const [externalTests, setExternalTests] = useState<ExternalTest[]>([]);
-  const [resultLinks, setResultLinks] = useState<ResultLink[]>([]);
-  const [users, setUsers] = useState<User[]>([]);
+  const [students, setStudents] = useState<Student[]>(() => loadLocal('utc_students', []));
+  const [fees, setFees] = useState<Fee[]>(() => loadLocal('utc_fees', []));
+  const [expenses, setExpenses] = useState<Expense[]>(() => loadLocal('utc_expenses', []));
+  const [attendance, setAttendance] = useState<Attendance[]>(() => loadLocal('utc_attendance', []));
+  const [tests, setTests] = useState<Test[]>(() => loadLocal('utc_tests', []));
+  const [testResults, setTestResults] = useState<TestResult[]>(() => loadLocal('utc_testResults', []));
+  const [materials, setMaterials] = useState<StudyMaterial[]>(() => loadLocal('utc_materials', []));
+  const [notices, setNotices] = useState<Notice[]>(() => loadLocal('utc_notices', []));
+  const [dueFees, setDueFees] = useState<DueFee[]>(() => loadLocal('utc_due_fees', []));
+  const [externalTests, setExternalTests] = useState<ExternalTest[]>(() => loadLocal('utc_external_tests', []));
+  const [resultLinks, setResultLinks] = useState<ResultLink[]>(() => loadLocal('utc_result_links', []));
+  const [users, setUsers] = useState<User[]>(() => loadLocal('utc_users', []));
   const [currentUser, setCurrentUser] = useState<User | null>(() => {
     try {
       const saved = localStorage.getItem('utc_current_user');
@@ -363,31 +373,6 @@ export const StorageProvider: React.FC<{ children: React.ReactNode }> = ({ child
     const updatedLogs = [newLog, ...currentLogs].slice(0, 100); // Keep last 100
     localStorage.setItem('utc_activity_logs', JSON.stringify(updatedLogs));
   };
-
-  // Load from localStorage for initial offline access
-  useEffect(() => {
-    const load = (key: string, setter: any) => {
-      try {
-        const data = localStorage.getItem(key);
-        if (data) setter(JSON.parse(data));
-      } catch (e) {
-        console.error(`Failed to load ${key} from localStorage`, e);
-      }
-    };
-
-    load('utc_students', setStudents);
-    load('utc_fees', setFees);
-    load('utc_expenses', setExpenses);
-    load('utc_attendance', setAttendance);
-    load('utc_tests', setTests);
-    load('utc_testResults', setTestResults);
-    load('utc_materials', setMaterials);
-    load('utc_notices', setNotices);
-    load('utc_due_fees', setDueFees);
-    load('utc_external_tests', setExternalTests);
-    load('utc_result_links', setResultLinks);
-    load('utc_users', setUsers);
-  }, []);
 
   // Persistence
   useEffect(() => { localStorage.setItem('utc_students', JSON.stringify(students)); }, [students]);

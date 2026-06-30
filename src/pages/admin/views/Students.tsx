@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useStorage } from '../../../hooks/useStorage';
-import { Search, User, Trash2, Edit2, Filter, Phone, MapPin, X, Save, Hash, RotateCcw, AlertTriangle } from 'lucide-react';
+import { Search, User, Trash2, Edit2, Filter, Phone, MapPin, X, Save, Hash, RotateCcw, AlertTriangle, Camera, Upload } from 'lucide-react';
 import { Student } from '../../../types';
 
 export default function StudentManagement() {
@@ -10,6 +10,50 @@ export default function StudentManagement() {
   const [editingStudent, setEditingStudent] = useState<Student | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'active' | 'deleted'>('active');
+
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const MAX_WIDTH = 400;
+        const MAX_HEIGHT = 400;
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > MAX_WIDTH) {
+            height *= MAX_WIDTH / width;
+            width = MAX_WIDTH;
+          }
+        } else {
+          if (height > MAX_HEIGHT) {
+            width *= MAX_HEIGHT / height;
+            height = MAX_HEIGHT;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.drawImage(img, 0, 0, width, height);
+          const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+          if (editingStudent) {
+            setEditingStudent({ ...editingStudent, avatarUrl: dataUrl });
+          }
+        }
+      };
+      img.src = event.target?.result as string;
+    };
+    reader.readAsDataURL(file);
+  };
 
   const approved = students.filter(s => s.status === 'approved');
   const deleted = students.filter(s => s.status === 'deleted' || s.status === 'rejected');
@@ -89,8 +133,17 @@ export default function StudentManagement() {
           <div key={s.id} className={`glass rounded-[32px] overflow-hidden group hover:bg-white/10 transition-all flex flex-col ${activeTab === 'deleted' ? 'opacity-80 border-rose-500/20' : ''}`}>
             <div className="p-8 flex-1 space-y-6">
               <div className="flex justify-between items-start">
-                <div className={`w-16 h-16 ${activeTab === 'deleted' ? 'bg-rose-600/50' : 'bg-indigo-600'} text-white rounded-2xl flex items-center justify-center font-black text-2xl shadow-lg shadow-indigo-600/20 group-hover:scale-110 transition-transform`}>
-                  {s.name.charAt(0)}
+                <div className={`w-16 h-16 ${activeTab === 'deleted' ? 'bg-rose-600/50' : 'bg-indigo-600'} text-white rounded-2xl flex items-center justify-center font-black text-2xl shadow-lg shadow-indigo-600/20 group-hover:scale-110 transition-transform overflow-hidden`}>
+                  {s.avatarUrl ? (
+                    <img 
+                      src={s.avatarUrl} 
+                      alt={s.name} 
+                      referrerPolicy="no-referrer"
+                      className="w-full h-full object-cover rounded-2xl" 
+                    />
+                  ) : (
+                    s.name.charAt(0)
+                  )}
                 </div>
                 <div className="flex flex-col items-end gap-1">
                   <span className={`px-3 py-1 bg-white/5 border border-white/10 rounded-xl text-[10px] font-black uppercase tracking-widest ${activeTab === 'deleted' ? 'text-rose-400' : 'text-indigo-400'}`}>
@@ -217,6 +270,57 @@ export default function StudentManagement() {
             </div>
 
             <form onSubmit={handleUpdate} className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="col-span-full flex flex-col items-center justify-center p-6 bg-white/5 border border-white/10 rounded-3xl gap-4">
+                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block text-center">Student Picture</label>
+                <div className="relative group">
+                  <div className="w-24 h-24 rounded-2xl bg-slate-900 border border-white/10 flex items-center justify-center overflow-hidden">
+                    {editingStudent.avatarUrl ? (
+                      <img 
+                        src={editingStudent.avatarUrl} 
+                        alt={editingStudent.name} 
+                        referrerPolicy="no-referrer"
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <span className="text-3xl font-black text-white/50">{editingStudent.name.charAt(0)}</span>
+                    )}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="absolute inset-0 bg-indigo-600/80 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-white text-[10px] font-black uppercase tracking-widest gap-1 cursor-pointer"
+                  >
+                    <Camera size={18} />
+                    Change
+                  </button>
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="px-4 py-2 bg-indigo-600/10 border border-indigo-500/20 text-indigo-400 hover:bg-indigo-600 hover:text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2"
+                  >
+                    <Upload size={12} /> Upload New
+                  </button>
+                  {editingStudent.avatarUrl && (
+                    <button
+                      type="button"
+                      onClick={() => setEditingStudent({ ...editingStudent, avatarUrl: '' })}
+                      className="px-4 py-2 bg-rose-500/10 border border-rose-500/20 text-rose-400 hover:bg-rose-500 hover:text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2"
+                    >
+                      <Trash2 size={12} /> Remove
+                    </button>
+                  )}
+                </div>
+                <input 
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleFileChange}
+                  accept="image/*"
+                  className="hidden"
+                />
+              </div>
+
               <div className="col-span-full">
                 <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 block ml-1">Assigned Roll Number</label>
                 <div className="relative">
@@ -275,12 +379,20 @@ export default function StudentManagement() {
 
               <div>
                 <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 block ml-1">Class</label>
-                <input 
-                  type="text"
+                <select 
                   value={editingStudent.class}
                   onChange={(e) => setEditingStudent({...editingStudent, class: e.target.value})}
-                  className="input-glass w-full px-6 py-4 rounded-2xl"
-                />
+                  className="input-glass w-full px-6 py-4 rounded-2xl font-bold appearance-none cursor-pointer"
+                >
+                  <option value="Class-V">Class-V</option>
+                  <option value="Class-VI">Class-VI</option>
+                  <option value="Class-VII">Class-VII</option>
+                  <option value="Class-VIII">Class-VIII</option>
+                  <option value="Class-IX">Class-IX</option>
+                  <option value="Class-X">Class-X</option>
+                  <option value="Class-XI">Class-XI</option>
+                  <option value="Class-XII">Class-XII</option>
+                </select>
               </div>
 
               <div>
