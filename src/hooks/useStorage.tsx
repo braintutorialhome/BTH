@@ -143,14 +143,17 @@ export const StorageProvider: React.FC<{ children: React.ReactNode }> = ({ child
         studentName: students.find(s => s.id === tr.studentId)?.name || 'Unknown'
       }));
 
+      // Strip avatarUrl from students sent to the cloud to prevent Google Sheets cell limit/size crashes
+      const cleanStudents = students.map(({ avatarUrl, ...rest }) => rest);
+
       const payload = {
         type: 'BACKUP',
         action: 'SYNC_ALL',
         data: {
-          students, 
-          approvedStudents: students.filter(s => s.status === 'approved'),
-          pendingAdmissions: students.filter(s => s.status === 'pending'),
-          deletedStudents: students.filter(s => s.status === 'deleted'),
+          students: cleanStudents, 
+          approvedStudents: cleanStudents.filter(s => s.status === 'approved'),
+          pendingAdmissions: cleanStudents.filter(s => s.status === 'pending'),
+          deletedStudents: cleanStudents.filter(s => s.status === 'deleted'),
           fees: enrichedFees, 
           expenses, 
           attendance: enrichedAttendance, 
@@ -238,7 +241,17 @@ export const StorageProvider: React.FC<{ children: React.ReactNode }> = ({ child
       try {
         const data = JSON.parse(text);
         if (data) {
-          if (data.students) setStudents(data.students);
+          if (data.students) {
+            setStudents(prevStudents => {
+              return data.students.map((newStudent: Student) => {
+                const existing = prevStudents.find(s => s.id === newStudent.id);
+                return {
+                  ...newStudent,
+                  avatarUrl: existing?.avatarUrl || newStudent.avatarUrl || ''
+                };
+              });
+            });
+          }
           if (data.fees) setFees(data.fees);
           if (data.expenses) setExpenses(data.expenses);
           if (data.users) setUsers(data.users);
