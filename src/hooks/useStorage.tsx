@@ -143,8 +143,8 @@ export const StorageProvider: React.FC<{ children: React.ReactNode }> = ({ child
         studentName: students.find(s => s.id === tr.studentId)?.name || 'Unknown'
       }));
 
-      // Strip avatarUrl from students sent to the cloud to prevent Google Sheets cell limit/size crashes
-      const cleanStudents = students.map(({ avatarUrl, ...rest }) => rest);
+      // Allow compressed avatarUrl to be synced to the cloud so students can see their photo on any device
+      const cleanStudents = students;
 
       const payload = {
         type: 'BACKUP',

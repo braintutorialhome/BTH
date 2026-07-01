@@ -22,8 +22,8 @@ export default function StudentManagement() {
       const img = new Image();
       img.onload = () => {
         const canvas = document.createElement('canvas');
-        const MAX_WIDTH = 400;
-        const MAX_HEIGHT = 400;
+        const MAX_WIDTH = 120;
+        const MAX_HEIGHT = 120;
         let width = img.width;
         let height = img.height;
 
@@ -44,7 +44,7 @@ export default function StudentManagement() {
         const ctx = canvas.getContext('2d');
         if (ctx) {
           ctx.drawImage(img, 0, 0, width, height);
-          const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+          const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
           if (editingStudent) {
             setEditingStudent({ ...editingStudent, avatarUrl: dataUrl });
           }
