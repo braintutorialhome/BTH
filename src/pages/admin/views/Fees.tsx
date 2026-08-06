@@ -22,8 +22,9 @@ export default function FeeManagement() {
 
   const approved = students.filter(s => 
     s.status === 'approved' && (
-      s.name.toLowerCase().includes(studentSearch.toLowerCase()) ||
-      (s.rollNumber?.toLowerCase() || '').includes(studentSearch.toLowerCase())
+      String(s.name || '').toLowerCase().includes(studentSearch.toLowerCase()) ||
+      String(s.rollNumber || '').toLowerCase().includes(studentSearch.toLowerCase()) ||
+      String(s.mobile || '').toLowerCase().includes(studentSearch.toLowerCase())
     )
   );
 
@@ -52,8 +53,8 @@ export default function FeeManagement() {
     if (!student) return false;
 
     const matchesSearch = 
-      student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (student.rollNumber?.toLowerCase() || '').includes(searchTerm.toLowerCase());
+      String(student.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      String(student.rollNumber || '').toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesClass = classFilter === 'all' || student.class === classFilter;
 

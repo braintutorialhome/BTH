@@ -64,9 +64,10 @@ export default function StudentManagement() {
   const classes = ['All', ...Array.from(new Set(approved.map(s => s.class).filter((c): c is string => Boolean(c) && c !== 'All'))).sort()];
 
   const filtered = displayList.filter(s => {
-    const matchesSearch = s.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                          s.rollNumber?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          s.id.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = String(s.name || '').toLowerCase().includes(searchTerm.toLowerCase()) || 
+                          String(s.rollNumber || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          String(s.id || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          String(s.mobile || '').toLowerCase().includes(searchTerm.toLowerCase());
     const matchesClass = filterClass === 'All' || s.class === filterClass;
     return matchesSearch && matchesClass;
   });

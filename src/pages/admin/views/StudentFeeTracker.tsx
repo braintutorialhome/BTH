@@ -83,11 +83,11 @@ export default function StudentFeeTracker() {
     const stats = getStudentFeeStats(student.id);
     
     const matchesSearch = 
-      student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (student.rollNumber || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-      student.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (student.fatherName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (student.mobile || '').includes(searchTerm);
+      String(student.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      String(student.rollNumber || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      String(student.id || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      String(student.fatherName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      String(student.mobile || '').toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesClass = classFilter === 'All' || student.class === classFilter;
     const matchesSubject = subjectFilter === 'All' || student.subject === subjectFilter;

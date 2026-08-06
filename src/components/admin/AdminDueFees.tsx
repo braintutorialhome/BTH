@@ -21,8 +21,8 @@ const AdminDueFees: React.FC = () => {
 
   const filteredStudentsForAdding = students.filter(s => 
     s.status === 'approved' &&
-    (s.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-     s.rollNumber?.toLowerCase().includes(searchTerm.toLowerCase()))
+    (String(s.name || '').toLowerCase().includes(searchTerm.toLowerCase()) || 
+     String(s.rollNumber || '').toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   const classes = Array.from(new Set(students.map(s => s.class))).filter(Boolean).sort();
@@ -32,9 +32,9 @@ const AdminDueFees: React.FC = () => {
     if (!student) return false;
 
     const matchesSearch = 
-      student.name.toLowerCase().includes(listSearchTerm.toLowerCase()) ||
-      student.rollNumber?.toLowerCase().includes(listSearchTerm.toLowerCase()) ||
-      fee.remarks.toLowerCase().includes(listSearchTerm.toLowerCase());
+      String(student.name || '').toLowerCase().includes(listSearchTerm.toLowerCase()) ||
+      String(student.rollNumber || '').toLowerCase().includes(listSearchTerm.toLowerCase()) ||
+      String(fee.remarks || '').toLowerCase().includes(listSearchTerm.toLowerCase());
 
     const matchesClass = classFilter === 'all' || student.class === classFilter;
 

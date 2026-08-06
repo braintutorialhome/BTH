@@ -9,8 +9,8 @@ export default function AttendanceManagement() {
 
   const approved = students.filter(s => s.status === 'approved');
   const filtered = approved.filter(s => 
-    s.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    s.rollNumber?.toLowerCase().includes(searchTerm.toLowerCase())
+    String(s.name || '').toLowerCase().includes(searchTerm.toLowerCase()) || 
+    String(s.rollNumber || '').toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const getAttendanceStatus = (studentId: string) => {
