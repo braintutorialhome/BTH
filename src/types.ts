@@ -33,6 +33,8 @@ export interface Fee {
   date: string;
   status: 'paid' | 'unpaid';
   month: string;
+  paymentMethod?: string;
+  notes?: string;
 }
 
 export interface Expense {

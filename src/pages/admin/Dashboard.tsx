@@ -17,6 +17,7 @@ import AdminResults from './views/Results';
 import StudyMaterialManagement from './views/Materials';
 import NoticeManagement from './views/Notices';
 import AdminDueFees from '../../components/admin/AdminDueFees';
+import StudentFeeTracker from './views/StudentFeeTracker';
 
 const NavItem = ({ to, icon: Icon, label, active, onClick }: any) => (
   <Link 
@@ -65,6 +66,7 @@ export default function AdminDashboard() {
 
   const navItems = [
     { to: '/admin/dashboard', icon: BarChart2, label: 'Dashboard' },
+    { to: '/admin/student-fee-tracker', icon: Users, label: 'Student Fee Tracker' },
     { to: '/admin/admissions', icon: FileCheck, label: 'Admissions' },
     { to: '/admin/students', icon: Users, label: 'Students' },
     { to: '/admin/fees', icon: CreditCard, label: 'Fees' },
@@ -81,6 +83,7 @@ export default function AdminDashboard() {
 
   const viewNames: Record<string, string> = {
     '/admin/dashboard': 'System Dashboard',
+    '/admin/student-fee-tracker': 'Student & Fee Management (Admin Only)',
     '/admin/admissions': 'Admission Panel',
     '/admin/students': 'Student Records',
     '/admin/fees': 'Fees & Collections',
@@ -219,6 +222,7 @@ export default function AdminDashboard() {
         <div className="p-8 flex-1 overflow-auto custom-scrollbar">
           <Routes>
             <Route path="dashboard" element={<AdminHome />} />
+            <Route path="student-fee-tracker" element={<StudentFeeTracker />} />
             <Route path="students" element={<StudentManagement />} />
             <Route path="admissions" element={<AdmissionManagement />} />
             <Route path="fees" element={<FeeManagement />} />

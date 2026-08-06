@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useStorage } from '../../../hooks/useStorage';
 import { Search, User, Trash2, Edit2, Filter, Phone, MapPin, X, Save, Hash, RotateCcw, AlertTriangle, Camera, Upload } from 'lucide-react';
 import { Student } from '../../../types';
@@ -60,7 +61,7 @@ export default function StudentManagement() {
   
   const displayList = activeTab === 'active' ? approved : deleted;
 
-  const classes = ['All', ...Array.from(new Set(approved.map(s => s.class)))];
+  const classes = ['All', ...Array.from(new Set(approved.map(s => s.class).filter((c): c is string => Boolean(c) && c !== 'All'))).sort()];
 
   const filtered = displayList.filter(s => {
     const matchesSearch = s.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -87,6 +88,22 @@ export default function StudentManagement() {
 
   return (
     <div className="space-y-10">
+      {/* Top Banner linking to Student Fee Tracker */}
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-6 bg-indigo-900/30 border border-indigo-500/30 rounded-[28px] shadow-lg">
+        <div>
+          <h3 className="font-black text-white text-base">Student Management & Fee Tracking</h3>
+          <p className="text-xs font-semibold text-slate-400 mt-1">
+            Access detailed fee breakdowns, payment history, dues adjustments, and quick student editing in one integrated view.
+          </p>
+        </div>
+        <Link 
+          to="/admin/student-fee-tracker" 
+          className="px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xs uppercase tracking-widest rounded-2xl shrink-0 transition-all shadow-lg shadow-indigo-600/30"
+        >
+          Open Fee Tracker →
+        </Link>
+      </div>
+
       {/* Tab Switcher */}
       <div className="flex gap-4 p-2 glass rounded-3xl w-fit">
         <button 
@@ -122,7 +139,7 @@ export default function StudentManagement() {
             onChange={(e) => setFilterClass(e.target.value)}
             className="input-glass w-full pl-14 py-4 rounded-2xl appearance-none"
           >
-            {classes.map(c => <option key={c} value={c} className="bg-slate-900">{c}</option>)}
+            {classes.map((c, idx) => <option key={`student-class-${c}-${idx}`} value={c} className="bg-slate-900">{c}</option>)}
           </select>
         </div>
       </div>
