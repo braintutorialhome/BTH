@@ -458,7 +458,7 @@ export default function StudentFeeTracker() {
                 </div>
 
                 {/* Fee Breakdown Pills */}
-                <div className="grid grid-cols-3 gap-2 pt-2 border-t border-white/5 text-center">
+                <div className="grid grid-cols-2 gap-2 pt-2 border-t border-white/5 text-center">
                   <div className="p-2 bg-slate-900/40 rounded-xl border border-white/5">
                     <p className="text-[8px] font-black uppercase text-slate-500">Total Dues</p>
                     <p className="text-xs font-black text-white">₹{stats.totalDueAssigned.toLocaleString()}</p>
@@ -466,12 +466,6 @@ export default function StudentFeeTracker() {
                   <div className="p-2 bg-emerald-950/30 rounded-xl border border-emerald-500/10">
                     <p className="text-[8px] font-black uppercase text-emerald-500">Paid</p>
                     <p className="text-xs font-black text-emerald-400">₹{stats.totalPaid.toLocaleString()}</p>
-                  </div>
-                  <div className={`p-2 rounded-xl border ${stats.remainingBalance > 0 ? 'bg-amber-950/30 border-amber-500/20' : 'bg-slate-900/40 border-white/5'}`}>
-                    <p className={`text-[8px] font-black uppercase ${stats.remainingBalance > 0 ? 'text-amber-400' : 'text-slate-500'}`}>Balance</p>
-                    <p className={`text-xs font-black ${stats.remainingBalance > 0 ? 'text-amber-400' : 'text-slate-300'}`}>
-                      ₹{stats.remainingBalance.toLocaleString()}
-                    </p>
                   </div>
                 </div>
               </div>
