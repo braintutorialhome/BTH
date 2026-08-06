@@ -525,7 +525,7 @@ export default function StudentFeeTracker() {
             </div>
 
             {/* Visual Fee Summary Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="p-5 bg-white/5 rounded-2xl border border-white/10 flex flex-col justify-between">
                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Dues Assigned</p>
                 <p className="text-2xl font-black text-indigo-400 mt-2">₹{selectedStudentStats.totalDueAssigned.toLocaleString()}</p>
@@ -536,18 +536,6 @@ export default function StudentFeeTracker() {
                 <p className="text-[10px] font-black text-emerald-400 uppercase tracking-widest">Total Paid</p>
                 <p className="text-2xl font-black text-emerald-400 mt-2">₹{selectedStudentStats.totalPaid.toLocaleString()}</p>
                 <p className="text-[10px] text-slate-500 mt-1">{selectedStudentStats.paymentCount} payment transaction(s)</p>
-              </div>
-
-              <div className={`p-5 rounded-2xl border flex flex-col justify-between ${selectedStudentStats.remainingBalance > 0 ? 'bg-amber-950/20 border-amber-500/30' : 'bg-emerald-950/10 border-emerald-500/20'}`}>
-                <p className={`text-[10px] font-black uppercase tracking-widest ${selectedStudentStats.remainingBalance > 0 ? 'text-amber-400' : 'text-emerald-400'}`}>
-                  Remaining Balance
-                </p>
-                <p className={`text-2xl font-black mt-2 ${selectedStudentStats.remainingBalance > 0 ? 'text-amber-400' : 'text-emerald-400'}`}>
-                  ₹{selectedStudentStats.remainingBalance.toLocaleString()}
-                </p>
-                <p className="text-[10px] font-bold text-slate-400 mt-1">
-                  {selectedStudentStats.remainingBalance > 0 ? '⚠️ Pending payment required' : '✓ All dues cleared'}
-                </p>
               </div>
             </div>
 
