@@ -274,7 +274,7 @@ export default function StudentFeeTracker() {
       </div>
 
       {/* Overview Stat Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
         <div className="glass p-6 rounded-[28px] border border-white/10 flex items-center justify-between">
           <div>
             <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Total Fee Collected</p>
@@ -294,17 +294,6 @@ export default function StudentFeeTracker() {
           </div>
           <div className="p-3 bg-indigo-500/10 text-indigo-400 rounded-2xl border border-indigo-500/20">
             <CreditCard size={24} />
-          </div>
-        </div>
-
-        <div className="glass p-6 rounded-[28px] border border-white/10 flex items-center justify-between">
-          <div>
-            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Pending Balance</p>
-            <h3 className="text-2xl font-black text-amber-400">₹{totalSystemPendingBalance.toLocaleString()}</h3>
-            <p className="text-[10px] font-bold text-slate-500 mt-1">Outstanding receivables</p>
-          </div>
-          <div className="p-3 bg-amber-500/10 text-amber-400 rounded-2xl border border-amber-500/20">
-            <ArrowDownRight size={24} />
           </div>
         </div>
       </div>
