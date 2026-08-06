@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
-import { Shield, User, Lock, ArrowLeft, KeyRound, UserPlus, LogIn, Loader2 } from 'lucide-react';
+import { ArrowLeft, LogIn, UserPlus, Loader2, ArrowRight } from 'lucide-react';
 import { useStorage } from '../../hooks/useStorage';
 
 export default function Login() {
@@ -46,156 +46,164 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-6 relative overflow-hidden selection:bg-indigo-500/30 selection:text-indigo-200">
-      <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-indigo-600/10 rounded-full blur-[120px]" />
-      <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-purple-600/10 rounded-full blur-[120px]" />
+    <div className="min-h-screen flex flex-col items-center justify-center p-4 sm:p-6 relative overflow-hidden selection:bg-cyan-500/30 selection:text-cyan-200">
+      {/* Background Ambient Glows */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-cyan-500/10 rounded-full blur-[140px] pointer-events-none" />
+      <div className="absolute top-[-10%] left-[-10%] w-[45%] h-[45%] bg-blue-600/10 rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-[45%] h-[45%] bg-teal-500/10 rounded-full blur-[120px] pointer-events-none" />
 
-      <Link to="/" className="mb-12 glass px-6 py-3 rounded-2xl flex items-center gap-3 border-white/5 text-slate-500 hover:text-white transition-all group relative z-10">
-        <ArrowLeft size={18} className="group-hover:-translate-x-1 transition-transform" /> 
-        <span className="text-xs font-black uppercase tracking-widest leading-none">Abort & Return</span>
+      {/* Return to Home link */}
+      <Link 
+        to="/" 
+        className="mb-8 glass px-5 py-2.5 rounded-full flex items-center gap-2.5 border-white/10 text-slate-400 hover:text-cyan-300 hover:border-cyan-500/30 transition-all group relative z-10 shadow-lg"
+      >
+        <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform text-cyan-400" /> 
+        <span className="text-[11px] font-black uppercase tracking-widest leading-none">Abort & Return</span>
       </Link>
       
+      {/* Glowing Circular Card Frame */}
       <motion.div 
-        layout
-        initial={{ y: 20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        className="w-full max-w-lg glass rounded-[60px] shadow-2xl border border-white/10 overflow-hidden relative z-10"
+        initial={{ scale: 0.9, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+        className="w-full max-w-[460px] relative z-10"
       >
-        <div className="p-12 text-center relative overflow-hidden">
-          <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-white/[0.03] to-transparent pointer-events-none"></div>
+        <div className="relative rounded-[48px] sm:rounded-full border-2 border-cyan-400 shadow-[0_0_40px_rgba(34,211,238,0.35),inset_0_0_25px_rgba(34,211,238,0.12)] bg-[#030d1d]/85 backdrop-blur-2xl p-8 sm:p-11 flex flex-col items-center justify-center text-center overflow-hidden">
           
-          <div className="inline-flex w-24 h-24 bg-white/5 rounded-[30px] items-center justify-center mb-10 border border-white/5 shadow-inner group relative">
-            <div className="absolute inset-0 bg-indigo-600 opacity-20 blur-2xl group-hover:opacity-40 transition-opacity"></div>
-            <Shield className="text-white relative z-10" size={40} />
-          </div>
-          
-          <h1 className="text-3xl font-black text-white tracking-tighter uppercase leading-none mb-3">
-            Portal <span className="text-indigo-500">{isLogin ? 'Access' : 'Registry'}</span>
-          </h1>
-          <p className="text-slate-500 font-bold uppercase tracking-widest text-xs">
-            {isLogin ? 'Encrypted BTH educational servers' : 'Register new administrative or student node'}
-          </p>
-        </div>
+          {/* Subtle inner top glow overlay */}
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-3/4 h-28 bg-cyan-400/10 blur-2xl pointer-events-none rounded-full" />
 
-        <div className="px-12 pb-16 space-y-10">
-          <div className="flex glass p-2 rounded-[30px] border-white/5 relative overflow-hidden">
-             <button 
+          {/* Heading */}
+          <h1 className="text-2xl sm:text-3xl font-black text-cyan-300 tracking-wider uppercase mb-6 drop-shadow-[0_0_12px_rgba(34,211,238,0.8)]">
+            {isLogin ? 'LOGIN' : 'REGISTER'}
+          </h1>
+
+          <form onSubmit={handleSubmit} className="w-full space-y-4 sm:space-y-5">
+            {/* Role Toggle Pill */}
+            <div className="bg-[#020914]/90 border border-cyan-500/25 p-1 rounded-full flex items-center justify-between shadow-inner">
+              <button 
+                type="button"
                 onClick={() => setRole('student')}
-                className={`flex-1 py-4 rounded-[22px] text-xs font-black uppercase tracking-widest transition-all relative z-10 ${
-                  role === 'student' ? 'bg-indigo-600 text-white shadow-xl' : 'text-slate-600 hover:text-slate-400'
+                className={`flex-1 py-2 sm:py-2.5 px-4 rounded-full text-[11px] font-black uppercase tracking-wider transition-all duration-300 ${
+                  role === 'student' 
+                    ? 'bg-gradient-to-r from-cyan-400 to-blue-500 text-slate-950 shadow-[0_0_15px_rgba(34,211,238,0.4)] font-extrabold' 
+                    : 'text-slate-400 hover:text-white'
                 }`}
               >
-                Student
+                STUDENT
               </button>
               <button 
+                type="button"
                 onClick={() => setRole('admin')}
-                className={`flex-1 py-4 rounded-[22px] text-xs font-black uppercase tracking-widest transition-all relative z-10 ${
-                  role === 'admin' ? 'bg-indigo-600 text-white shadow-xl' : 'text-slate-600 hover:text-slate-400'
+                className={`flex-1 py-2 sm:py-2.5 px-4 rounded-full text-[11px] font-black uppercase tracking-wider transition-all duration-300 ${
+                  role === 'admin' 
+                    ? 'bg-gradient-to-r from-cyan-400 to-blue-500 text-slate-950 shadow-[0_0_15px_rgba(34,211,238,0.4)] font-extrabold' 
+                    : 'text-slate-400 hover:text-white'
                 }`}
               >
-                Root
+                ROOT/ADMIN
               </button>
-          </div>
+            </div>
 
-          <form onSubmit={handleSubmit} className="space-y-8">
+            {/* Inputs */}
             <AnimatePresence mode="wait">
               {!isLogin && (
                 <motion.div 
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: 'auto' }}
                   exit={{ opacity: 0, height: 0 }}
-                  className="space-y-4"
                 >
-                  <label className="text-xs font-black uppercase tracking-widest text-slate-500 ml-2">Full Identity Name</label>
                   <input 
                     required
                     type="text" 
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    className="input-glass w-full py-5 rounded-3xl font-bold tracking-tight text-lg"
-                    placeholder="ENTER FULL NAME"
+                    className="w-full bg-[#020914]/80 border border-cyan-500/20 text-cyan-100 placeholder:text-slate-500/70 text-center text-sm font-semibold py-3 px-5 rounded-full focus:outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/40 focus:shadow-[0_0_15px_rgba(34,211,238,0.25)] transition-all"
+                    placeholder="Full Name"
                   />
                 </motion.div>
               )}
             </AnimatePresence>
 
-            <div className="space-y-4">
-              <label className="text-xs font-black uppercase tracking-widest text-slate-500 ml-2">System UID / Username</label>
+            <div>
               <input 
                 required
                 type="text" 
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                className="input-glass w-full py-5 rounded-3xl font-bold tracking-tight text-lg"
-                placeholder="USERNAME"
+                className="w-full bg-[#020914]/80 border border-cyan-500/20 text-cyan-100 placeholder:text-slate-500/70 text-center text-sm font-semibold py-3 sm:py-3.5 px-5 rounded-full focus:outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/40 focus:shadow-[0_0_15px_rgba(34,211,238,0.25)] transition-all"
+                placeholder="Username"
               />
             </div>
-            
-            <div className="space-y-4">
-              <label className="text-xs font-black uppercase tracking-widest text-slate-500 ml-2">Encryption Key / Password</label>
+
+            <div>
               <input 
                 required
                 type="password" 
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="input-glass w-full py-5 rounded-3xl font-bold text-lg"
-                placeholder="••••••••"
+                className="w-full bg-[#020914]/80 border border-cyan-500/20 text-cyan-100 placeholder:text-slate-500/70 text-center text-sm font-semibold py-3 sm:py-3.5 px-5 rounded-full focus:outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/40 focus:shadow-[0_0_15px_rgba(34,211,238,0.25)] transition-all"
+                placeholder="Password"
               />
             </div>
 
+            {/* Error or Sync Info */}
             {error && (
-              <motion.div 
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="p-5 bg-rose-500/10 border border-rose-500/20 rounded-2xl flex items-center gap-3"
+              <motion.p 
+                initial={{ opacity: 0, y: -4 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="text-rose-400 text-[10px] font-black uppercase tracking-wider py-1 px-3 bg-rose-500/10 rounded-full border border-rose-500/20"
               >
-                <p className="text-rose-400 text-[9px] font-black uppercase tracking-widest">{error}</p>
-              </motion.div>
+                {error}
+              </motion.p>
             )}
 
             {isInitialSyncing && (
-              <motion.div 
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="p-5 bg-indigo-500/5 border border-white/5 rounded-2xl flex items-center justify-center gap-3"
-              >
-                <Loader2 className="animate-spin text-indigo-500" size={14} />
-                <p className="text-slate-500 text-[9px] font-black uppercase tracking-widest">Initial cloud sync in progress...</p>
-              </motion.div>
+              <div className="flex items-center justify-center gap-2 py-1 text-cyan-400 text-[10px] font-bold uppercase tracking-wider">
+                <Loader2 size={12} className="animate-spin" />
+                <span>Synchronizing database...</span>
+              </div>
             )}
 
             {syncError && !isInitialSyncing && (
-              <motion.div 
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="p-5 bg-amber-500/10 border border-amber-500/20 rounded-2xl flex flex-col gap-2"
-              >
-                <p className="text-amber-500 text-[9px] font-black uppercase tracking-widest flex items-center gap-2"> Cloud connectivity warning </p>
-                <p className="text-slate-400 text-[8px] font-bold uppercase tracking-wider">{syncError}</p>
-              </motion.div>
+              <p className="text-amber-400 text-[9px] font-bold uppercase tracking-wider bg-amber-500/10 border border-amber-500/20 p-2 rounded-xl">
+                ⚠️ {syncError}
+              </p>
             )}
 
+            {/* Sign In / Sign Up Button */}
             <button 
               type="submit" 
               disabled={loading || isInitialSyncing}
-              className="w-full py-6 text-xs font-black uppercase tracking-widest indigo-button shadow-2xl flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full py-3.5 sm:py-4 px-6 rounded-full bg-gradient-to-r from-cyan-400 via-sky-400 to-blue-500 hover:brightness-110 active:scale-95 text-slate-950 font-black tracking-widest uppercase text-xs sm:text-sm shadow-[0_0_25px_rgba(34,211,238,0.4)] flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer mt-2"
             >
-              {loading ? <Loader2 className="animate-spin" size={18} /> : isLogin ? <LogIn size={18} /> : <UserPlus size={18} />}
-              <span>{isInitialSyncing ? 'Synchronizing...' : isLogin ? 'Login' : 'Sign Up'}</span>
+              {loading ? (
+                <Loader2 className="animate-spin" size={18} />
+              ) : (
+                <ArrowRight size={18} strokeWidth={3} />
+              )}
+              <span>{isInitialSyncing ? 'SYNCHRONIZING...' : isLogin ? 'SIGN IN' : 'REGISTER NOW'}</span>
             </button>
           </form>
-          
-          <div className="text-center">
+
+          {/* Switch Mode Toggle */}
+          <div className="mt-5">
             <button 
-              onClick={() => setIsLogin(!isLogin)}
-              className="text-xs font-black uppercase tracking-widest text-slate-500 hover:text-white transition-all underline decoration-white/0 hover:decoration-white/10 underline-offset-8"
+              type="button"
+              onClick={() => {
+                setIsLogin(!isLogin);
+                setError('');
+              }}
+              className="text-[11px] font-bold text-slate-400 hover:text-cyan-300 transition-colors underline decoration-cyan-500/30 underline-offset-4 cursor-pointer"
             >
-              {isLogin ? "Terminate session? Create new registry" : "Already registered? Restore session"}
+              {isLogin ? "Need an account? Register" : "Already registered? Sign in"}
             </button>
           </div>
+
         </div>
       </motion.div>
     </div>
   );
 }
+
 
