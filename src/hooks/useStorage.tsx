@@ -282,10 +282,12 @@ export const StorageProvider: React.FC<{ children: React.ReactNode }> = ({ child
         throw new Error("Invalid Cloud Data: The script is not returning JSON.");
       }
     } catch (e: any) {
-      console.error('Fetch Diagnostic:', e);
       let errorMsg = e.message || 'Unknown sync error';
       if (errorMsg === 'Failed to fetch') {
         errorMsg = 'ACCESS DENIED: Browser blocked the request. Ensure "Who has access" is set to "Anyone" in your Apps Script deployment and you have authorized permissions.';
+        console.warn('Google Apps Script Cloud Fetch could not connect (CORS/Permissions). Operating in offline local storage mode.');
+      } else {
+        console.error('Fetch Diagnostic:', e);
       }
       setSyncError(errorMsg);
     } finally {

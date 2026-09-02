@@ -18,6 +18,7 @@ export default function StudentFeeTracker() {
   // Active filter state
   const [searchTerm, setSearchTerm] = useState('');
   const [classFilter, setClassFilter] = useState('All');
+  const [sessionFilter, setSessionFilter] = useState('All');
   const [subjectFilter, setSubjectFilter] = useState('All');
   const [statusFilter, setStatusFilter] = useState<'All' | 'Pending' | 'Cleared'>('All');
   const [sortBy, setSortBy] = useState<'name' | 'due' | 'roll'>('name');
@@ -74,8 +75,9 @@ export default function StudentFeeTracker() {
     };
   };
 
-  // Distinct classes and subjects for dropdown filters
+  // Distinct classes, sessions, and subjects for dropdown filters
   const classes = ['All', ...Array.from(new Set(approvedStudents.map(s => s.class).filter((c): c is string => Boolean(c) && c !== 'All'))).sort()];
+  const sessions = ['All', ...Array.from(new Set(approvedStudents.map(s => s.semester).filter((sem): sem is string => Boolean(sem) && sem !== 'All'))).sort()];
   const subjects = ['All', ...Array.from(new Set(approvedStudents.map(s => s.subject).filter((s): s is string => Boolean(s) && s !== 'All'))).sort()];
 
   // Filter & Sort student list
@@ -90,6 +92,7 @@ export default function StudentFeeTracker() {
       String(student.mobile || '').toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesClass = classFilter === 'All' || student.class === classFilter;
+    const matchesSession = sessionFilter === 'All' || student.semester === sessionFilter;
     const matchesSubject = subjectFilter === 'All' || student.subject === subjectFilter;
 
     let matchesStatus = true;
@@ -99,7 +102,7 @@ export default function StudentFeeTracker() {
       matchesStatus = stats.remainingBalance <= 0;
     }
 
-    return matchesSearch && matchesClass && matchesSubject && matchesStatus;
+    return matchesSearch && matchesClass && matchesSession && matchesSubject && matchesStatus;
   }).sort((a, b) => {
     if (sortBy === 'due') {
       const dueA = getStudentFeeStats(a.id).remainingBalance;
@@ -300,9 +303,9 @@ export default function StudentFeeTracker() {
 
       {/* Toolbar: Search, Filters & Sorting */}
       <div className="glass p-6 rounded-[32px] border border-white/10 space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3">
           {/* Search */}
-          <div className="md:col-span-5 relative">
+          <div className="sm:col-span-2 lg:col-span-4 relative">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
             <input 
               type="text" 
@@ -319,41 +322,60 @@ export default function StudentFeeTracker() {
           </div>
 
           {/* Filter Class */}
-          <div className="md:col-span-2 relative">
+          <div className="col-span-1 lg:col-span-2 relative">
             <select 
               value={classFilter}
               onChange={(e) => setClassFilter(e.target.value)}
               className="input-glass w-full py-3 px-4 text-xs font-bold rounded-2xl appearance-none cursor-pointer"
             >
               {classes.map((c, idx) => (
-                <option key={`cls-opt-${c}-${idx}`} value={c} className="bg-slate-900 text-white">Class: {c}</option>
+                <option key={`cls-opt-${c}-${idx}`} value={c} className="bg-slate-900 text-white">
+                  {c === 'All' ? 'All Classes' : `Class: ${c}`}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Filter Session */}
+          <div className="col-span-1 lg:col-span-2 relative">
+            <select 
+              value={sessionFilter}
+              onChange={(e) => setSessionFilter(e.target.value)}
+              className="input-glass w-full py-3 px-4 text-xs font-bold rounded-2xl appearance-none cursor-pointer"
+            >
+              {sessions.map((s, idx) => (
+                <option key={`ses-opt-${s}-${idx}`} value={s} className="bg-slate-900 text-white">
+                  {s === 'All' ? 'All Sessions' : `Session: ${s}`}
+                </option>
               ))}
             </select>
           </div>
 
           {/* Filter Subject/Batch */}
-          <div className="md:col-span-2 relative">
+          <div className="col-span-1 lg:col-span-2 relative">
             <select 
               value={subjectFilter}
               onChange={(e) => setSubjectFilter(e.target.value)}
               className="input-glass w-full py-3 px-4 text-xs font-bold rounded-2xl appearance-none cursor-pointer"
             >
               {subjects.map((s, idx) => (
-                <option key={`sbj-opt-${s}-${idx}`} value={s} className="bg-slate-900 text-white">Subject: {s}</option>
+                <option key={`sbj-opt-${s}-${idx}`} value={s} className="bg-slate-900 text-white">
+                  {s === 'All' ? 'All Subjects' : `Subject: ${s}`}
+                </option>
               ))}
             </select>
           </div>
 
           {/* Filter Fee Status */}
-          <div className="md:col-span-3 relative">
+          <div className="col-span-1 sm:col-span-2 lg:col-span-2 relative">
             <select 
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value as any)}
               className="input-glass w-full py-3 px-4 text-xs font-bold rounded-2xl appearance-none cursor-pointer"
             >
-              <option value="All" className="bg-slate-900 text-white">Status: All Students</option>
-              <option value="Pending" className="bg-slate-900 text-white">Status: Pending Balance</option>
-              <option value="Cleared" className="bg-slate-900 text-white">Status: Dues Cleared</option>
+              <option value="All" className="bg-slate-900 text-white">Status: All</option>
+              <option value="Pending" className="bg-slate-900 text-white">Status: Pending</option>
+              <option value="Cleared" className="bg-slate-900 text-white">Status: Cleared</option>
             </select>
           </div>
         </div>
@@ -362,6 +384,20 @@ export default function StudentFeeTracker() {
           <div className="flex items-center gap-2">
             <span className="font-bold text-slate-500">Showing:</span>
             <span className="px-2.5 py-1 bg-white/5 rounded-lg font-black text-indigo-400">{filteredStudents.length} of {approvedStudents.length} Students</span>
+            {(classFilter !== 'All' || sessionFilter !== 'All' || subjectFilter !== 'All' || statusFilter !== 'All' || searchTerm) && (
+              <button 
+                onClick={() => {
+                  setClassFilter('All');
+                  setSessionFilter('All');
+                  setSubjectFilter('All');
+                  setStatusFilter('All');
+                  setSearchTerm('');
+                }}
+                className="text-[10px] text-indigo-400 hover:text-indigo-300 font-bold underline cursor-pointer ml-1"
+              >
+                Reset Filters
+              </button>
+            )}
           </div>
 
           <div className="flex items-center gap-3">
@@ -415,7 +451,7 @@ export default function StudentFeeTracker() {
                         {student.name}
                       </h3>
                       <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">
-                        Class: {student.class} • {student.subject}
+                        Class: {student.class} • {student.subject}{student.semester ? ` • Session: ${student.semester}` : ''}
                       </p>
                       <p className="text-[9px] font-semibold text-slate-500">
                         Roll No: <span className="text-slate-300 font-bold">{student.rollNumber || 'N/A'}</span>

@@ -73,16 +73,17 @@ export function exportStudentToPdf(
   const rowSpacing = 6.8;
 
   // Helper for label/value
-  const drawField = (x: number, y: number, label: string, value: string) => {
+  const drawField = (x: number, y: number, label: string, value: any) => {
     doc.setFontSize(8.5);
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(100, 116, 139); // slate-500
-    doc.text(`${label}:`, x, y);
+    doc.text(String(label) + ':', x, y);
 
     doc.setFont('helvetica', 'normal');
     doc.setTextColor(15, 23, 42); // slate-900
-    const labelWidth = doc.getTextWidth(`${label}: `);
-    doc.text(value, x + labelWidth + 1, y);
+    const labelWidth = doc.getTextWidth(String(label) + ': ');
+    const safeVal = value != null ? String(value) : 'N/A';
+    doc.text(safeVal, x + labelWidth + 1, y);
   };
 
   // Row 1

@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useStorage } from '../../../hooks/useStorage';
-import { Search, User, Trash2, Edit2, Filter, Phone, MapPin, X, Save, Hash, RotateCcw, AlertTriangle, Camera, Upload } from 'lucide-react';
+import { Search, User, Trash2, Edit2, Filter, Phone, MapPin, X, Save, Hash, RotateCcw, AlertTriangle, Camera, Upload, Calendar } from 'lucide-react';
 import { Student } from '../../../types';
 
 export default function StudentManagement() {
   const { students, deleteStudent, removeStudentPermanently, updateStudent } = useStorage();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterClass, setFilterClass] = useState('All');
+  const [filterSession, setFilterSession] = useState('All');
   const [editingStudent, setEditingStudent] = useState<Student | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'active' | 'deleted'>('active');
@@ -62,6 +63,7 @@ export default function StudentManagement() {
   const displayList = activeTab === 'active' ? approved : deleted;
 
   const classes = ['All', ...Array.from(new Set(approved.map(s => s.class).filter((c): c is string => Boolean(c) && c !== 'All'))).sort()];
+  const sessions = ['All', ...Array.from(new Set(displayList.map(s => s.semester).filter((sem): sem is string => Boolean(sem) && sem !== 'All'))).sort()];
 
   const filtered = displayList.filter(s => {
     const matchesSearch = String(s.name || '').toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -69,7 +71,8 @@ export default function StudentManagement() {
                           String(s.id || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
                           String(s.mobile || '').toLowerCase().includes(searchTerm.toLowerCase());
     const matchesClass = filterClass === 'All' || s.class === filterClass;
-    return matchesSearch && matchesClass;
+    const matchesSession = filterSession === 'All' || s.semester === filterSession;
+    return matchesSearch && matchesClass && matchesSession;
   });
 
   const handleUpdate = (e: React.FormEvent) => {
@@ -122,7 +125,7 @@ export default function StudentManagement() {
       </div>
 
       {/* Toolbar */}
-      <div className="flex flex-col md:flex-row gap-6">
+      <div className="flex flex-col md:flex-row gap-4">
         <div className="flex-1 relative">
           <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-500" size={20} />
           <input 
@@ -133,14 +136,32 @@ export default function StudentManagement() {
             className="input-glass w-full pl-14 py-4 rounded-2xl"
           />
         </div>
-        <div className="md:w-64 relative">
-          <Filter className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-500" size={20} />
+        <div className="md:w-56 relative">
+          <Filter className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
           <select 
             value={filterClass}
             onChange={(e) => setFilterClass(e.target.value)}
-            className="input-glass w-full pl-14 py-4 rounded-2xl appearance-none"
+            className="input-glass w-full pl-12 py-4 rounded-2xl appearance-none cursor-pointer text-xs font-bold"
           >
-            {classes.map((c, idx) => <option key={`student-class-${c}-${idx}`} value={c} className="bg-slate-900">{c}</option>)}
+            {classes.map((c, idx) => (
+              <option key={`student-class-${c}-${idx}`} value={c} className="bg-slate-900">
+                {c === 'All' ? 'All Classes' : `Class: ${c}`}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="md:w-56 relative">
+          <Calendar className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
+          <select 
+            value={filterSession}
+            onChange={(e) => setFilterSession(e.target.value)}
+            className="input-glass w-full pl-12 py-4 rounded-2xl appearance-none cursor-pointer text-xs font-bold"
+          >
+            {sessions.map((s, idx) => (
+              <option key={`student-session-${s}-${idx}`} value={s} className="bg-slate-900">
+                {s === 'All' ? 'All Sessions' : `Session: ${s}`}
+              </option>
+            ))}
           </select>
         </div>
       </div>
@@ -176,7 +197,9 @@ export default function StudentManagement() {
                   {s.name}
                   {activeTab === 'deleted' && <span className="ml-3 text-[8px] bg-rose-500/20 text-rose-500 px-2 py-1 rounded-lg">DELETED</span>}
                 </h3>
-                <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">{s.subject} • Class {s.class}</p>
+                <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">
+                  {s.subject} • Class {s.class}{s.semester ? ` • Session ${s.semester}` : ''}
+                </p>
               </div>
 
               <div className="space-y-3 pt-6 border-t border-white/5">
