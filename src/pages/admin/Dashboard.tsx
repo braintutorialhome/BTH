@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Routes, Route, Link, useLocation, useNavigate } from 'react-router-dom';
 import { 
-  BarChart2, Users, FileCheck, CreditCard, Wallet, Calendar, BookMarked, Bell, LogOut, Menu, X, Plus, Trash2, Edit2, TrendingUp, TrendingDown, DollarSign, Settings, AlertCircle, ExternalLink
+  BarChart2, Users, FileCheck, CreditCard, Wallet, Calendar, BookMarked, Bell, LogOut, Menu, X, Plus, Trash2, Edit2, TrendingUp, TrendingDown, DollarSign, Settings, AlertCircle, ExternalLink, Eye
 } from 'lucide-react';
 import { useStorage } from '../../hooks/useStorage';
 import AdminHome from './views/Home';
@@ -18,6 +18,7 @@ import StudyMaterialManagement from './views/Materials';
 import NoticeManagement from './views/Notices';
 import AdminDueFees from '../../components/admin/AdminDueFees';
 import StudentFeeTracker from './views/StudentFeeTracker';
+import StudentOverview from './views/StudentOverview';
 
 const NavItem = ({ to, icon: Icon, label, active, onClick }: any) => (
   <Link 
@@ -67,6 +68,7 @@ export default function AdminDashboard() {
   const navItems = [
     { to: '/admin/dashboard', icon: BarChart2, label: 'Dashboard' },
     { to: '/admin/student-fee-tracker', icon: Users, label: 'Student Fee Tracker' },
+    { to: '/admin/student-overview', icon: Eye, label: 'Student Overview' },
     { to: '/admin/admissions', icon: FileCheck, label: 'Admissions' },
     { to: '/admin/students', icon: Users, label: 'Students' },
     { to: '/admin/fees', icon: CreditCard, label: 'Fees' },
@@ -84,6 +86,7 @@ export default function AdminDashboard() {
   const viewNames: Record<string, string> = {
     '/admin/dashboard': 'System Dashboard',
     '/admin/student-fee-tracker': 'Student & Fee Management (Admin Only)',
+    '/admin/student-overview': 'Student Overview (Read-Only)',
     '/admin/admissions': 'Admission Panel',
     '/admin/students': 'Student Records',
     '/admin/fees': 'Fees & Collections',
@@ -223,6 +226,7 @@ export default function AdminDashboard() {
           <Routes>
             <Route path="dashboard" element={<AdminHome />} />
             <Route path="student-fee-tracker" element={<StudentFeeTracker />} />
+            <Route path="student-overview" element={<StudentOverview />} />
             <Route path="students" element={<StudentManagement />} />
             <Route path="admissions" element={<AdmissionManagement />} />
             <Route path="fees" element={<FeeManagement />} />

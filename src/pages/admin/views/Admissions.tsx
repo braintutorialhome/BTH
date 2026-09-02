@@ -282,6 +282,17 @@ export default function AdmissionManagement() {
               </div>
 
               <div>
+                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 block ml-1">WhatsApp Number</label>
+                <input 
+                  type="text"
+                  value={editingStudent.whatsapp || ''}
+                  onChange={(e) => setEditingStudent({...editingStudent, whatsapp: e.target.value})}
+                  className="input-glass w-full px-6 py-4 rounded-2xl font-bold"
+                  placeholder="+91..."
+                />
+              </div>
+
+              <div>
                 <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 block ml-1">Subject</label>
                 <input 
                   type="text"
@@ -293,15 +304,14 @@ export default function AdmissionManagement() {
               </div>
 
               <div>
-                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 block ml-1">Semester</label>
-                <select 
-                  value={editingStudent.semester || 'NA'}
+                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 block ml-1">Session</label>
+                <input 
+                  type="text"
+                  value={editingStudent.semester || ''}
                   onChange={(e) => setEditingStudent({...editingStudent, semester: e.target.value})}
-                  className="input-glass w-full px-6 py-4 rounded-2xl font-bold appearance-none cursor-pointer"
-                >
-                  <option value="NA">NA</option>
-                  <option value="No Semester">No Semester</option>
-                </select>
+                  className="input-glass w-full px-6 py-4 rounded-2xl font-bold"
+                  placeholder=""
+                />
               </div>
 
               <div className="col-span-full">

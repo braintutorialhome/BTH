@@ -28,8 +28,9 @@ export default function StudentProfile({ student }: { student: Student }) {
     { label: 'Biological Marker', value: student.gender, icon: User, color: 'blue' },
     { label: 'Subjects', value: student.subject, icon: Book, color: 'emerald' },
     { label: 'Present Class', value: student.class, icon: Layers, color: 'orange' },
-    { label: 'Semester', value: student.semester || 'N/A', icon: Layers, color: 'rose' },
+    { label: 'Session', value: student.semester || 'N/A', icon: Layers, color: 'rose' },
     { label: 'Mobile Number', value: student.mobile, icon: Phone, color: 'sky' },
+    { label: 'WhatsApp Number', value: student.whatsapp || 'N/A', icon: Phone, color: 'emerald' },
     { label: 'Address', value: student.address, icon: MapPin, color: 'amber' },
   ];
 

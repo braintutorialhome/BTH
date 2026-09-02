@@ -18,6 +18,7 @@ export default function AdmissionForm() {
     semester: '',
     dateOfJoining: '',
     mobile: '',
+    whatsapp: '',
     address: ''
   });
 
@@ -186,16 +187,14 @@ export default function AdmissionForm() {
                 </select>
               </div>
               <div className="space-y-2">
-                <label className="text-xs font-black uppercase tracking-widest text-slate-500 ml-1">Semester</label>
-                <select 
+                <label className="text-xs font-black uppercase tracking-widest text-slate-500 ml-1">Session</label>
+                <input 
+                  type="text"
                   value={formData.semester}
                   onChange={(e) => setFormData({...formData, semester: e.target.value})}
-                  className="input-glass w-full py-5 px-8 rounded-3xl font-bold appearance-none cursor-pointer"
-                >
-                  <option value="" disabled>Select Semester</option>
-                  <option value="NA">NA</option>
-                  <option value="No Semester">No Semester</option>
-                </select>
+                  className="input-glass w-full py-5 rounded-3xl font-bold"
+                  placeholder=""
+                />
               </div>
               <div className="space-y-2">
                 <label className="text-xs font-black uppercase tracking-widest text-slate-500 ml-1">Date of Joining</label>
@@ -226,6 +225,16 @@ export default function AdmissionForm() {
                   type="tel" 
                   value={formData.mobile}
                   onChange={(e) => setFormData({...formData, mobile: e.target.value})}
+                  className="input-glass w-full py-5 rounded-3xl font-bold"
+                  placeholder="+91..."
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs font-black uppercase tracking-widest text-slate-500 ml-1">WhatsApp Number</label>
+                <input 
+                  type="tel" 
+                  value={formData.whatsapp}
+                  onChange={(e) => setFormData({...formData, whatsapp: e.target.value})}
                   className="input-glass w-full py-5 rounded-3xl font-bold"
                   placeholder="+91..."
                 />

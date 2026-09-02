@@ -657,6 +657,17 @@ export default function StudentFeeTracker() {
                   </div>
 
                   <div>
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 block">WhatsApp Number</label>
+                    <input 
+                      type="text" 
+                      value={profileForm.whatsapp || ''} 
+                      onChange={e => setProfileForm({ ...profileForm, whatsapp: e.target.value })} 
+                      className="input-glass w-full py-2.5 px-4 text-xs font-bold" 
+                      placeholder="+91..."
+                    />
+                  </div>
+
+                  <div>
                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 block">Class</label>
                     <select 
                       value={profileForm.class} 
@@ -887,6 +898,10 @@ export default function StudentFeeTracker() {
                   <p className="font-bold text-indigo-300 mt-0.5">{selectedStudent.mobile || 'N/A'}</p>
                 </div>
                 <div>
+                  <p className="text-[10px] font-bold text-slate-500 uppercase">WhatsApp Number</p>
+                  <p className="font-bold text-indigo-300 mt-0.5">{selectedStudent.whatsapp || 'N/A'}</p>
+                </div>
+                <div>
                   <p className="text-[10px] font-bold text-slate-500 uppercase">Gender / DOB</p>
                   <p className="font-bold text-white mt-0.5">{selectedStudent.gender || 'N/A'} • {selectedStudent.dob || 'N/A'}</p>
                 </div>
@@ -899,7 +914,7 @@ export default function StudentFeeTracker() {
                   <p className="font-bold text-slate-300 mt-0.5">{selectedStudent.address || 'N/A'}</p>
                 </div>
                 <div>
-                  <p className="text-[10px] font-bold text-slate-500 uppercase">Semester</p>
+                  <p className="text-[10px] font-bold text-slate-500 uppercase">Session</p>
                   <p className="font-bold text-white mt-0.5">{selectedStudent.semester || 'NA'}</p>
                 </div>
                 <div>

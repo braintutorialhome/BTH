@@ -18,6 +18,7 @@ export interface Student {
   class: string;
   semester: string;
   mobile: string;
+  whatsapp?: string;
   address: string;
   admissionDate: string;
   status: 'pending' | 'approved' | 'rejected' | 'deleted';
