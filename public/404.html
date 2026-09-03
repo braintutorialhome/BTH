@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Brain Tutorial Home</title>
+    <script>
+      // Single Page App redirect for GitHub Pages
+      // If someone visits a direct path (e.g. /login instead of /#/login),
+      // redirect them into the HashRouter route seamlessly.
+      (function() {
+        var path = window.location.pathname;
+        var parts = path.split('/').filter(Boolean);
+        // If hosted on GitHub Pages user.github.io/repo-name/
+        var isSubdir = parts.length > 0;
+        var repoName = isSubdir ? parts[0] : '';
+        var remaining = isSubdir ? parts.slice(1).join('/') : '';
+        
+        var targetUrl = (repoName ? '/' + repoName + '/' : '/') + (remaining ? '#/' + remaining : '');
+        if (window.location.search) {
+          targetUrl += window.location.search;
+        }
+        window.location.replace(targetUrl);
+      })();
+    </script>
+  </head>
+  <body>
+  </body>
+</html>
