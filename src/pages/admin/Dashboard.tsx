@@ -201,11 +201,20 @@ export default function AdminDashboard() {
                   </div>
                 </div>
               )}
-              <Link to="/admin/attendance" className="glass-button px-5 py-2.5 text-xs font-black uppercase tracking-widest text-slate-300">
+              <Link 
+                id="admin-header-attendance-btn"
+                to="/admin/attendance" 
+                className="glass-button px-5 py-2.5 text-xs font-black uppercase tracking-widest text-slate-300"
+              >
                 Attendance
               </Link>
-              <Link to="/admin/expenses" className="indigo-button px-6 py-2.5 text-xs font-black uppercase tracking-widest">
-                Add Expense 💸
+              <Link 
+                id="admin-header-settings-btn"
+                to="/admin/settings" 
+                className="indigo-button px-6 py-2.5 text-xs font-black uppercase tracking-widest flex items-center gap-2"
+              >
+                <Settings size={14} />
+                <span>Settings</span>
               </Link>
            </div>
         </header>

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useStorage } from '../../../hooks/useStorage';
 import { Search, User, Trash2, Edit2, Filter, Phone, MapPin, X, Save, Hash, RotateCcw, AlertTriangle, Camera, Upload, Calendar } from 'lucide-react';
 import { Student } from '../../../types';
+import { formatClassName } from '../../../lib/utils';
 
 export default function StudentManagement() {
   const { students, deleteStudent, removeStudentPermanently, updateStudent } = useStorage();
@@ -198,7 +199,7 @@ export default function StudentManagement() {
                   {activeTab === 'deleted' && <span className="ml-3 text-[8px] bg-rose-500/20 text-rose-500 px-2 py-1 rounded-lg">DELETED</span>}
                 </h3>
                 <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">
-                  {s.subject} • Class {s.class}{s.semester ? ` • Session ${s.semester}` : ''}
+                  {s.subject} • {formatClassName(s.class)}{s.semester ? ` • Session ${s.semester}` : ''}
                 </p>
               </div>
 

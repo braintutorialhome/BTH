@@ -3,10 +3,12 @@ import { useStorage } from '../../../hooks/useStorage';
 import { 
   Search, Filter, Users, CreditCard, IndianRupee, Plus, Edit2, Trash2, X, 
   CheckCircle, AlertCircle, Phone, MapPin, Calendar, BookOpen, User, Camera, 
-  Upload, Save, ChevronRight, DollarSign, FileText, ArrowUpRight, ArrowDownRight, RefreshCw
+  Upload, Save, ChevronRight, DollarSign, FileText, ArrowUpRight, ArrowDownRight, RefreshCw, FileDown
 } from 'lucide-react';
 import { Student, Fee, DueFee } from '../../../types';
-import { safeFormat } from '../../../lib/utils';
+import { safeFormat, formatClassName } from '../../../lib/utils';
+import { exportStudentToPdf } from '../../../utils/studentPdfExport';
+import { exportCsvData } from '../../../utils/mobileExportHelper';
 
 export default function StudentFeeTracker() {
   const { 
@@ -133,6 +135,45 @@ export default function StudentFeeTracker() {
     setIsAddingDue(false);
     setEditingPayment(null);
     setEditingDue(null);
+  };
+
+  // Export Fee Tracking Data to CSV with mobile APK support
+  const handleExportFeeCSV = async () => {
+    const headers = [
+      'Student ID', 'Roll No', 'Full Name', 'Father Name', 'Class', 'Session',
+      'Subject', 'Mobile', 'Total Dues Assigned (INR)', 'Total Fees Paid (INR)',
+      'Remaining Balance (INR)', 'Fee Status'
+    ];
+
+    const rows = filteredStudents.map(s => {
+      const stats = getStudentFeeStats(s.id);
+      const feeStatus = stats.remainingBalance <= 0 ? 'Cleared' : 'Pending';
+      return [
+        `"${s.id}"`,
+        `"${s.rollNumber || 'N/A'}"`,
+        `"${s.name.replace(/"/g, '""')}"`,
+        `"${(s.fatherName || 'N/A').replace(/"/g, '""')}"`,
+        `"${formatClassName(s.class)}"`,
+        `"${s.semester || 'N/A'}"`,
+        `"${(s.subject || 'N/A').replace(/"/g, '""')}"`,
+        `"${s.mobile || 'N/A'}"`,
+        stats.totalDueAssigned,
+        stats.totalPaid,
+        stats.remainingBalance,
+        `"${feeStatus}"`
+      ].join(',');
+    });
+
+    const csvContent = [headers.join(','), ...rows].join('\n');
+    const filename = `Fee_Tracker_${new Date().toISOString().split('T')[0]}.csv`;
+    await exportCsvData(csvContent, filename);
+  };
+
+  const handleExportStudentPdf = async (student: Student) => {
+    const stats = getStudentFeeStats(student.id);
+    const studentPayments = fees.filter(f => f.studentId === student.id && f.status === 'paid');
+    const studentDues = dueFees.filter(d => d.studentId === student.id);
+    await exportStudentToPdf(student, stats, studentPayments, studentDues);
   };
 
   const handleProfileImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -420,6 +461,15 @@ export default function StudentFeeTracker() {
             >
               Roll No
             </button>
+
+            <button
+              onClick={handleExportFeeCSV}
+              className="px-3 py-1.5 rounded-xl bg-cyan-600/20 hover:bg-cyan-600 border border-cyan-500/30 hover:border-cyan-500 text-cyan-300 hover:text-white text-xs font-bold inline-flex items-center gap-1.5 transition-all cursor-pointer shadow-sm active:scale-95 ml-2"
+              title="Export fee tracking data to CSV (APK & Web compatible)"
+            >
+              <FileDown size={13} />
+              <span>Export CSV</span>
+            </button>
           </div>
         </div>
       </div>
@@ -541,12 +591,22 @@ export default function StudentFeeTracker() {
                 </div>
               </div>
 
-              <button 
-                onClick={() => setSelectedStudentId(null)}
-                className="p-2 hover:bg-white/10 rounded-2xl text-slate-400 hover:text-white transition-all"
-              >
-                <X size={22} />
-              </button>
+              <div className="flex items-center gap-2">
+                <button 
+                  onClick={() => selectedStudent && selectedStudentStats && handleExportStudentPdf(selectedStudent)}
+                  className="px-3 py-1.5 rounded-xl bg-cyan-600/20 hover:bg-cyan-600 border border-cyan-500/30 hover:border-cyan-500 text-cyan-300 hover:text-white text-xs font-bold inline-flex items-center gap-1.5 transition-all cursor-pointer shadow-sm active:scale-95"
+                  title="Export student dossier to PDF (APK & Web compatible)"
+                >
+                  <FileDown size={14} />
+                  <span>Export PDF</span>
+                </button>
+                <button 
+                  onClick={() => setSelectedStudentId(null)}
+                  className="p-2 hover:bg-white/10 rounded-2xl text-slate-400 hover:text-white transition-all cursor-pointer"
+                >
+                  <X size={22} />
+                </button>
+              </div>
             </div>
 
             {/* Visual Fee Summary Cards */}

@@ -8,14 +8,18 @@ import {
   IndianRupee, Lock, UserCheck, MessageSquare, FileDown
 } from 'lucide-react';
 import { Student } from '../../../types';
-import { safeFormat } from '../../../lib/utils';
+import { safeFormat, formatClassName } from '../../../lib/utils';
 import { exportStudentToPdf } from '../../../utils/studentPdfExport';
+import { exportCsvData } from '../../../utils/mobileExportHelper';
 
 export default function StudentOverview() {
   const { currentUser, students, fees, dueFees } = useStorage();
 
   // Strict Role-Based Access Control
   if (!currentUser || currentUser.role !== 'admin') {
+    if (currentUser?.role === 'student') {
+      return <Navigate to="/student/overview" replace />;
+    }
     return <Navigate to="/login" replace />;
   }
 
@@ -117,8 +121,8 @@ export default function StudentOverview() {
   const totalSystemFeesPaid = fees.reduce((acc, f) => f.status === 'paid' ? acc + (Number(f.amount) || 0) : acc, 0);
   const totalSystemDuesAssigned = dueFees.reduce((acc, d) => acc + (Number(d.amount) || 0), 0);
 
-  // Export to CSV
-  const handleExportCSV = () => {
+  // Export to CSV with mobile APK and web support
+  const handleExportCSV = async () => {
     const headers = [
       'Student ID', 'Roll No', 'Full Name', 'Father Name', 'Class', 'Session', 
       'Subject', 'Mobile', 'WhatsApp', 'Gender', 'DOB', 'Joining Date', 
@@ -132,7 +136,7 @@ export default function StudentOverview() {
         `"${s.rollNumber || 'N/A'}"`,
         `"${s.name.replace(/"/g, '""')}"`,
         `"${(s.fatherName || 'N/A').replace(/"/g, '""')}"`,
-        `"${s.class || 'N/A'}"`,
+        `"${formatClassName(s.class)}"`,
         `"${s.semester || 'N/A'}"`,
         `"${(s.subject || 'N/A').replace(/"/g, '""')}"`,
         `"${s.mobile || 'N/A'}"`,
@@ -148,25 +152,20 @@ export default function StudentOverview() {
       ].join(',');
     });
 
-    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows].join('\n');
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement('a');
-    link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `Student_Overview_${new Date().toISOString().split('T')[0]}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    const csvContent = [headers.join(','), ...rows].join('\n');
+    const filename = `Student_Overview_${new Date().toISOString().split('T')[0]}.csv`;
+    await exportCsvData(csvContent, filename);
   };
 
   const handlePrint = () => {
     window.print();
   };
 
-  const handleExportSingleStudentPdf = (student: Student) => {
+  const handleExportSingleStudentPdf = async (student: Student) => {
     const stats = getStudentFeeStats(student.id);
     const studentPayments = fees.filter(f => f.studentId === student.id && f.status === 'paid');
     const studentDues = dueFees.filter(d => d.studentId === student.id);
-    exportStudentToPdf(student, stats, studentPayments, studentDues);
+    await exportStudentToPdf(student, stats, studentPayments, studentDues);
   };
 
   const selectedStats = selectedStudent ? getStudentFeeStats(selectedStudent.id) : null;
@@ -483,7 +482,7 @@ export default function StudentOverview() {
                       <td className="py-4 px-4">
                         <div className="flex items-center gap-1.5">
                           <span className="px-2 py-0.5 rounded-md bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 text-[10px] font-black uppercase">
-                            Class {student.class || 'N/A'}
+                            {formatClassName(student.class)}
                           </span>
                           <span className="px-2 py-0.5 rounded-md bg-white/5 text-slate-300 text-[10px] font-bold">
                             {student.semester || 'N/A'}
@@ -625,7 +624,7 @@ export default function StudentOverview() {
                   {/* Badges / Academic Meta */}
                   <div className="flex flex-wrap items-center gap-2 mb-4 text-[10px]">
                     <span className="px-2.5 py-1 rounded-lg bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 font-black uppercase">
-                      Class {student.class || 'N/A'}
+                      {formatClassName(student.class)}
                     </span>
                     <span className="px-2.5 py-1 rounded-lg bg-white/5 border border-white/5 text-slate-300 font-bold">
                       Session: {student.semester || 'N/A'}
@@ -776,7 +775,7 @@ export default function StudentOverview() {
                 </div>
                 <div>
                   <p className="text-[10px] font-bold text-slate-400 uppercase">Class</p>
-                  <p className="font-bold text-white mt-0.5">Class {selectedStudent.class || 'N/A'}</p>
+                  <p className="font-bold text-white mt-0.5">{formatClassName(selectedStudent.class)}</p>
                 </div>
                 <div>
                   <p className="text-[10px] font-bold text-slate-400 uppercase">Session</p>
@@ -795,8 +794,12 @@ export default function StudentOverview() {
                   <p className="font-bold text-emerald-400 mt-0.5">{selectedStudent.whatsapp || 'N/A'}</p>
                 </div>
                 <div>
-                  <p className="text-[10px] font-bold text-slate-400 uppercase">Gender / DOB</p>
-                  <p className="font-bold text-white mt-0.5">{selectedStudent.gender || 'N/A'} • {selectedStudent.dob || 'N/A'}</p>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase">Gender</p>
+                  <p className="font-bold text-white mt-0.5">{selectedStudent.gender || 'N/A'}</p>
+                </div>
+                <div>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase">Date of Birth</p>
+                  <p className="font-bold text-white mt-0.5">{selectedStudent.dob || 'N/A'}</p>
                 </div>
                 <div>
                   <p className="text-[10px] font-bold text-slate-400 uppercase">Joining Date</p>

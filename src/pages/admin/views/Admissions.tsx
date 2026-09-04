@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useStorage } from '../../../hooks/useStorage';
 import { Check, X, FileText, User, MapPin, Calendar, Edit2, Save, Phone, Info, Camera, Upload, Trash2 } from 'lucide-react';
-import { safeFormat } from '../../../lib/utils';
+import { safeFormat, formatClassName } from '../../../lib/utils';
 import { Student } from '../../../types';
 
 export default function AdmissionManagement() {
@@ -107,7 +107,7 @@ export default function AdmissionManagement() {
                   </div>
                   <div className="flex gap-3">
                     <span className="px-3 py-1 bg-white/5 border border-white/10 rounded-lg text-[10px] font-black tracking-widest text-indigo-100 uppercase">
-                      Class {s.class}
+                      {formatClassName(s.class)}
                     </span>
                     <span className="px-3 py-1 bg-white/5 border border-white/10 rounded-lg text-[10px] font-black tracking-widest text-indigo-100 uppercase">
                       {s.subject}

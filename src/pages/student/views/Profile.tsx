@@ -1,6 +1,7 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { Student } from '../../../types';
-import { User, Phone, MapPin, Calendar, Book, Layers, ShieldCheck } from 'lucide-react';
+import { User, Phone, MapPin, Calendar, Book, Layers, ShieldCheck, Eye } from 'lucide-react';
 
 export default function StudentProfile({ student }: { student: Student }) {
 
@@ -36,9 +37,18 @@ export default function StudentProfile({ student }: { student: Student }) {
 
   return (
     <div className="max-w-5xl mx-auto space-y-12 pb-20">
-      <div className="space-y-2">
-         <p className="text-xs font-black uppercase tracking-widest text-indigo-500">Profile</p>
-         <h1 className="text-3xl font-black text-white tracking-tighter uppercase">Student Profile <span className="text-slate-700">/</span> {student.rollNumber}</h1>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="space-y-2">
+           <p className="text-xs font-black uppercase tracking-widest text-indigo-500">Profile</p>
+           <h1 className="text-3xl font-black text-white tracking-tighter uppercase">Student Profile <span className="text-slate-700">/</span> {student.rollNumber}</h1>
+        </div>
+        <Link 
+          to="/student/overview" 
+          className="px-5 py-2.5 rounded-2xl bg-gradient-to-r from-cyan-600 to-indigo-600 hover:from-cyan-500 hover:to-indigo-500 text-white font-bold text-xs flex items-center gap-2 transition-all shadow-lg shadow-cyan-500/20 active:scale-95 border border-cyan-400/30 w-fit"
+        >
+          <Eye size={15} />
+          <span>View My Overview</span>
+        </Link>
       </div>
 
       <div className="glass rounded-[60px] border border-white/5 overflow-hidden shadow-2xl relative group">

@@ -1,7 +1,7 @@
 import React from 'react';
 import { useStorage } from '../../../hooks/useStorage';
 import { Student } from '../../../types';
-import { CreditCard, Brain, Calendar, Bell, ArrowRight, BookMarked, Trophy, AlertCircle, ExternalLink, FileCheck } from 'lucide-react';
+import { CreditCard, Brain, Calendar, Bell, ArrowRight, BookMarked, Trophy, AlertCircle, ExternalLink, FileCheck, Eye, User } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { motion } from 'motion/react';
 
@@ -55,9 +55,14 @@ export default function StudentHome({ student }: { student: Student }) {
            <p className="text-xs font-black uppercase tracking-widest text-indigo-500">{kolkataTime}</p>
            <h1 className="text-3xl font-black text-white tracking-tighter uppercase">{greeting}! {student.name.split(' ')[0]}</h1>
         </div>
-        <div className="glass px-6 py-3 rounded-2xl flex items-center gap-3 border-white/5">
-           <div className={`w-3 h-3 rounded-full ${isPresentToday ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500 animate-bounce'}`}></div>
-           <span className="text-xs font-black uppercase tracking-widest text-slate-400">System Presence: {isPresentToday ? 'Online' : 'Not Linked'}</span>
+        <div className="flex flex-wrap items-center gap-3">
+           <Link 
+             to="/student/overview" 
+             className="px-5 py-2.5 rounded-2xl bg-gradient-to-r from-cyan-600 to-indigo-600 hover:from-cyan-500 hover:to-indigo-500 text-white font-bold text-xs flex items-center gap-2 transition-all shadow-lg shadow-cyan-500/20 active:scale-95 border border-cyan-400/30 cursor-pointer"
+           >
+             <Eye size={15} />
+             <span>My Overview</span>
+           </Link>
         </div>
       </div>
 
@@ -111,23 +116,20 @@ export default function StudentHome({ student }: { student: Student }) {
 
         <div className="glass p-10 rounded-[40px] bg-gradient-to-br from-emerald-500/10 to-transparent flex flex-col justify-between group relative overflow-hidden">
           <div className="absolute top-0 right-0 p-8 opacity-5 scale-150 group-hover:scale-[1.7] transition-transform">
-             <Calendar size={120} />
+             <User size={120} />
           </div>
           <div>
-            <div className={`w-14 h-14 ${isPresentToday ? 'bg-emerald-500/20 text-emerald-400' : 'bg-rose-500/20 text-rose-400'} rounded-2xl flex items-center justify-center mb-10 border border-white/5 transition-all duration-500`}>
-               <Calendar size={28} />
+            <div className="w-14 h-14 bg-emerald-500/20 text-emerald-400 rounded-2xl flex items-center justify-center mb-10 border border-emerald-500/20 group-hover:bg-emerald-600 group-hover:text-white transition-all duration-500">
+               <User size={28} />
             </div>
-            <p className="text-xs font-black uppercase tracking-widest text-slate-500 mb-2">Attendance</p>
-            <h3 className={`text-4xl font-black tracking-tighter uppercase ${isPresentToday ? 'text-emerald-400' : 'text-rose-400'}`}>
-              {isPresentToday ? 'Verified' : 'Absent'}
+            <p className="text-xs font-black uppercase tracking-widest text-slate-500 mb-2">Student Profile</p>
+            <h3 className="text-4xl font-black text-white tracking-tighter truncate">
+              {student.name.split(' ')[0]} <span className="text-slate-700 text-lg font-bold">/ {student.rollNumber || 'Active'}</span>
             </h3>
           </div>
-          <div className="mt-10 flex items-center gap-2">
-             <div className="w-8 h-1 bg-white/5 rounded-full overflow-hidden">
-                <div className="h-full bg-emerald-500" style={{ width: '85%' }}></div>
-             </div>
-             <span className="text-xs font-black text-slate-600 uppercase tracking-widest">85% RATIO</span>
-          </div>
+          <Link to="/student/profile" className="mt-10 text-xs font-black uppercase tracking-widest text-emerald-400 flex items-center gap-2 hover:gap-4 transition-all">
+            View Profile <ArrowRight size={14} />
+          </Link>
         </div>
       </div>
 

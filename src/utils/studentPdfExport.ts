@@ -1,9 +1,10 @@
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { Student, Fee, DueFee } from '../types';
-import { safeFormat } from '../lib/utils';
+import { safeFormat, formatClassName } from '../lib/utils';
+import { exportPdfDocument } from './mobileExportHelper';
 
-export function exportStudentToPdf(
+export async function exportStudentToPdf(
   student: Student,
   feeStats: {
     totalPaid: number;
@@ -97,7 +98,7 @@ export function exportStudentToPdf(
 
   // Row 3
   infoY += rowSpacing;
-  drawField(col1X, infoY, 'Class', `Class ${student.class || 'N/A'}`);
+  drawField(col1X, infoY, 'Class', formatClassName(student.class));
   drawField(col2X, infoY, 'Session', student.semester || 'N/A');
 
   // Row 4
@@ -112,10 +113,14 @@ export function exportStudentToPdf(
 
   // Row 6
   infoY += rowSpacing;
-  drawField(col1X, infoY, 'Gender / DOB', `${student.gender || 'N/A'} • ${student.dob || 'N/A'}`);
-  drawField(col2X, infoY, 'Address', student.address ? (student.address.length > 35 ? student.address.substring(0, 35) + '...' : student.address) : 'N/A');
+  drawField(col1X, infoY, 'Gender', student.gender || 'N/A');
+  drawField(col2X, infoY, 'Date of Birth', student.dob || 'N/A');
 
-  currentY += 56;
+  // Row 7
+  infoY += rowSpacing;
+  drawField(col1X, infoY, 'Address', student.address ? (student.address.length > 60 ? student.address.substring(0, 60) + '...' : student.address) : 'N/A');
+
+  currentY += 66;
 
   // Section: Fee Overview
   doc.setTextColor(30, 41, 59);
@@ -289,7 +294,8 @@ export function exportStudentToPdf(
   doc.setDrawColor(148, 163, 184);
   doc.line(pageWidth - margin - 55, footerY + 4, pageWidth - margin, footerY + 4);
 
-  // Trigger download
+  // Trigger download with mobile APK & Web support
   const sanitizedStudentName = student.name.replace(/[^a-zA-Z0-9_-]/g, '_');
-  doc.save(`Student_${sanitizedStudentName}_${student.rollNumber || student.id}.pdf`);
+  const filename = `Student_${sanitizedStudentName}_${student.rollNumber || student.id}.pdf`;
+  await exportPdfDocument(doc, filename);
 }

@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Routes, Route, Link, useLocation, useNavigate } from 'react-router-dom';
 import { 
-  BarChart2, User, CreditCard, BookMarked, Bell, LogOut, Menu, X, ArrowRight, Phone, MessageSquare, Compass, AlertCircle, ExternalLink, FileCheck
+  BarChart2, User, CreditCard, BookMarked, Bell, LogOut, Menu, X, ArrowRight, Phone, MessageSquare, Compass, AlertCircle, ExternalLink, FileCheck, Eye
 } from 'lucide-react';
 import { useStorage } from '../../hooks/useStorage';
 import { motion, AnimatePresence } from 'motion/react';
 import StudentHome from './views/Home';
+import StudentOverview from './views/StudentOverview';
 import StudentProfile from './views/Profile';
 import StudentFees from './views/Fees';
 import StudentTestMaster from './views/TestMaster';
@@ -83,6 +84,7 @@ export default function StudentDashboard() {
 
   const navItems = [
     { to: '/student/dashboard', icon: BarChart2, label: 'Dashboard' },
+    { to: '/student/overview', icon: Eye, label: 'My Overview' },
     { to: '/student/profile', icon: User, label: 'Profile' },
     { to: '/student/fees', icon: CreditCard, label: 'Fees Status' },
     { to: '/student/due-fees', icon: AlertCircle, label: 'Due Fees' },
@@ -218,6 +220,8 @@ export default function StudentDashboard() {
              >
                 <Routes>
                   <Route path="dashboard" element={<StudentHome student={currentStudent} />} />
+                  <Route path="overview" element={<StudentOverview student={currentStudent} />} />
+                  <Route path="student-overview" element={<StudentOverview student={currentStudent} />} />
                   <Route path="profile" element={<StudentProfile student={currentStudent} />} />
                   <Route path="fees" element={<StudentFees student={currentStudent} />} />
                   <Route path="due-fees" element={<StudentDueFees />} />
