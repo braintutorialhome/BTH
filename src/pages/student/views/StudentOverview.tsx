@@ -3,10 +3,11 @@ import { Student } from '../../../types';
 import { useStorage } from '../../../hooks/useStorage';
 import { 
   User, Phone, CheckCircle2, 
-  FileText, MessageSquare, CreditCard, FileDown
+  FileText, MessageSquare, CreditCard, FileDown, FileSpreadsheet
 } from 'lucide-react';
 import { safeFormat, formatClassName } from '../../../lib/utils';
 import { exportStudentToPdf } from '../../../utils/studentPdfExport';
+import { exportStudentToCsv } from '../../../utils/studentCsvExport';
 
 export default function StudentOverview({ student }: { student: Student }) {
   const { fees, dueFees } = useStorage();
@@ -78,6 +79,14 @@ export default function StudentOverview({ student }: { student: Student }) {
               <FileDown size={13} />
               <span>Export PDF</span>
             </button>
+            <button
+              onClick={() => exportStudentToCsv(student, feeStats, studentPayments, studentDues)}
+              className="px-3 py-1.5 rounded-xl bg-emerald-600/20 hover:bg-emerald-600 border border-emerald-500/30 hover:border-emerald-500 text-emerald-300 hover:text-white text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-sm active:scale-95"
+              title="Export complete fee & academic dossier as CSV (Excel/Sheets)"
+            >
+              <FileSpreadsheet size={13} />
+              <span>Export CSV</span>
+            </button>
             {student.mobile && (
               <a 
                 href={`tel:${student.mobile}`}
@@ -118,13 +127,13 @@ export default function StudentOverview({ student }: { student: Student }) {
             </p>
           </div>
 
-          <div className="p-5 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 flex flex-col justify-between">
+          <div className="p-5 rounded-2xl bg-rose-500/10 border border-rose-500/20 flex flex-col justify-between">
             <div>
-              <p className="text-[10px] font-black uppercase tracking-wider text-cyan-400 flex items-center gap-1.5">
+              <p className="text-[10px] font-black uppercase tracking-wider text-rose-400 flex items-center gap-1.5">
                 <FileText size={13} />
                 Total Dues Assigned
               </p>
-              <p className="text-3xl font-black text-cyan-300 mt-2">
+              <p className="text-3xl font-black text-rose-300 mt-2">
                 ₹{totalDueAssigned.toLocaleString('en-IN')}
               </p>
             </div>
@@ -258,7 +267,7 @@ export default function StudentOverview({ student }: { student: Student }) {
       {/* Assigned Due Fees History */}
       <div className="p-6 sm:p-8 rounded-[32px] bg-[#020712]/80 border border-white/10 shadow-xl backdrop-blur-md">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-xs font-black uppercase tracking-widest text-cyan-400 flex items-center gap-2">
+          <h3 className="text-xs font-black uppercase tracking-widest text-rose-400 flex items-center gap-2">
             <FileText size={15} />
             Assigned Due Fees (Invoiced Items)
           </h3>
@@ -293,7 +302,7 @@ export default function StudentOverview({ student }: { student: Student }) {
                       <td className="py-3 px-4 font-bold text-white">
                         {due.remarks || 'Standard Dues'}
                       </td>
-                      <td className="py-3 px-4 text-right font-black text-cyan-300 font-mono text-sm">
+                      <td className="py-3 px-4 text-right font-black text-rose-400 font-mono text-sm">
                         ₹{Number(due.amount).toLocaleString('en-IN')}
                       </td>
                     </tr>

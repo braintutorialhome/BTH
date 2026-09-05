@@ -5,11 +5,12 @@ import {
   Search, Eye, ShieldCheck, Download, Printer, User, Phone, 
   MapPin, Calendar, BookOpen, Layers, CheckCircle2, 
   X, LayoutGrid, Table as TableIcon, DollarSign, Clock, FileText,
-  IndianRupee, Lock, UserCheck, MessageSquare, FileDown
+  IndianRupee, Lock, UserCheck, MessageSquare, FileDown, FileSpreadsheet
 } from 'lucide-react';
 import { Student } from '../../../types';
 import { safeFormat, formatClassName } from '../../../lib/utils';
 import { exportStudentToPdf } from '../../../utils/studentPdfExport';
+import { exportStudentToCsv } from '../../../utils/studentCsvExport';
 import { exportCsvData } from '../../../utils/mobileExportHelper';
 
 export default function StudentOverview() {
@@ -168,6 +169,13 @@ export default function StudentOverview() {
     await exportStudentToPdf(student, stats, studentPayments, studentDues);
   };
 
+  const handleExportSingleStudentCsv = async (student: Student) => {
+    const stats = getStudentFeeStats(student.id);
+    const studentPayments = fees.filter(f => f.studentId === student.id && f.status === 'paid');
+    const studentDues = dueFees.filter(d => d.studentId === student.id);
+    await exportStudentToCsv(student, stats, studentPayments, studentDues);
+  };
+
   const selectedStats = selectedStudent ? getStudentFeeStats(selectedStudent.id) : null;
   const selectedStudentPayments = selectedStudent ? fees.filter(f => f.studentId === selectedStudent.id) : [];
   const selectedStudentDues = selectedStudent ? dueFees.filter(d => d.studentId === selectedStudent.id) : [];
@@ -247,12 +255,12 @@ export default function StudentOverview() {
 
         <div className="p-5 sm:p-6 rounded-[28px] bg-white/[0.03] border border-white/10 backdrop-blur-md relative overflow-hidden">
           <div className="flex items-center justify-between mb-2">
-            <p className="text-[11px] font-black uppercase tracking-wider text-cyan-400">Total Dues Assigned</p>
-            <div className="p-2.5 rounded-2xl bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
+            <p className="text-[11px] font-black uppercase tracking-wider text-rose-400">Total Dues Assigned</p>
+            <div className="p-2.5 rounded-2xl bg-rose-500/10 text-rose-400 border border-rose-500/20">
               <DollarSign size={18} />
             </div>
           </div>
-          <p className="text-2xl sm:text-3xl font-black text-cyan-300">₹{totalSystemDuesAssigned.toLocaleString('en-IN')}</p>
+          <p className="text-2xl sm:text-3xl font-black text-rose-300">₹{totalSystemDuesAssigned.toLocaleString('en-IN')}</p>
           <p className="text-[10px] font-bold text-slate-500 mt-1 uppercase tracking-wider">
             {dueFees.length} Fee Invoices / Dues Logged
           </p>
@@ -725,14 +733,22 @@ export default function StudentOverview() {
                 </div>
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <button
                   onClick={() => handleExportSingleStudentPdf(selectedStudent)}
                   className="px-3 py-1.5 rounded-xl bg-cyan-600/20 hover:bg-cyan-600 text-cyan-300 hover:text-white border border-cyan-500/30 hover:border-cyan-500 text-xs font-bold inline-flex items-center gap-1.5 transition-all cursor-pointer shadow-sm active:scale-95"
-                  title="Export this student's complete information and fee dossier to PDF"
+                  title="Export this student's complete dossier to PDF"
                 >
                   <FileDown size={14} />
                   <span>Export PDF</span>
+                </button>
+                <button
+                  onClick={() => handleExportSingleStudentCsv(selectedStudent)}
+                  className="px-3 py-1.5 rounded-xl bg-emerald-600/20 hover:bg-emerald-600 text-emerald-300 hover:text-white border border-emerald-500/30 hover:border-emerald-500 text-xs font-bold inline-flex items-center gap-1.5 transition-all cursor-pointer shadow-sm active:scale-95"
+                  title="Export this student's complete dossier to CSV"
+                >
+                  <FileSpreadsheet size={14} />
+                  <span>Export CSV</span>
                 </button>
                 <span className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest bg-white/5 border border-white/10 text-slate-400">
                   <Lock size={12} className="text-emerald-400" />
@@ -755,9 +771,9 @@ export default function StudentOverview() {
                 <p className="text-[10px] text-slate-400 font-medium mt-0.5">{selectedStats?.paymentCount} payments recorded</p>
               </div>
 
-              <div className="p-4 rounded-2xl bg-cyan-500/10 border border-cyan-500/20">
-                <p className="text-[10px] font-black uppercase tracking-wider text-cyan-400">Total Dues Assigned</p>
-                <p className="text-2xl font-black text-cyan-300 mt-1">₹{selectedStats?.totalDueAssigned.toLocaleString('en-IN')}</p>
+              <div className="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/20">
+                <p className="text-[10px] font-black uppercase tracking-wider text-rose-400">Total Dues Assigned</p>
+                <p className="text-2xl font-black text-rose-300 mt-1">₹{selectedStats?.totalDueAssigned.toLocaleString('en-IN')}</p>
                 <p className="text-[10px] text-slate-400 font-medium mt-0.5">{selectedStats?.dueCount} dues assigned</p>
               </div>
             </div>
@@ -893,14 +909,22 @@ export default function StudentOverview() {
               <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
                 System Record • Confidential
               </span>
-              <div className="flex items-center gap-3 w-full sm:w-auto justify-end">
+              <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto justify-end">
                 <button
                   onClick={() => handleExportSingleStudentPdf(selectedStudent)}
-                  className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-cyan-600 to-indigo-600 hover:from-cyan-500 hover:to-indigo-500 text-white font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer shadow-lg active:scale-95 border border-cyan-400/30"
+                  className="px-4 py-2.5 rounded-xl bg-cyan-600/30 hover:bg-cyan-600 text-cyan-200 hover:text-white border border-cyan-500/30 font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer shadow-lg active:scale-95"
                   title="Export student complete profile & fees as PDF"
                 >
                   <FileDown size={15} />
                   <span>Export PDF</span>
+                </button>
+                <button
+                  onClick={() => handleExportSingleStudentCsv(selectedStudent)}
+                  className="px-4 py-2.5 rounded-xl bg-emerald-600/30 hover:bg-emerald-600 text-emerald-200 hover:text-white border border-emerald-500/30 font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer shadow-lg active:scale-95"
+                  title="Export student complete profile & fees as CSV"
+                >
+                  <FileSpreadsheet size={15} />
+                  <span>Export CSV</span>
                 </button>
                 <button
                   onClick={() => setSelectedStudent(null)}

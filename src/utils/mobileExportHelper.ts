@@ -115,28 +115,74 @@ const tryWebShareFile = async (blob: Blob, filename: string, mimeType: string): 
 /**
  * Standard browser anchor download fallback using blob object URL
  */
-const triggerBrowserDownload = (blob: Blob, filename: string) => {
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.style.display = 'none';
-  link.href = url;
-  link.setAttribute('download', filename);
-  link.setAttribute('target', '_blank');
-  document.body.appendChild(link);
-  link.click();
+const triggerBrowserDownload = (blob: Blob, filename: string): boolean => {
+  try {
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.style.position = 'fixed';
+    link.style.left = '-9999px';
+    link.style.top = '-9999px';
+    link.style.opacity = '0';
+    link.href = url;
+    link.setAttribute('download', filename);
+    // Never use target="_blank" in Android WebViews as it can be blocked
+    link.setAttribute('target', '_self');
+    document.body.appendChild(link);
+    link.click();
 
-  setTimeout(() => {
-    try {
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-    } catch {}
-  }, 3000);
+    setTimeout(() => {
+      try {
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+      } catch {}
+    }, 4000);
+    return true;
+  } catch (err) {
+    console.warn('triggerBrowserDownload failed:', err);
+    return false;
+  }
 };
 
 /**
- * Displays a lightweight toast notification on the screen
+ * Secondary download trigger using Base64 Data URI
+ * Highly reliable in Android WebViews where blob: schemes may not be intercepted.
  */
-export const showExportToast = (message: string, isSuccess: boolean = true) => {
+const triggerDataUriDownload = async (blob: Blob, filename: string): Promise<boolean> => {
+  try {
+    const dataUrl = await blobToBase64(blob);
+    const link = document.createElement('a');
+    link.style.position = 'fixed';
+    link.style.left = '-9999px';
+    link.style.top = '-9999px';
+    link.style.opacity = '0';
+    link.href = dataUrl;
+    link.setAttribute('download', filename);
+    link.setAttribute('target', '_self');
+    document.body.appendChild(link);
+    link.click();
+
+    setTimeout(() => {
+      try {
+        document.body.removeChild(link);
+      } catch {}
+    }, 4000);
+    return true;
+  } catch (err) {
+    console.warn('triggerDataUriDownload failed:', err);
+    return false;
+  }
+};
+
+/**
+ * Displays an interactive toast notification on the screen
+ * with optional Action button (e.g. Share via App / Save)
+ */
+export const showExportToast = (
+  message: string, 
+  isSuccess: boolean = true, 
+  actionLabel?: string, 
+  onAction?: () => void
+) => {
   if (typeof document === 'undefined') return;
 
   const existingToast = document.getElementById('bth-export-toast');
@@ -146,16 +192,26 @@ export const showExportToast = (message: string, isSuccess: boolean = true) => {
 
   const toast = document.createElement('div');
   toast.id = 'bth-export-toast';
-  toast.className = `fixed bottom-6 left-1/2 -translate-x-1/2 z-[9999] px-5 py-3 rounded-2xl text-xs font-black tracking-wide shadow-2xl transition-all duration-300 flex items-center gap-2.5 backdrop-blur-xl border ${
+  toast.className = `fixed bottom-6 left-1/2 -translate-x-1/2 z-[9999] px-5 py-3 rounded-2xl text-xs font-black tracking-wide shadow-2xl transition-all duration-300 flex items-center gap-3 backdrop-blur-xl border ${
     isSuccess 
       ? 'bg-slate-900/95 text-emerald-400 border-emerald-500/30' 
       : 'bg-slate-900/95 text-rose-400 border-rose-500/30'
   }`;
 
-  toast.innerHTML = `
-    <span class="w-2 h-2 rounded-full ${isSuccess ? 'bg-emerald-400 animate-pulse' : 'bg-rose-400'}"></span>
-    <span>${message}</span>
-  `;
+  const dot = `<span class="w-2 h-2 rounded-full shrink-0 ${isSuccess ? 'bg-emerald-400 animate-pulse' : 'bg-rose-400'}"></span>`;
+  const text = `<span class="truncate max-w-[220px] sm:max-w-[320px]">${message}</span>`;
+  toast.innerHTML = `${dot}${text}`;
+
+  if (actionLabel && onAction) {
+    const btn = document.createElement('button');
+    btn.className = 'ml-1 px-2.5 py-1 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 hover:text-white text-[11px] font-bold border border-emerald-500/40 transition-all cursor-pointer whitespace-nowrap active:scale-95';
+    btn.textContent = actionLabel;
+    btn.onclick = (e) => {
+      e.stopPropagation();
+      onAction();
+    };
+    toast.appendChild(btn);
+  }
 
   document.body.appendChild(toast);
 
@@ -167,11 +223,12 @@ export const showExportToast = (message: string, isSuccess: boolean = true) => {
         toast.remove();
       } catch {}
     }, 400);
-  }, 4000);
+  }, 5000);
 };
 
 /**
  * Master file export function handling Android WebView APK, Mobile browsers, and Desktop.
+ * Guarantees both PDF and CSV exports initiate standard downloads AND support Android APKs.
  */
 export const exportFileForMobileAndWeb = async (
   blob: Blob,
@@ -180,45 +237,57 @@ export const exportFileForMobileAndWeb = async (
 ): Promise<void> => {
   const isMobile = isMobileOrWebView();
 
-  // 1. If APK has native Android JavascriptInterface
+  // 1. Check for native Android JavascriptInterface bridge in APK
   const bridgeHandled = await tryNativeAndroidBridge(blob, filename, mimeType);
   if (bridgeHandled) {
     showExportToast(`Exporting ${filename} via Android APK...`);
     return;
   }
 
-  // 2. On Mobile / Android WebView: Use Web Share API Level 2 (files support)
-  // This opens Android's system share drawer with "Save to device", "Files", "Drive", etc.
-  if (isMobile) {
-    showExportToast(`Preparing ${filename} for APK export...`);
-    const shareHandled = await tryWebShareFile(blob, filename, mimeType);
-    if (shareHandled) {
-      showExportToast(`${filename} export ready!`);
-      return;
-    }
+  // 2. Prepare file object for Web Share API if supported
+  let shareSupported = false;
+  let shareFileObj: File | null = null;
+  if (typeof navigator !== 'undefined' && navigator.share && navigator.canShare) {
+    try {
+      shareFileObj = new File([blob], filename, { type: mimeType, lastModified: Date.now() });
+      if (navigator.canShare({ files: [shareFileObj] })) {
+        shareSupported = true;
+      }
+    } catch {}
   }
 
-  // 3. Fallback: Trigger standard browser download
-  try {
-    triggerBrowserDownload(blob, filename);
-    showExportToast(`Downloading ${filename}...`);
-  } catch (e) {
-    console.error('Download fallback error:', e);
-    // 4. Data URI fallback as ultimate safety net
-    try {
-      const dataUrl = await blobToBase64(blob);
-      const link = document.createElement('a');
-      link.href = dataUrl;
-      link.setAttribute('download', filename);
-      document.body.appendChild(link);
-      link.click();
-      setTimeout(() => {
-        try { link.remove(); } catch {}
-      }, 2000);
-      showExportToast(`Exported ${filename}`);
-    } catch (err) {
-      showExportToast(`Failed to export ${filename}`, false);
-    }
+  // 3. Trigger direct browser download
+  const blobDownloaded = triggerBrowserDownload(blob, filename);
+
+  // If in Android WebView and blob might be ignored, also attempt data URI
+  if (isMobile) {
+    await triggerDataUriDownload(blob, filename);
+  }
+
+  // 4. Provide instant feedback & mobile Share / Save action
+  if (shareSupported && isMobile) {
+    showExportToast(
+      `Exported ${filename}`,
+      true,
+      'Share / Save via App',
+      async () => {
+        try {
+          if (shareFileObj) {
+            await navigator.share({
+              files: [shareFileObj],
+              title: filename,
+              text: `Download file: ${filename}`
+            });
+          }
+        } catch (err: any) {
+          if (err?.name !== 'AbortError') {
+            console.warn('Manual share failed:', err);
+          }
+        }
+      }
+    );
+  } else {
+    showExportToast(blobDownloaded ? `Downloaded ${filename}` : `Exported ${filename}`);
   }
 };
 

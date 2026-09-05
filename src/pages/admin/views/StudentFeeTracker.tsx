@@ -3,11 +3,12 @@ import { useStorage } from '../../../hooks/useStorage';
 import { 
   Search, Filter, Users, CreditCard, IndianRupee, Plus, Edit2, Trash2, X, 
   CheckCircle, AlertCircle, Phone, MapPin, Calendar, BookOpen, User, Camera, 
-  Upload, Save, ChevronRight, DollarSign, FileText, ArrowUpRight, ArrowDownRight, RefreshCw, FileDown
+  Upload, Save, ChevronRight, DollarSign, FileText, ArrowUpRight, ArrowDownRight, RefreshCw, FileDown, FileSpreadsheet
 } from 'lucide-react';
 import { Student, Fee, DueFee } from '../../../types';
 import { safeFormat, formatClassName } from '../../../lib/utils';
 import { exportStudentToPdf } from '../../../utils/studentPdfExport';
+import { exportStudentToCsv } from '../../../utils/studentCsvExport';
 import { exportCsvData } from '../../../utils/mobileExportHelper';
 
 export default function StudentFeeTracker() {
@@ -174,6 +175,13 @@ export default function StudentFeeTracker() {
     const studentPayments = fees.filter(f => f.studentId === student.id && f.status === 'paid');
     const studentDues = dueFees.filter(d => d.studentId === student.id);
     await exportStudentToPdf(student, stats, studentPayments, studentDues);
+  };
+
+  const handleExportStudentCsv = async (student: Student) => {
+    const stats = getStudentFeeStats(student.id);
+    const studentPayments = fees.filter(f => f.studentId === student.id && f.status === 'paid');
+    const studentDues = dueFees.filter(d => d.studentId === student.id);
+    await exportStudentToCsv(student, stats, studentPayments, studentDues);
   };
 
   const handleProfileImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -591,7 +599,7 @@ export default function StudentFeeTracker() {
                 </div>
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <button 
                   onClick={() => selectedStudent && selectedStudentStats && handleExportStudentPdf(selectedStudent)}
                   className="px-3 py-1.5 rounded-xl bg-cyan-600/20 hover:bg-cyan-600 border border-cyan-500/30 hover:border-cyan-500 text-cyan-300 hover:text-white text-xs font-bold inline-flex items-center gap-1.5 transition-all cursor-pointer shadow-sm active:scale-95"
@@ -599,6 +607,14 @@ export default function StudentFeeTracker() {
                 >
                   <FileDown size={14} />
                   <span>Export PDF</span>
+                </button>
+                <button 
+                  onClick={() => selectedStudent && selectedStudentStats && handleExportStudentCsv(selectedStudent)}
+                  className="px-3 py-1.5 rounded-xl bg-emerald-600/20 hover:bg-emerald-600 border border-emerald-500/30 hover:border-emerald-500 text-emerald-300 hover:text-white text-xs font-bold inline-flex items-center gap-1.5 transition-all cursor-pointer shadow-sm active:scale-95"
+                  title="Export student dossier to CSV (Excel/Sheets)"
+                >
+                  <FileSpreadsheet size={14} />
+                  <span>Export CSV</span>
                 </button>
                 <button 
                   onClick={() => setSelectedStudentId(null)}

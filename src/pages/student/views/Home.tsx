@@ -4,6 +4,7 @@ import { Student } from '../../../types';
 import { CreditCard, Brain, Calendar, Bell, ArrowRight, BookMarked, Trophy, AlertCircle, ExternalLink, FileCheck, Eye, User } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { motion } from 'motion/react';
+import { formatClassName } from '../../../lib/utils';
 
 export default function StudentHome({ student }: { student: Student }) {
   const { fees, attendance, testResults, notices, dueFees } = useStorage();
@@ -50,12 +51,45 @@ export default function StudentHome({ student }: { student: Student }) {
 
   return (
     <div className="space-y-12">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 h-full">
-        <div className="space-y-2">
-           <p className="text-xs font-black uppercase tracking-widest text-indigo-500">{kolkataTime}</p>
-           <h1 className="text-3xl font-black text-white tracking-tighter uppercase">{greeting}! {student.name.split(' ')[0]}</h1>
+      <div className="p-5 sm:p-6 rounded-[28px] bg-white/[0.02] border border-white/5 flex flex-col md:flex-row justify-between items-start md:items-center gap-5 shadow-xl backdrop-blur-md">
+        <div className="flex items-center gap-3.5 sm:gap-4.5 min-w-0">
+          <Link 
+            to="/student/profile" 
+            className="relative shrink-0 group focus:outline-none focus:ring-2 focus:ring-indigo-500/50 rounded-2xl sm:rounded-3xl"
+            title="View student profile photo & details"
+          >
+            {student.avatarUrl ? (
+              <img 
+                src={student.avatarUrl} 
+                alt={student.name} 
+                referrerPolicy="no-referrer"
+                className="w-13 h-13 sm:w-16 sm:h-16 rounded-2xl sm:rounded-3xl object-cover border-2 border-indigo-500/40 shadow-lg shadow-indigo-500/10 group-hover:border-indigo-400 group-hover:scale-105 transition-all" 
+              />
+            ) : (
+              <div className="w-13 h-13 sm:w-16 sm:h-16 rounded-2xl sm:rounded-3xl bg-gradient-to-tr from-indigo-600 via-indigo-700 to-purple-600 border-2 border-indigo-500/40 flex items-center justify-center font-black text-white text-xl sm:text-2xl shadow-lg shadow-indigo-500/10 group-hover:border-indigo-400 group-hover:scale-105 transition-all">
+                {student.name.charAt(0)}
+              </div>
+            )}
+            <span className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 sm:w-4 sm:h-4 bg-emerald-500 border-2 border-[#020712] rounded-full shadow-sm" />
+          </Link>
+
+          <div className="space-y-1 min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-[10px] sm:text-xs font-black uppercase tracking-widest text-indigo-400">{kolkataTime}</span>
+              <span className="text-slate-600 text-xs">•</span>
+              <span className="text-[11px] sm:text-xs font-bold text-amber-400 uppercase tracking-wider">{greeting}!</span>
+            </div>
+            <h1 className="text-sm sm:text-base md:text-lg font-black text-white tracking-tight uppercase leading-snug break-words">
+              {student.name}
+            </h1>
+            <p className="text-[11px] sm:text-xs font-semibold text-slate-400 truncate flex items-center gap-1.5">
+              <span>Roll: {student.rollNumber || 'N/A'}</span>
+              <span>•</span>
+              <span>{formatClassName(student.class)}</span>
+            </p>
+          </div>
         </div>
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3 shrink-0">
            <Link 
              to="/student/overview" 
              className="px-5 py-2.5 rounded-2xl bg-gradient-to-r from-cyan-600 to-indigo-600 hover:from-cyan-500 hover:to-indigo-500 text-white font-bold text-xs flex items-center gap-2 transition-all shadow-lg shadow-cyan-500/20 active:scale-95 border border-cyan-400/30 cursor-pointer"
