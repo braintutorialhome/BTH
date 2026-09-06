@@ -3,11 +3,9 @@ import { Student } from '../../../types';
 import { useStorage } from '../../../hooks/useStorage';
 import { 
   User, Phone, CheckCircle2, 
-  FileText, MessageSquare, CreditCard, FileDown, FileSpreadsheet
+  FileText, MessageSquare, CreditCard
 } from 'lucide-react';
 import { safeFormat, formatClassName } from '../../../lib/utils';
-import { exportStudentToPdf } from '../../../utils/studentPdfExport';
-import { exportStudentToCsv } from '../../../utils/studentCsvExport';
 
 export default function StudentOverview({ student }: { student: Student }) {
   const { fees, dueFees } = useStorage();
@@ -71,22 +69,6 @@ export default function StudentOverview({ student }: { student: Student }) {
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
-            <button
-              onClick={() => exportStudentToPdf(student, feeStats, studentPayments, studentDues)}
-              className="px-3 py-1.5 rounded-xl bg-cyan-600/20 hover:bg-cyan-600 border border-cyan-500/30 hover:border-cyan-500 text-cyan-300 hover:text-white text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-sm active:scale-95"
-              title="Export complete fee & academic dossier as PDF"
-            >
-              <FileDown size={13} />
-              <span>Export PDF</span>
-            </button>
-            <button
-              onClick={() => exportStudentToCsv(student, feeStats, studentPayments, studentDues)}
-              className="px-3 py-1.5 rounded-xl bg-emerald-600/20 hover:bg-emerald-600 border border-emerald-500/30 hover:border-emerald-500 text-emerald-300 hover:text-white text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-sm active:scale-95"
-              title="Export complete fee & academic dossier as CSV (Excel/Sheets)"
-            >
-              <FileSpreadsheet size={13} />
-              <span>Export CSV</span>
-            </button>
             {student.mobile && (
               <a 
                 href={`tel:${student.mobile}`}
