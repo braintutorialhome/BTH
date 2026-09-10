@@ -118,3 +118,14 @@ export interface ResultLink {
   url: string;
   date: string;
 }
+
+export interface StudentRemark {
+  id: string;
+  studentId: string;
+  title?: string;
+  remark: string;
+  category: 'academic' | 'behavior' | 'attendance' | 'general' | 'appreciation';
+  addedBy?: string;
+  date: string;
+  updatedAt?: string;
+}

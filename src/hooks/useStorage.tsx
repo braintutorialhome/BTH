@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { Student, Fee, Expense, Attendance, Test, TestResult, StudyMaterial, Notice, User, UserRole, DueFee, ExternalTest, ResultLink } from '../types';
+import { Student, Fee, Expense, Attendance, Test, TestResult, StudyMaterial, Notice, User, UserRole, DueFee, ExternalTest, ResultLink, StudentRemark } from '../types';
 
 // Fallback for crypto.randomUUID
 const uuid = () => {
@@ -27,6 +27,8 @@ interface StorageContextType {
   notices: Notice[];
   dueFees: DueFee[];
   externalTests: ExternalTest[];
+  resultLinks: ResultLink[];
+  remarks: StudentRemark[];
   users: User[];
   currentUser: User | null;
   
@@ -50,6 +52,8 @@ interface StorageContextType {
   deleteExpense: (id: string) => void;
   
   markAttendance: (date: string, studentId: string, status: 'present' | 'absent') => void;
+  deleteAttendance: (id: string) => void;
+  updateAttendance: (record: Attendance) => void;
   
   addTest: (test: Omit<Test, 'id'>) => void;
   submitTestResult: (result: Omit<TestResult, 'id'>) => void;
@@ -65,6 +69,9 @@ interface StorageContextType {
   deleteExternalTest: (id: string) => void;
   addResultLink: (result: Omit<ResultLink, 'id' | 'date'>) => void;
   deleteResultLink: (id: string) => void;
+  addRemark: (remark: Omit<StudentRemark, 'id' | 'date'>) => void;
+  updateRemark: (remark: StudentRemark) => void;
+  deleteRemark: (id: string) => void;
   deleteTest: (id: string) => void;
   deleteFee: (id: string) => void;
   clearAllData: () => void;
@@ -106,6 +113,7 @@ export const StorageProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [dueFees, setDueFees] = useState<DueFee[]>(() => loadLocal('utc_due_fees', []));
   const [externalTests, setExternalTests] = useState<ExternalTest[]>(() => loadLocal('utc_external_tests', []));
   const [resultLinks, setResultLinks] = useState<ResultLink[]>(() => loadLocal('utc_result_links', []));
+  const [remarks, setRemarks] = useState<StudentRemark[]>(() => loadLocal('utc_remarks', []));
   const [users, setUsers] = useState<User[]>(() => loadLocal('utc_users', []));
   const [currentUser, setCurrentUser] = useState<User | null>(() => {
     try {
@@ -164,6 +172,7 @@ export const StorageProvider: React.FC<{ children: React.ReactNode }> = ({ child
           dueFees,
           externalTests,
           resultLinks,
+          remarks,
           users,
           logs: JSON.parse(localStorage.getItem('utc_activity_logs') || '[]')
         }
@@ -199,7 +208,7 @@ export const StorageProvider: React.FC<{ children: React.ReactNode }> = ({ child
       }
     }, 2000); // 2 second debounce
     return () => clearTimeout(timer);
-  }, [students, fees, expenses, attendance, tests, testResults, materials, notices, dueFees, externalTests, resultLinks, users]);
+  }, [students, fees, expenses, attendance, tests, testResults, materials, notices, dueFees, externalTests, resultLinks, remarks, users]);
 
   const refreshCloudData = useCallback(async () => {
     const cleanUrl = scriptUrl.trim();
@@ -259,6 +268,7 @@ export const StorageProvider: React.FC<{ children: React.ReactNode }> = ({ child
           if (data.dueFees) setDueFees(data.dueFees);
           if (data.externalTests) setExternalTests(data.externalTests);
           if (data.resultLinks) setResultLinks(data.resultLinks);
+          if (data.remarks) setRemarks(data.remarks);
           if (data.materials) setMaterials(data.materials);
           if (data.tests) setTests(data.tests);
           if (data.testResults) setTestResults(data.testResults);
@@ -401,12 +411,13 @@ export const StorageProvider: React.FC<{ children: React.ReactNode }> = ({ child
   useEffect(() => { localStorage.setItem('utc_due_fees', JSON.stringify(dueFees)); }, [dueFees]);
   useEffect(() => { localStorage.setItem('utc_external_tests', JSON.stringify(externalTests)); }, [externalTests]);
   useEffect(() => { localStorage.setItem('utc_result_links', JSON.stringify(resultLinks)); }, [resultLinks]);
+  useEffect(() => { localStorage.setItem('utc_remarks', JSON.stringify(remarks)); }, [remarks]);
   useEffect(() => { localStorage.setItem('utc_users', JSON.stringify(users)); }, [users]);
 
   const clearAllData = () => {
-    const keys = ['students', 'fees', 'expenses', 'attendance', 'tests', 'testResults', 'materials', 'notices', 'due_fees', 'external_tests', 'result_links', 'users'];
+    const keys = ['students', 'fees', 'expenses', 'attendance', 'tests', 'testResults', 'materials', 'notices', 'due_fees', 'external_tests', 'result_links', 'remarks', 'users'];
     keys.forEach(k => localStorage.removeItem(`utc_${k}`));
-    setStudents([]); setFees([]); setExpenses([]); setAttendance([]); setTests([]); setTestResults([]); setMaterials([]); setNotices([]); setDueFees([]); setExternalTests([]); setResultLinks([]); setUsers([]);
+    setStudents([]); setFees([]); setExpenses([]); setAttendance([]); setTests([]); setTestResults([]); setMaterials([]); setNotices([]); setDueFees([]); setExternalTests([]); setResultLinks([]); setRemarks([]); setUsers([]);
   };
 
   const addStudent = (s: Omit<Student, 'id' | 'admissionDate' | 'status'>) => {
@@ -511,6 +522,17 @@ export const StorageProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
   };
 
+  const deleteAttendance = (id: string) => {
+    setAttendance(prev => prev.filter(a => a.id !== id));
+    addLog('ATTENDANCE_DELETE', `Deleted attendance record ${id}`);
+  };
+
+  const updateAttendance = (record: Attendance) => {
+    setAttendance(prev => prev.map(a => a.id === record.id ? record : a));
+    const studentName = students.find(s => s.id === record.studentId)?.name || record.studentId;
+    addLog('ATTENDANCE_UPDATE', `Updated attendance for ${studentName} on ${record.date} to ${record.status}`);
+  };
+
   const addTest = (t: Omit<Test, 'id'>) => {
     const newTest = { ...t, id: uuid() };
     setTests([...tests, newTest]);
@@ -582,15 +604,35 @@ export const StorageProvider: React.FC<{ children: React.ReactNode }> = ({ child
     addLog('RESULT_DELETED', `Deleted result link ${id}`);
   };
 
+  const addRemark = (r: Omit<StudentRemark, 'id' | 'date'>) => {
+    const newRemark: StudentRemark = { ...r, id: uuid(), date: new Date().toISOString() };
+    setRemarks(prev => [newRemark, ...prev]);
+    const studentName = students.find(s => s.id === r.studentId)?.name || 'Unknown';
+    addLog('REMARK_ADDED', `Added remark for student ${studentName}: ${r.remark.slice(0, 50)}`);
+  };
+
+  const updateRemark = (r: StudentRemark) => {
+    const updatedRemark: StudentRemark = { ...r, updatedAt: new Date().toISOString() };
+    setRemarks(prev => prev.map(item => item.id === r.id ? updatedRemark : item));
+    addLog('REMARK_UPDATED', `Updated remark ${r.id}`);
+  };
+
+  const deleteRemark = (id: string) => {
+    setRemarks(prev => prev.filter(item => item.id !== id));
+    addLog('REMARK_DELETED', `Deleted remark ${id}`);
+  };
+
   return (
     <StorageContext.Provider value={{
-      students, fees, expenses, attendance, tests, testResults, materials, notices, dueFees, externalTests, resultLinks, users, currentUser,
+      students, fees, expenses, attendance, tests, testResults, materials, notices, dueFees, externalTests, resultLinks, remarks, users, currentUser,
       login, signup, logout, refreshCloudData, updateUser,
       scriptUrl, syncError, isInitialSyncing,
       addStudent, updateStudent, deleteStudent, removeStudentPermanently, approveStudent, rejectStudent,
       addFee, updateFee, deleteFee, addExpense, updateExpense, deleteExpense, markAttendance,
+      deleteAttendance, updateAttendance,
       addTest, deleteTest, submitTestResult, addMaterial, deleteMaterial, addNotice, deleteNotice, 
-      addDueFee, updateDueFee, deleteDueFee, addExternalTest, deleteExternalTest, addResultLink, deleteResultLink, clearAllData, addLog
+      addDueFee, updateDueFee, deleteDueFee, addExternalTest, deleteExternalTest, addResultLink, deleteResultLink,
+      addRemark, updateRemark, deleteRemark, clearAllData, addLog
     }}>
       {children}
     </StorageContext.Provider>

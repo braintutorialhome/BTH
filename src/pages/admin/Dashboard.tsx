@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Routes, Route, Link, useLocation, useNavigate } from 'react-router-dom';
 import { 
-  BarChart2, Users, FileCheck, CreditCard, Wallet, Calendar, BookMarked, Bell, LogOut, Menu, X, Plus, Trash2, Edit2, TrendingUp, TrendingDown, DollarSign, Settings, AlertCircle, ExternalLink, Eye
+  BarChart2, Users, FileCheck, CreditCard, Wallet, Calendar, BookMarked, Bell, LogOut, Menu, X, Plus, Trash2, Edit2, TrendingUp, TrendingDown, DollarSign, Settings, AlertCircle, ExternalLink, Eye, MessageSquareQuote
 } from 'lucide-react';
 import { useStorage } from '../../hooks/useStorage';
 import AdminHome from './views/Home';
@@ -19,6 +19,7 @@ import NoticeManagement from './views/Notices';
 import AdminDueFees from '../../components/admin/AdminDueFees';
 import StudentFeeTracker from './views/StudentFeeTracker';
 import StudentOverview from './views/StudentOverview';
+import StudentRemarksManagement from './views/StudentRemarks';
 
 const NavItem = ({ to, icon: Icon, label, active, onClick }: any) => (
   <Link 
@@ -80,6 +81,7 @@ export default function AdminDashboard() {
     { to: '/admin/results', icon: FileCheck, label: 'Results' },
     { to: '/admin/materials', icon: BookMarked, label: 'Materials' },
     { to: '/admin/due-fees', icon: AlertCircle, label: 'Due Fees' },
+    { to: '/admin/student-remarks', icon: MessageSquareQuote, label: 'Student Remarks' },
     { to: '/admin/notices', icon: Bell, label: 'Notices' },
   ];
 
@@ -98,6 +100,7 @@ export default function AdminDashboard() {
     '/admin/results': 'Result Management',
     '/admin/materials': 'Study Materials',
     '/admin/due-fees': 'Due Fees Management',
+    '/admin/student-remarks': 'Student Remarks',
     '/admin/notices': 'Notice Board',
   };
 
@@ -247,6 +250,7 @@ export default function AdminDashboard() {
             <Route path="results" element={<AdminResults />} />
             <Route path="materials" element={<StudyMaterialManagement />} />
             <Route path="due-fees" element={<AdminDueFees />} />
+            <Route path="student-remarks" element={<StudentRemarksManagement />} />
             <Route path="notices" element={<NoticeManagement />} />
             <Route path="/" element={<AdminHome />} />
           </Routes>
