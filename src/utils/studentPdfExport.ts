@@ -156,21 +156,22 @@ export async function exportStudentToPdf(
 
   // Card 2: Assigned Dues
   const card2X = margin + cardWidth + 6;
-  doc.setFillColor(240, 249, 255); // sky-50
-  doc.setDrawColor(186, 230, 253); // sky-200
+  doc.setFillColor(254, 242, 242); // rose-50 / soft red tint
+  doc.setDrawColor(254, 202, 202); // rose-200
   doc.roundedRect(card2X, currentY, cardWidth, 20, 2, 2, 'FD');
 
   doc.setFontSize(8);
   doc.setFont('helvetica', 'bold');
-  doc.setTextColor(7, 89, 133); // sky-800
+  doc.setTextColor(220, 38, 38); // red-600 for TOTAL DUES ASSIGNED
   doc.text('TOTAL DUES ASSIGNED', card2X + 5, currentY + 6);
 
   doc.setFontSize(13);
+  doc.setTextColor(220, 38, 38); // red-600
   doc.text(`INR ${feeStats.totalDueAssigned.toLocaleString('en-IN')}`, card2X + 5, currentY + 14);
 
   doc.setFontSize(7.5);
   doc.setFont('helvetica', 'normal');
-  doc.setTextColor(14, 116, 144);
+  doc.setTextColor(185, 28, 28); // red-700
   doc.text(`(${feeStats.dueCount} invoice records created)`, card2X + 5, currentY + 18);
 
   currentY += 28;
@@ -269,7 +270,7 @@ export async function exportStudentToPdf(
       0: { cellWidth: 10, halign: 'center' },
       1: { cellWidth: 35 },
       2: { cellWidth: 'auto' },
-      3: { cellWidth: 35, halign: 'right', fontStyle: 'bold', textColor: [3, 105, 161] }
+      3: { cellWidth: 35, halign: 'right', fontStyle: 'bold', textColor: [220, 38, 38] }
     }
   });
 
