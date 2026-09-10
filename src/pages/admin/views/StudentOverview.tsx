@@ -436,7 +436,7 @@ export default function StudentOverview() {
                   <th className="py-4 px-4">Academic Details</th>
                   <th className="py-4 px-4">Contact Details</th>
                   <th className="py-4 px-4">Current Fees Paid</th>
-                  <th className="py-4 px-4">Due Balance</th>
+                  <th className="py-4 px-4">Total Dues Assigned</th>
                   <th className="py-4 px-4">Status</th>
                   <th className="py-4 px-6 text-right">Action</th>
                 </tr>
@@ -525,23 +525,14 @@ export default function StudentOverview() {
                         </p>
                       </td>
 
-                      {/* Due Balance */}
+                      {/* Total Dues Assigned */}
                       <td className="py-4 px-4">
-                        {isCleared ? (
-                          <div className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-black uppercase tracking-wider">
-                            <CheckCircle2 size={12} />
-                            <span>Cleared</span>
-                          </div>
-                        ) : (
-                          <div>
-                            <p className="font-black text-rose-400 text-sm">
-                              ₹{stats.remainingBalance.toLocaleString('en-IN')}
-                            </p>
-                            <p className="text-[10px] text-slate-400 font-medium">
-                              of ₹{stats.totalDueAssigned.toLocaleString('en-IN')} due
-                            </p>
-                          </div>
-                        )}
+                        <p className="font-black text-rose-400 text-sm">
+                          ₹{stats.totalDueAssigned.toLocaleString('en-IN')}
+                        </p>
+                        <p className="text-[10px] text-slate-400 font-medium">
+                          {stats.dueCount} {stats.dueCount === 1 ? 'due assigned' : 'dues assigned'}
+                        </p>
                       </td>
 
                       {/* Status */}
@@ -662,14 +653,18 @@ export default function StudentOverview() {
 
                   {/* Financial Mini Grid */}
                   <div className="grid grid-cols-2 gap-3 py-4">
-                    <div className="p-3 rounded-2xl bg-white/[0.02] border border-white/5">
-                      <p className="text-[9px] font-black uppercase tracking-wider text-slate-400">Current Fees Paid</p>
-                      <p className="text-base font-black text-emerald-400 mt-0.5">₹{stats.totalPaid.toLocaleString('en-IN')}</p>
+                    <div className="p-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/20">
+                      <p className="text-[9px] font-black uppercase tracking-wider text-emerald-400">Current Fees Paid</p>
+                      <p className="text-base font-black text-emerald-300 mt-0.5">₹{stats.totalPaid.toLocaleString('en-IN')}</p>
+                      <p className="text-[9px] text-slate-400 font-medium mt-0.5 truncate">
+                        {stats.paymentCount} {stats.paymentCount === 1 ? 'payment' : 'payments'}
+                      </p>
                     </div>
-                    <div className="p-3 rounded-2xl bg-white/[0.02] border border-white/5">
-                      <p className="text-[9px] font-black uppercase tracking-wider text-slate-400">Due Balance</p>
-                      <p className={`text-base font-black mt-0.5 ${isCleared ? 'text-emerald-400' : 'text-rose-400'}`}>
-                        {isCleared ? '₹0 (Cleared)' : `₹${stats.remainingBalance.toLocaleString('en-IN')}`}
+                    <div className="p-3 rounded-2xl bg-rose-500/10 border border-rose-500/20">
+                      <p className="text-[9px] font-black uppercase tracking-wider text-rose-400">Total Dues Assigned</p>
+                      <p className="text-base font-black text-rose-300 mt-0.5">₹{stats.totalDueAssigned.toLocaleString('en-IN')}</p>
+                      <p className="text-[9px] text-slate-400 font-medium mt-0.5 truncate">
+                        {stats.dueCount} {stats.dueCount === 1 ? 'due assigned' : 'dues assigned'}
                       </p>
                     </div>
                   </div>
