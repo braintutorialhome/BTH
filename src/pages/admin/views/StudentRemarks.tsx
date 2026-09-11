@@ -7,7 +7,7 @@ import {
   GraduationCap, ThumbsUp, X, ChevronRight, MessageSquareQuote,
   Clock, ArrowUpDown
 } from 'lucide-react';
-import { formatClassName, safeFormat } from '../../../lib/utils';
+import { formatClassName, safeFormat, getISTToday } from '../../../lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
 
 type RemarkCategory = 'academic' | 'behavior' | 'attendance' | 'general' | 'appreciation';
@@ -76,7 +76,7 @@ export default function StudentRemarksManagement() {
   const [title, setTitle] = useState('');
   const [remarkText, setRemarkText] = useState('');
   const [category, setCategory] = useState<RemarkCategory>('academic');
-  const [formDate, setFormDate] = useState(new Date().toISOString().split('T')[0]);
+  const [formDate, setFormDate] = useState(getISTToday());
 
   // Distinct approved classes
   const availableClasses = useMemo(() => {
@@ -146,7 +146,7 @@ export default function StudentRemarksManagement() {
     setTitle('');
     setRemarkText('');
     setCategory('academic');
-    setFormDate(new Date().toISOString().split('T')[0]);
+    setFormDate(getISTToday());
     setIsModalOpen(true);
   };
 
@@ -157,7 +157,7 @@ export default function StudentRemarksManagement() {
     setTitle(remark.title || '');
     setRemarkText(remark.remark);
     setCategory(remark.category || 'academic');
-    setFormDate(remark.date.split('T')[0] || new Date().toISOString().split('T')[0]);
+    setFormDate(remark.date.split('T')[0] || getISTToday());
     setIsModalOpen(true);
   };
 

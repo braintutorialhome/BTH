@@ -5,6 +5,7 @@ import {
   Users, FileCheck, CreditCard, Calendar, TrendingUp, DollarSign
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
+import { getISTToday } from '../../../lib/utils';
 
 const StatCard = ({ label, value, icon: Icon, color, subValue }: any) => (
   <div className="glass p-6 rounded-3xl group hover:bg-white/10 transition-all">
@@ -34,7 +35,7 @@ export default function AdminHome() {
   const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
   const netBalance = totalFees - totalExpenses;
 
-  const today = new Date().toISOString().split('T')[0];
+  const today = getISTToday();
   const attendanceToday = attendance.filter(a => a.date === today);
   const attendancePercent = attendanceToday.length > 0 
     ? Math.round((attendanceToday.filter(a => a.status === 'present').length / attendanceToday.length) * 100)

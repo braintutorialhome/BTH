@@ -2,6 +2,7 @@ import React from 'react';
 import { useStorage } from '../../../hooks/useStorage';
 import { ExternalLink, Calendar, ClipboardList } from 'lucide-react';
 import { motion } from 'motion/react';
+import { formatDateIST } from '../../../lib/utils';
 
 const StudentTestMaster: React.FC = () => {
   const { externalTests } = useStorage();
@@ -42,7 +43,7 @@ const StudentTestMaster: React.FC = () => {
                     )}
                     <div className="flex items-center mt-3 text-slate-500 text-xs font-black uppercase tracking-widest">
                       <Calendar className="w-4 h-4 mr-1.5 text-indigo-400" />
-                      Posted on {new Date(test.date).toLocaleDateString()}
+                      Posted on {formatDateIST(test.date)}
                     </div>
                   </div>
                 </div>

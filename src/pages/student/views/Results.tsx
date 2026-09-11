@@ -2,6 +2,7 @@ import React from 'react';
 import { useStorage } from '../../../hooks/useStorage';
 import { Calendar, FileText, Download } from 'lucide-react';
 import { motion } from 'motion/react';
+import { formatDateIST } from '../../../lib/utils';
 
 const StudentResults: React.FC = () => {
   const { resultLinks } = useStorage();
@@ -42,7 +43,7 @@ const StudentResults: React.FC = () => {
                     )}
                     <div className="flex items-center mt-3 text-slate-500 text-xs font-black uppercase tracking-widest">
                       <Calendar className="w-4 h-4 mr-1.5 text-emerald-400" />
-                      Published on {new Date(result.date).toLocaleDateString()}
+                      Published on {formatDateIST(result.date)}
                     </div>
                   </div>
                 </div>

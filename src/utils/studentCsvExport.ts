@@ -1,5 +1,5 @@
 import { Student, Fee, DueFee } from '../types';
-import { safeFormat, formatClassName } from '../lib/utils';
+import { safeFormat, formatClassName, getISTToday } from '../lib/utils';
 import { exportCsvData } from './mobileExportHelper';
 
 /**
@@ -24,7 +24,7 @@ export async function exportStudentToCsv(
 
   // Header
   lines.push(`"BRAIN TUTORIAL HOME (BTH) - STUDENT COMPREHENSIVE DOSSIER"`);
-  lines.push(`"Generated On",${sanitize(safeFormat(new Date(), 'dd MMM yyyy, hh:mm a'))}`);
+  lines.push(`"Generated On",${sanitize(safeFormat(new Date(), 'dd MMM yyyy, hh:mm a') + ' IST')}`);
   lines.push('');
 
   // Section 1: Student Profile Information
@@ -86,7 +86,7 @@ export async function exportStudentToCsv(
   }
 
   const csvContent = lines.join('\n');
-  const filename = `BTH_Student_${student.rollNumber || 'Roll'}_${student.name.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.csv`;
+  const filename = `BTH_Student_${student.rollNumber || 'Roll'}_${student.name.replace(/\s+/g, '_')}_${getISTToday()}.csv`;
 
   await exportCsvData(csvContent, filename);
 }

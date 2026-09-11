@@ -2,9 +2,10 @@ import React, { useState } from 'react';
 import { useStorage } from '../../../hooks/useStorage';
 import { Shield, User as UserIcon, Key, Lock, X, Save, RefreshCw, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { User } from '../../../types';
+import { formatDateTimeIST } from '../../../lib/utils';
 
 export default function SystemSettings() {
-  const { students, users, updateUser, currentUser, refreshCloudData, isInitialSyncing, syncError } = useStorage();
+  const { students, users, updateUser, currentUser, refreshCloudData, isInitialSyncing, syncError, lastSyncTime } = useStorage();
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [newUsername, setNewUsername] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -63,7 +64,7 @@ export default function SystemSettings() {
               Cloud System Status: {syncError ? 'Communication Issue' : 'Operational'}
             </h4>
             <p className="text-[10px] font-bold text-slate-500 uppercase tracking-tight mt-0.5">
-              {syncError ? syncError : 'All data nodes are synchronized with Google Sheets'}
+              {syncError ? syncError : `All data nodes are synchronized with Google Sheets${lastSyncTime ? ` • Last Sync: ${formatDateTimeIST(lastSyncTime, true)} IST` : ''}`}
             </p>
           </div>
         </div>

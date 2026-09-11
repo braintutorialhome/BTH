@@ -43,7 +43,7 @@ export default function StudentNotices({ student }: { student: Student }) {
                    <div className="space-y-1">
                       <p className={`text-xs uppercase tracking-widest ${n.isImportant ? 'text-orange-400' : 'text-slate-600'}`}>{n.isImportant ? 'Priority Notice' : 'Notice'}</p>
                       <span className="text-xs uppercase tracking-widest text-slate-500">
-                          {safeFormat(n.date, 'dd MMMM yyyy, HH:mm')}
+                          {safeFormat(n.date, 'dd MMMM yyyy, hh:mm a')} IST
                       </span>
                    </div>
                  </div>

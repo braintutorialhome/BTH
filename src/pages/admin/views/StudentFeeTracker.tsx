@@ -6,7 +6,7 @@ import {
   Upload, Save, ChevronRight, DollarSign, FileText, ArrowUpRight, ArrowDownRight, RefreshCw, FileDown, FileSpreadsheet
 } from 'lucide-react';
 import { Student, Fee, DueFee } from '../../../types';
-import { safeFormat, formatClassName } from '../../../lib/utils';
+import { safeFormat, formatClassName, getISTToday, getISTMonthName } from '../../../lib/utils';
 import { exportStudentToPdf } from '../../../utils/studentPdfExport';
 import { exportStudentToCsv } from '../../../utils/studentCsvExport';
 import { exportCsvData } from '../../../utils/mobileExportHelper';
@@ -42,15 +42,15 @@ export default function StudentFeeTracker() {
   const [profileForm, setProfileForm] = useState<Student | null>(null);
   const [paymentForm, setPaymentForm] = useState({
     amount: '',
-    month: safeFormat(new Date(), 'MMMM yyyy'),
-    date: new Date().toISOString().split('T')[0],
+    month: getISTMonthName(),
+    date: getISTToday(),
     paymentMethod: 'Cash',
     notes: ''
   });
   const [dueForm, setDueForm] = useState({
     amount: '',
     remarks: '',
-    date: new Date().toISOString().split('T')[0]
+    date: getISTToday()
   });
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -166,7 +166,7 @@ export default function StudentFeeTracker() {
     });
 
     const csvContent = [headers.join(','), ...rows].join('\n');
-    const filename = `Fee_Tracker_${new Date().toISOString().split('T')[0]}.csv`;
+    const filename = `Fee_Tracker_${getISTToday()}.csv`;
     await exportCsvData(csvContent, filename);
   };
 
@@ -261,8 +261,8 @@ export default function StudentFeeTracker() {
     setIsAddingPayment(false);
     setPaymentForm({
       amount: '',
-      month: safeFormat(new Date(), 'MMMM yyyy'),
-      date: new Date().toISOString().split('T')[0],
+      month: getISTMonthName(),
+      date: getISTToday(),
       paymentMethod: 'Cash',
       notes: ''
     });
@@ -277,14 +277,15 @@ export default function StudentFeeTracker() {
         ...editingDue,
         amount: parseFloat(dueForm.amount),
         remarks: dueForm.remarks,
-        date: dueForm.date || new Date().toISOString()
+        date: dueForm.date || getISTToday()
       });
       setEditingDue(null);
     } else {
       addDueFee({
         studentId: selectedStudent.id,
         amount: parseFloat(dueForm.amount),
-        remarks: dueForm.remarks
+        remarks: dueForm.remarks,
+        date: dueForm.date || getISTToday()
       });
     }
 
@@ -292,7 +293,7 @@ export default function StudentFeeTracker() {
     setDueForm({
       amount: '',
       remarks: '',
-      date: new Date().toISOString().split('T')[0]
+      date: getISTToday()
     });
   };
 

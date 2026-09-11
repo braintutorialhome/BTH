@@ -4,7 +4,7 @@ import { Student } from '../../../types';
 import { CreditCard, Brain, Calendar, Bell, ArrowRight, BookMarked, Trophy, AlertCircle, ExternalLink, FileCheck, Eye, User, CalendarX, MessageSquareQuote } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { motion } from 'motion/react';
-import { formatClassName } from '../../../lib/utils';
+import { formatClassName, getISTToday } from '../../../lib/utils';
 
 export default function StudentHome({ student }: { student: Student }) {
   const { fees, attendance, testResults, notices, dueFees, remarks } = useStorage();
@@ -57,7 +57,7 @@ export default function StudentHome({ student }: { student: Student }) {
     (student.rollNumber && r.studentId === student.rollNumber)
   );
 
-  const today = new Date().toISOString().split('T')[0];
+  const today = getISTToday();
   const isPresentToday = attendance.find(a => a.date === today && a.studentId === student.id)?.status === 'present';
 
   return (
@@ -86,7 +86,7 @@ export default function StudentHome({ student }: { student: Student }) {
 
           <div className="space-y-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-[10px] sm:text-xs font-black uppercase tracking-widest text-indigo-400">{kolkataTime}</span>
+              <span className="text-[10px] sm:text-xs font-black uppercase tracking-widest text-indigo-400">{kolkataTime} (IST)</span>
               <span className="text-slate-600 text-xs">•</span>
               <span className="text-[11px] sm:text-xs font-bold text-amber-400 uppercase tracking-wider">{greeting}!</span>
             </div>

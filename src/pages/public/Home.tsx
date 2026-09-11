@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { Phone, MessageSquare, BookOpen, GraduationCap, ArrowRight, MapPin, PhoneCall } from 'lucide-react';
+import { getISTYear } from '../../lib/utils';
 
 export default function PublicHome() {
   return (
@@ -187,7 +188,7 @@ export default function PublicHome() {
             </a>
           </div>
           <div className="text-xs font-black uppercase tracking-widest text-slate-600">
-            © {new Date().getFullYear()} Brain Tutorial Home. All Rights Reserved.
+            © {getISTYear()} Brain Tutorial Home. All Rights Reserved.
           </div>
         </div>
       </footer>

@@ -5,7 +5,7 @@ import {
   CalendarX, Calendar, AlertTriangle, CheckCircle2, 
   Search, Info, Phone, MessageSquare, ArrowUpDown, Filter
 } from 'lucide-react';
-import { formatClassName } from '../../../lib/utils';
+import { formatClassName, formatDateIST } from '../../../lib/utils';
 import { motion } from 'motion/react';
 
 interface StudentAttendanceProps {
@@ -49,16 +49,13 @@ export default function StudentAttendance({ student }: StudentAttendanceProps) {
         if (!searchTerm.trim()) return true;
 
         const term = searchTerm.toLowerCase();
-        const dateObj = new Date(record.date);
         const dateStr = record.date;
-        const readableDate = !isNaN(dateObj.getTime())
-          ? dateObj.toLocaleDateString('en-IN', {
-              weekday: 'long',
-              day: 'numeric',
-              month: 'long',
-              year: 'numeric'
-            }).toLowerCase()
-          : '';
+        const readableDate = formatDateIST(record.date, {
+          weekday: 'long',
+          day: 'numeric',
+          month: 'long',
+          year: 'numeric'
+        }).toLowerCase();
 
         return dateStr.includes(term) || readableDate.includes(term);
       })
@@ -71,19 +68,16 @@ export default function StudentAttendance({ student }: StudentAttendanceProps) {
 
   const formatAbsentDate = (dateString: string) => {
     try {
-      const dateObj = new Date(dateString);
-      if (isNaN(dateObj.getTime())) return { fullDate: dateString, dayName: '', year: '' };
-      
-      const dayName = dateObj.toLocaleDateString('en-IN', { weekday: 'long' });
-      const dayNum = dateObj.toLocaleDateString('en-IN', { day: 'numeric' });
-      const monthName = dateObj.toLocaleDateString('en-IN', { month: 'short' });
-      const year = dateObj.getFullYear();
+      const dayName = formatDateIST(dateString, { weekday: 'long' });
+      const dayNum = formatDateIST(dateString, { day: 'numeric' });
+      const monthName = formatDateIST(dateString, { month: 'short' });
+      const year = formatDateIST(dateString, { year: 'numeric' });
       
       return {
         dayName,
         dayNum,
         monthName,
-        year: String(year),
+        year,
         formatted: `${dayName}, ${dayNum} ${monthName} ${year}`
       };
     } catch {
@@ -94,8 +88,8 @@ export default function StudentAttendance({ student }: StudentAttendanceProps) {
   const formatMonthLabel = (monthKey: string) => {
     try {
       const [y, m] = monthKey.split('-');
-      const d = new Date(parseInt(y, 10), parseInt(m, 10) - 1, 1);
-      return d.toLocaleDateString('en-IN', { month: 'long', year: 'numeric' });
+      const d = new Date(parseInt(y, 10), parseInt(m, 10) - 1, 15);
+      return formatDateIST(d, { month: 'long', year: 'numeric' });
     } catch {
       return monthKey;
     }

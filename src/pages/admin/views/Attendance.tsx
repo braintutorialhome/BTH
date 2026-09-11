@@ -6,13 +6,13 @@ import {
   AlertTriangle, Filter, ArrowUpDown, Plus, Phone, MessageSquare,
   CheckCircle2, Clock, CalendarX, AlertCircle, Sparkles
 } from 'lucide-react';
-import { safeFormat, formatClassName } from '../../../lib/utils';
+import { safeFormat, formatClassName, getISTToday } from '../../../lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
 
 export default function AttendanceManagement() {
   const { students, attendance, markAttendance, deleteAttendance, updateAttendance } = useStorage();
   
-  const today = new Date().toISOString().split('T')[0];
+  const today = getISTToday();
   const [selectedDate, setSelectedDate] = useState(today);
   const [activeTab, setActiveTab] = useState<'roll-call' | 'present-list' | 'absent-list'>('roll-call');
   

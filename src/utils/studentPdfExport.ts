@@ -43,7 +43,7 @@ export async function exportStudentToPdf(
   doc.text('OFFICIAL STUDENT COMPREHENSIVE RECORD & FEE DOSSIER', margin + 5, currentY + 13.5);
 
   // Date on right
-  const dateStr = safeFormat(new Date(), 'dd MMM yyyy, hh:mm a');
+  const dateStr = safeFormat(new Date(), 'dd MMM yyyy, hh:mm a') + ' IST';
   doc.setFontSize(7);
   doc.setTextColor(203, 213, 225);
   doc.text(`Generated: ${dateStr}`, pageWidth - margin - 5, currentY + 7, { align: 'right' });

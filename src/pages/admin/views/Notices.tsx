@@ -101,7 +101,7 @@ export default function NoticeManagement() {
                   <div>
                     <h3 className="text-2xl font-black text-white tracking-tight">{n.title}</h3>
                     <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mt-1">
-                      {safeFormat(n.date, 'MMM dd, yyyy • HH:mm')}
+                      {safeFormat(n.date, 'MMM dd, yyyy • hh:mm a')} IST
                     </p>
                   </div>
                 </div>
