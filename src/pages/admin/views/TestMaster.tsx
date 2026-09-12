@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useStorage } from '../../../hooks/useStorage';
 import { Plus, Trash2, Link as LinkIcon, ExternalLink, Search, ClipboardList } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { formatDateIST } from '../../../lib/utils';
 
 const AdminTestMaster: React.FC = () => {
   const { externalTests, addExternalTest, deleteExternalTest } = useStorage();
@@ -194,7 +195,7 @@ const AdminTestMaster: React.FC = () => {
                       </a>
                     </td>
                     <td className="px-8 py-5 text-slate-300">
-                      {new Date(test.date).toLocaleDateString()}
+                      {formatDateIST(test.date)}
                     </td>
                     <td className="px-8 py-5 text-right">
                       <button 

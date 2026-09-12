@@ -657,7 +657,7 @@ export default function StudentFeeTracker() {
                   onClick={() => {
                     setIsAddingDue(true);
                     setIsAddingPayment(false);
-                    setDueForm({ amount: '', remarks: '', date: new Date().toISOString().split('T')[0] });
+                    setDueForm({ amount: '', remarks: '', date: getISTToday() });
                   }}
                   className="px-4 py-2.5 bg-amber-500/20 border border-amber-500/30 text-amber-300 hover:bg-amber-500 hover:text-slate-950 rounded-xl text-xs font-black uppercase tracking-widest transition-all flex items-center gap-2"
                 >
@@ -670,8 +670,8 @@ export default function StudentFeeTracker() {
                     setIsAddingDue(false);
                     setPaymentForm({
                       amount: '',
-                      month: safeFormat(new Date(), 'MMMM yyyy'),
-                      date: new Date().toISOString().split('T')[0],
+                      month: getISTMonthName(),
+                      date: getISTToday(),
                       paymentMethod: 'Cash',
                       notes: ''
                     });
@@ -1165,7 +1165,7 @@ export default function StudentFeeTracker() {
                                   setDueForm({
                                     amount: due.amount.toString(),
                                     remarks: due.remarks,
-                                    date: due.date ? due.date.split('T')[0] : new Date().toISOString().split('T')[0]
+                                    date: due.date ? due.date.split('T')[0] : getISTToday()
                                   });
                                   setIsAddingDue(false);
                                 }}

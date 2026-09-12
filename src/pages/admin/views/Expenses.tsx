@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useStorage } from '../../../hooks/useStorage';
 import { Wallet, Plus, Trash2, Calendar, X } from 'lucide-react';
-import { safeFormat } from '../../../lib/utils';
+import { safeFormat, getISTToday, getISTMonthKey } from '../../../lib/utils';
 
 export default function ExpenseManagement() {
   const { expenses, addExpense, deleteExpense } = useStorage();
@@ -14,7 +14,7 @@ export default function ExpenseManagement() {
     title: '',
     amount: '',
     category: 'Others',
-    date: new Date().toISOString().split('T')[0],
+    date: getISTToday(),
     description: ''
   });
 
@@ -33,7 +33,7 @@ export default function ExpenseManagement() {
     });
     
     setShowAdd(false);
-    setNewExpense({ title: '', amount: '', category: 'Others', date: new Date().toISOString().split('T')[0], description: '' });
+    setNewExpense({ title: '', amount: '', category: 'Others', date: getISTToday(), description: '' });
   };
 
   const filteredExpenses = expenses.filter(e => {
@@ -42,9 +42,7 @@ export default function ExpenseManagement() {
     
     const matchesCategory = categoryFilter === 'all' || e.category === categoryFilter;
 
-    const expenseDate = new Date(e.date);
-    const matchesMonth = monthFilter === 'all' || 
-      `${expenseDate.getFullYear()}-${(expenseDate.getMonth() + 1).toString().padStart(2, '0')}` === monthFilter;
+    const matchesMonth = monthFilter === 'all' || getISTMonthKey(e.date) === monthFilter;
 
     return matchesSearch && matchesCategory && matchesMonth;
   });

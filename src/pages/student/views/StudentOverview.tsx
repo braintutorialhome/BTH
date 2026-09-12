@@ -5,7 +5,7 @@ import {
   User, Phone, CheckCircle2, 
   FileText, MessageSquare, CreditCard
 } from 'lucide-react';
-import { safeFormat, formatClassName } from '../../../lib/utils';
+import { safeFormat, formatClassName, formatDateIST } from '../../../lib/utils';
 
 export default function StudentOverview({ student }: { student: Student }) {
   const { fees, dueFees } = useStorage();
@@ -171,12 +171,12 @@ export default function StudentOverview({ student }: { student: Student }) {
 
           <div>
             <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Date of Birth</p>
-            <p className="font-bold text-white mt-1 text-sm">{student.dob || 'N/A'}</p>
+            <p className="font-bold text-white mt-1 text-sm">{formatDateIST(student.dob) || student.dob || 'N/A'}</p>
           </div>
 
           <div>
             <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Date of Joining</p>
-            <p className="font-bold text-white mt-1 text-sm">{student.dateOfJoining || student.admissionDate || 'N/A'}</p>
+            <p className="font-bold text-white mt-1 text-sm">{formatDateIST(student.dateOfJoining || student.admissionDate) || student.dateOfJoining || student.admissionDate || 'N/A'}</p>
           </div>
 
           <div className="sm:col-span-2 md:col-span-3">

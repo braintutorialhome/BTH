@@ -180,7 +180,7 @@ export default function StudentRemarksManagement() {
         title: title.trim() || undefined,
         remark: remarkText.trim(),
         category,
-        date: formDate ? new Date(formDate).toISOString() : editingRemark.date,
+        date: formDate ? (formDate.includes('T') ? formDate : `${formDate}T12:00:00+05:30`) : editingRemark.date,
         addedBy: editingRemark.addedBy || currentUser?.name || 'Administrator'
       });
     } else {
@@ -189,6 +189,7 @@ export default function StudentRemarksManagement() {
         title: title.trim() || undefined,
         remark: remarkText.trim(),
         category,
+        date: formDate ? `${formDate}T12:00:00+05:30` : undefined,
         addedBy: currentUser?.name || 'Administrator'
       });
     }

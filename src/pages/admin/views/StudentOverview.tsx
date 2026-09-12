@@ -8,7 +8,7 @@ import {
   IndianRupee, Lock, UserCheck, MessageSquare, FileDown, FileSpreadsheet
 } from 'lucide-react';
 import { Student } from '../../../types';
-import { safeFormat, formatClassName } from '../../../lib/utils';
+import { safeFormat, formatClassName, getISTToday } from '../../../lib/utils';
 import { exportStudentToPdf } from '../../../utils/studentPdfExport';
 import { exportStudentToCsv } from '../../../utils/studentCsvExport';
 import { exportCsvData } from '../../../utils/mobileExportHelper';
@@ -154,7 +154,7 @@ export default function StudentOverview() {
     });
 
     const csvContent = [headers.join(','), ...rows].join('\n');
-    const filename = `Student_Overview_${new Date().toISOString().split('T')[0]}.csv`;
+    const filename = `Student_Overview_${getISTToday()}.csv`;
     await exportCsvData(csvContent, filename);
   };
 

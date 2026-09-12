@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useStorage } from '../../../hooks/useStorage';
 import { Plus, Trash2, Link as LinkIcon, ExternalLink, Search, FileText } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { formatDateIST } from '../../../lib/utils';
 
 const AdminResults: React.FC = () => {
   const { resultLinks, addResultLink, deleteResultLink } = useStorage();
@@ -194,7 +195,7 @@ const AdminResults: React.FC = () => {
                       </a>
                     </td>
                     <td className="px-8 py-5 text-slate-300">
-                      {new Date(result.date).toLocaleDateString()}
+                      {formatDateIST(result.date)}
                     </td>
                     <td className="px-8 py-5 text-right">
                       <button 

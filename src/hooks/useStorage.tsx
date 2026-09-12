@@ -69,7 +69,7 @@ interface StorageContextType {
   deleteExternalTest: (id: string) => void;
   addResultLink: (result: Omit<ResultLink, 'id' | 'date'>) => void;
   deleteResultLink: (id: string) => void;
-  addRemark: (remark: Omit<StudentRemark, 'id' | 'date'>) => void;
+  addRemark: (remark: Omit<StudentRemark, 'id' | 'date'> & { date?: string }) => void;
   updateRemark: (remark: StudentRemark) => void;
   deleteRemark: (id: string) => void;
   deleteTest: (id: string) => void;
@@ -604,8 +604,8 @@ export const StorageProvider: React.FC<{ children: React.ReactNode }> = ({ child
     addLog('RESULT_DELETED', `Deleted result link ${id}`);
   };
 
-  const addRemark = (r: Omit<StudentRemark, 'id' | 'date'>) => {
-    const newRemark: StudentRemark = { ...r, id: uuid(), date: new Date().toISOString() };
+  const addRemark = (r: Omit<StudentRemark, 'id' | 'date'> & { date?: string }) => {
+    const newRemark: StudentRemark = { ...r, id: uuid(), date: r.date || new Date().toISOString() };
     setRemarks(prev => [newRemark, ...prev]);
     const studentName = students.find(s => s.id === r.studentId)?.name || 'Unknown';
     addLog('REMARK_ADDED', `Added remark for student ${studentName}: ${r.remark.slice(0, 50)}`);

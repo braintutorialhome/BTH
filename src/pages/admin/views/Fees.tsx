@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useStorage } from '../../../hooks/useStorage';
 import { CreditCard, Plus, X, Trash2 } from 'lucide-react';
-import { safeFormat } from '../../../lib/utils';
+import { safeFormat, getISTMonthName, getISTToday } from '../../../lib/utils';
 
 export default function FeeManagement() {
   const { students, fees, addFee, deleteFee } = useStorage();
@@ -14,8 +14,8 @@ export default function FeeManagement() {
   const [newFee, setNewFee] = useState({
     studentId: '',
     amount: '',
-    month: safeFormat(new Date(), 'MMMM yyyy'),
-    date: new Date().toISOString().split('T')[0]
+    month: getISTMonthName(),
+    date: getISTToday()
   });
 
   const [studentSearch, setStudentSearch] = useState('');
@@ -42,7 +42,7 @@ export default function FeeManagement() {
     
     setShowAdd(false);
     setDropdownOpen(false);
-    setNewFee({ studentId: '', amount: '', month: safeFormat(new Date(), 'MMMM yyyy'), date: new Date().toISOString().split('T')[0] });
+    setNewFee({ studentId: '', amount: '', month: getISTMonthName(), date: getISTToday() });
     setStudentSearch('');
   };
 
