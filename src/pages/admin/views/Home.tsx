@@ -2,7 +2,7 @@ import React from 'react';
 import { motion } from 'motion/react';
 import { useStorage } from '../../../hooks/useStorage';
 import { 
-  Users, FileCheck, CreditCard, Calendar, TrendingUp, DollarSign
+  Users, FileCheck, CreditCard, Calendar, DollarSign
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { getISTToday } from '../../../lib/utils';
@@ -96,8 +96,8 @@ export default function AdminHome() {
           </div>
         </div>
 
-        <div className="flex flex-col gap-8">
-          <div className="glass p-10 rounded-[40px] flex flex-col items-center text-center">
+        <div className="flex flex-col">
+          <div className="glass p-10 rounded-[40px] flex flex-col items-center justify-center text-center h-full">
             <div className="w-16 h-16 bg-white/5 rounded-2xl flex items-center justify-center mb-6">
               <Calendar size={32} className="text-indigo-400" />
             </div>
@@ -109,25 +109,6 @@ export default function AdminHome() {
               <div className="bg-indigo-500 h-full shadow-[0_0_15px_rgba(99,102,241,0.5)]" style={{ width: `${attendancePercent}%` }}></div>
             </div>
             <p className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em]">Institutional Average</p>
-          </div>
-
-          <div className="bg-gradient-to-br from-indigo-600 to-purple-700 p-10 rounded-[40px] shadow-2xl relative overflow-hidden group">
-            <div className="absolute top-0 right-0 p-8 opacity-20 scale-150 group-hover:scale-[1.7] transition-transform">
-               <TrendingUp size={120} />
-            </div>
-            <div className="relative z-10">
-              <h3 className="text-white font-black uppercase tracking-tight text-xl mb-8">Performance Summary</h3>
-              <div className="space-y-6">
-                <div className="flex justify-between items-center pb-4 border-b border-white/10">
-                  <span className="text-indigo-100/60 text-xs font-bold uppercase">Profit Margin</span>
-                  <span className="text-xl font-black text-white">{(netBalance / (totalFees || 1) * 100).toFixed(1)}%</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-indigo-100/60 text-xs font-bold uppercase">Active Tests</span>
-                  <span className="text-xl font-black text-white">03</span>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
       </div>

@@ -4,7 +4,7 @@ import { Student, StudentRemark } from '../../../types';
 import { 
   MessageSquare, Plus, Trash2, Edit2, Search, Filter, 
   CheckCircle2, AlertCircle, Sparkles, User, Calendar, 
-  GraduationCap, ThumbsUp, X, ChevronRight, MessageSquareQuote,
+  GraduationCap, ThumbsUp, X, ChevronRight, ChevronDown, MessageSquareQuote,
   Clock, ArrowUpDown
 } from 'lucide-react';
 import { formatClassName, safeFormat, getISTToday } from '../../../lib/utils';
@@ -73,6 +73,8 @@ export default function StudentRemarksManagement() {
 
   // Form fields
   const [selectedStudentId, setSelectedStudentId] = useState('');
+  const [modalStudentSearch, setModalStudentSearch] = useState('');
+  const [isStudentDropdownOpen, setIsStudentDropdownOpen] = useState(false);
   const [title, setTitle] = useState('');
   const [remarkText, setRemarkText] = useState('');
   const [category, setCategory] = useState<RemarkCategory>('academic');
@@ -93,6 +95,22 @@ export default function StudentRemarksManagement() {
       .filter(s => s.status === 'approved')
       .sort((a, b) => (a.name || '').localeCompare(b.name || ''));
   }, [students]);
+
+  // Filtered students for modal search
+  const filteredModalStudents = useMemo(() => {
+    if (!modalStudentSearch.trim()) return activeStudents;
+    const term = modalStudentSearch.toLowerCase().trim();
+    return activeStudents.filter(s => 
+      (s.name || '').toLowerCase().includes(term) ||
+      (s.rollNumber || '').toLowerCase().includes(term) ||
+      (s.class || '').toLowerCase().includes(term) ||
+      (s.phone || '').includes(term)
+    );
+  }, [activeStudents, modalStudentSearch]);
+
+  const selectedStudent = useMemo(() => {
+    return activeStudents.find(s => s.id === selectedStudentId);
+  }, [activeStudents, selectedStudentId]);
 
   // Filtered Remarks
   const filteredRemarks = useMemo(() => {
@@ -143,6 +161,8 @@ export default function StudentRemarksManagement() {
   const handleOpenAdd = (preselectedStudentId?: string) => {
     setEditingRemark(null);
     setSelectedStudentId(preselectedStudentId || (activeStudents[0]?.id || ''));
+    setModalStudentSearch('');
+    setIsStudentDropdownOpen(false);
     setTitle('');
     setRemarkText('');
     setCategory('academic');
@@ -154,6 +174,8 @@ export default function StudentRemarksManagement() {
   const handleOpenEdit = (remark: StudentRemark) => {
     setEditingRemark(remark);
     setSelectedStudentId(remark.studentId);
+    setModalStudentSearch('');
+    setIsStudentDropdownOpen(false);
     setTitle(remark.title || '');
     setRemarkText(remark.remark);
     setCategory(remark.category || 'academic');
@@ -165,6 +187,8 @@ export default function StudentRemarksManagement() {
     setIsModalOpen(false);
     setEditingRemark(null);
     setSelectedStudentId('');
+    setModalStudentSearch('');
+    setIsStudentDropdownOpen(false);
     setTitle('');
     setRemarkText('');
   };
@@ -678,24 +702,127 @@ export default function StudentRemarksManagement() {
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-5 mt-5">
-                {/* Student Selector */}
-                <div>
-                  <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">
-                    Select Student <span className="text-rose-400">*</span>
-                  </label>
-                  <select
-                    value={selectedStudentId}
-                    onChange={(e) => setSelectedStudentId(e.target.value)}
-                    required
-                    className="w-full bg-white/5 border border-white/15 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-indigo-500 transition-colors"
+                {/* Searchable Student Selector */}
+                <div className="relative">
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider">
+                      Select Student <span className="text-rose-400">*</span>
+                    </label>
+                    {selectedStudent && (
+                      <span className="text-[11px] font-semibold text-indigo-400">
+                        Roll: {selectedStudent.rollNumber || 'N/A'} • {formatClassName(selectedStudent.class)}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Trigger Box */}
+                  <div
+                    onClick={() => setIsStudentDropdownOpen(prev => !prev)}
+                    className="w-full bg-white/5 border border-white/15 hover:border-indigo-500/50 rounded-xl px-4 py-3 text-sm text-white flex items-center justify-between cursor-pointer transition-all focus-within:border-indigo-500 group"
                   >
-                    <option value="" disabled className="bg-[#020712] text-slate-400">Select a student...</option>
-                    {activeStudents.map(st => (
-                      <option key={st.id} value={st.id} className="bg-[#020712] text-white">
-                        {st.name} — Roll: {st.rollNumber || 'N/A'} ({formatClassName(st.class)})
-                      </option>
-                    ))}
-                  </select>
+                    <div className="flex items-center gap-3 overflow-hidden flex-1 mr-2">
+                      <Search size={16} className="text-slate-400 group-hover:text-indigo-400 transition-colors shrink-0" />
+                      {selectedStudent ? (
+                        <div className="flex items-center gap-2 truncate flex-1">
+                          <span className="font-bold text-white truncate">{selectedStudent.name}</span>
+                          <span className="text-xs text-slate-400 shrink-0">
+                            (Roll: {selectedStudent.rollNumber || 'N/A'})
+                          </span>
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 shrink-0">
+                            {formatClassName(selectedStudent.class)}
+                          </span>
+                        </div>
+                      ) : (
+                        <span className="text-slate-400 text-sm">Search and select student...</span>
+                      )}
+                    </div>
+                    <ChevronDown size={16} className={`text-slate-400 transition-transform duration-200 shrink-0 ${isStudentDropdownOpen ? 'rotate-180 text-indigo-400' : ''}`} />
+                  </div>
+
+                  {/* Dropdown Menu */}
+                  {isStudentDropdownOpen && (
+                    <>
+                      <div 
+                        className="fixed inset-0 z-[60]" 
+                        onClick={() => setIsStudentDropdownOpen(false)}
+                      />
+                      <div className="absolute top-full left-0 right-0 mt-2 bg-[#020712] border border-white/20 rounded-2xl shadow-2xl z-[70] overflow-hidden animate-in fade-in slide-in-from-top-2 duration-150">
+                        <div className="p-3 border-b border-white/10 bg-white/[0.03]">
+                          <div className="relative">
+                            <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                            <input
+                              autoFocus
+                              type="text"
+                              placeholder="Search by student name, roll no, or class..."
+                              value={modalStudentSearch}
+                              onChange={(e) => setModalStudentSearch(e.target.value)}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Escape') setIsStudentDropdownOpen(false);
+                              }}
+                              className="w-full bg-white/5 border border-white/15 rounded-xl pl-10 pr-8 py-2.5 text-xs text-white placeholder-slate-400 focus:outline-none focus:border-indigo-500 transition-colors"
+                            />
+                            {modalStudentSearch && (
+                              <button
+                                type="button"
+                                onClick={() => setModalStudentSearch('')}
+                                className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-white"
+                              >
+                                <X size={13} />
+                              </button>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="max-h-56 overflow-y-auto divide-y divide-white/5">
+                          {filteredModalStudents.length > 0 ? (
+                            filteredModalStudents.map(st => {
+                              const isCurrent = st.id === selectedStudentId;
+                              return (
+                                <div
+                                  key={st.id}
+                                  onClick={() => {
+                                    setSelectedStudentId(st.id);
+                                    setIsStudentDropdownOpen(false);
+                                    setModalStudentSearch('');
+                                  }}
+                                  className={`px-4 py-3 flex items-center justify-between cursor-pointer transition-colors ${
+                                    isCurrent ? 'bg-indigo-600/30 text-white' : 'hover:bg-indigo-600/20 text-slate-200'
+                                  }`}
+                                >
+                                  <div className="truncate mr-3">
+                                    <p className={`text-xs font-bold truncate ${isCurrent ? 'text-indigo-300' : 'text-white'}`}>
+                                      {st.name}
+                                    </p>
+                                    <p className="text-[10px] text-slate-400 mt-0.5">
+                                      Roll: <span className="text-slate-300 font-semibold">{st.rollNumber || 'N/A'}</span>
+                                      {st.phone ? ` • ${st.phone}` : ''}
+                                    </p>
+                                  </div>
+                                  <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-white/5 text-indigo-300 border border-white/10 shrink-0">
+                                    {formatClassName(st.class)}
+                                  </span>
+                                </div>
+                              );
+                            })
+                          ) : (
+                            <div className="px-4 py-6 text-center text-xs text-slate-400 font-medium">
+                              No student matching &ldquo;{modalStudentSearch}&rdquo;
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </>
+                  )}
+
+                  {/* Hidden input for HTML5 required form validation */}
+                  <input
+                    type="text"
+                    className="sr-only"
+                    required
+                    value={selectedStudentId}
+                    onChange={() => {}}
+                    tabIndex={-1}
+                  />
                 </div>
 
                 {/* Category Selector */}

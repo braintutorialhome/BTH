@@ -11,6 +11,7 @@ import { Student } from '../../../types';
 import { safeFormat, formatClassName, getISTToday } from '../../../lib/utils';
 import { exportStudentToPdf } from '../../../utils/studentPdfExport';
 import { exportStudentToCsv } from '../../../utils/studentCsvExport';
+import { exportStudentOverviewToPdf } from '../../../utils/studentOverviewPdfExport';
 import { exportCsvData } from '../../../utils/mobileExportHelper';
 
 export default function StudentOverview() {
@@ -36,6 +37,9 @@ export default function StudentOverview() {
 
   // Selected student for comprehensive read-only profile modal
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
+  const [exportingStudentId, setExportingStudentId] = useState<string | null>(null);
+  const [isExportingOverviewPdf, setIsExportingOverviewPdf] = useState(false);
+  const [isExportingCsv, setIsExportingCsv] = useState(false);
 
   // Fee helper calculation
   const getStudentFeeStats = (studentId: string) => {
@@ -124,38 +128,62 @@ export default function StudentOverview() {
 
   // Export to CSV with mobile APK and web support
   const handleExportCSV = async () => {
-    const headers = [
-      'Student ID', 'Roll No', 'Full Name', 'Father Name', 'Class', 'Session', 
-      'Subject', 'Mobile', 'WhatsApp', 'Gender', 'DOB', 'Joining Date', 
-      'Address', 'Status', 'Current Fees Paid (INR)', 'Assigned Dues (INR)', 'Due Balance (INR)'
-    ];
+    setIsExportingCsv(true);
+    try {
+      const headers = [
+        'Student ID', 'Roll No', 'Full Name', 'Father Name', 'Class', 'Session', 
+        'Subject', 'Mobile', 'WhatsApp', 'Gender', 'DOB', 'Joining Date', 
+        'Address', 'Status', 'Current Fees Paid (INR)', 'Assigned Dues (INR)', 'Due Balance (INR)'
+      ];
 
-    const rows = filteredStudents.map(s => {
-      const stats = getStudentFeeStats(s.id);
-      return [
-        `"${s.id}"`,
-        `"${s.rollNumber || 'N/A'}"`,
-        `"${s.name.replace(/"/g, '""')}"`,
-        `"${(s.fatherName || 'N/A').replace(/"/g, '""')}"`,
-        `"${formatClassName(s.class)}"`,
-        `"${s.semester || 'N/A'}"`,
-        `"${(s.subject || 'N/A').replace(/"/g, '""')}"`,
-        `"${s.mobile || 'N/A'}"`,
-        `"${s.whatsapp || 'N/A'}"`,
-        `"${s.gender || 'N/A'}"`,
-        `"${s.dob || 'N/A'}"`,
-        `"${s.dateOfJoining || s.admissionDate || 'N/A'}"`,
-        `"${(s.address || 'N/A').replace(/"/g, '""')}"`,
-        `"${s.status}"`,
-        stats.totalPaid,
-        stats.totalDueAssigned,
-        stats.remainingBalance
-      ].join(',');
-    });
+      const rows = filteredStudents.map(s => {
+        const stats = getStudentFeeStats(s.id);
+        return [
+          `"${s.id}"`,
+          `"${s.rollNumber || 'N/A'}"`,
+          `"${s.name.replace(/"/g, '""')}"`,
+          `"${(s.fatherName || 'N/A').replace(/"/g, '""')}"`,
+          `"${formatClassName(s.class)}"`,
+          `"${s.semester || 'N/A'}"`,
+          `"${(s.subject || 'N/A').replace(/"/g, '""')}"`,
+          `"${s.mobile || 'N/A'}"`,
+          `"${s.whatsapp || 'N/A'}"`,
+          `"${s.gender || 'N/A'}"`,
+          `"${s.dob || 'N/A'}"`,
+          `"${s.dateOfJoining || s.admissionDate || 'N/A'}"`,
+          `"${(s.address || 'N/A').replace(/"/g, '""')}"`,
+          `"${s.status}"`,
+          stats.totalPaid,
+          stats.totalDueAssigned,
+          stats.remainingBalance
+        ].join(',');
+      });
 
-    const csvContent = [headers.join(','), ...rows].join('\n');
-    const filename = `Student_Overview_${getISTToday()}.csv`;
-    await exportCsvData(csvContent, filename);
+      const csvContent = [headers.join(','), ...rows].join('\n');
+      const filename = `Student_Overview_${getISTToday()}.csv`;
+      await exportCsvData(csvContent, filename);
+    } finally {
+      setIsExportingCsv(false);
+    }
+  };
+
+  // Export Master Student Overview to official PDF report
+  const handleExportOverviewPdf = async () => {
+    setIsExportingOverviewPdf(true);
+    try {
+      const items = filteredStudents.map(student => ({
+        student,
+        stats: getStudentFeeStats(student.id)
+      }));
+      await exportStudentOverviewToPdf(items, {
+        classFilter,
+        statusFilter
+      });
+    } catch (err) {
+      console.error('Failed to export overview PDF:', err);
+    } finally {
+      setIsExportingOverviewPdf(false);
+    }
   };
 
   const handlePrint = () => {
@@ -163,10 +191,17 @@ export default function StudentOverview() {
   };
 
   const handleExportSingleStudentPdf = async (student: Student) => {
-    const stats = getStudentFeeStats(student.id);
-    const studentPayments = fees.filter(f => f.studentId === student.id && f.status === 'paid');
-    const studentDues = dueFees.filter(d => d.studentId === student.id);
-    await exportStudentToPdf(student, stats, studentPayments, studentDues);
+    setExportingStudentId(student.id);
+    try {
+      const stats = getStudentFeeStats(student.id);
+      const studentPayments = fees.filter(f => f.studentId === student.id && f.status === 'paid');
+      const studentDues = dueFees.filter(d => d.studentId === student.id);
+      await exportStudentToPdf(student, stats, studentPayments, studentDues);
+    } catch (err) {
+      console.error('Failed to export single student PDF:', err);
+    } finally {
+      setExportingStudentId(null);
+    }
   };
 
   const handleExportSingleStudentCsv = async (student: Student) => {
@@ -207,12 +242,22 @@ export default function StudentOverview() {
         {/* Action controls (Read-Only Data Consumption) */}
         <div className="flex flex-wrap items-center gap-3 relative z-10">
           <button 
+            onClick={handleExportOverviewPdf}
+            disabled={isExportingOverviewPdf}
+            className="px-4 py-2.5 rounded-2xl bg-rose-500/20 hover:bg-rose-500/30 border border-rose-500/40 text-rose-300 hover:text-white text-xs font-bold flex items-center gap-2 transition-all cursor-pointer shadow-sm hover:shadow-rose-500/20 active:scale-95 disabled:opacity-50"
+            title="Export complete student overview report to PDF"
+          >
+            <FileDown size={15} className="text-rose-400" />
+            <span>{isExportingOverviewPdf ? 'Exporting PDF...' : 'Export PDF'}</span>
+          </button>
+          <button 
             onClick={handleExportCSV}
-            className="px-4 py-2.5 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 text-white text-xs font-bold flex items-center gap-2 transition-all cursor-pointer shadow-sm hover:border-white/20 active:scale-95"
+            disabled={isExportingCsv}
+            className="px-4 py-2.5 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 text-white text-xs font-bold flex items-center gap-2 transition-all cursor-pointer shadow-sm hover:border-white/20 active:scale-95 disabled:opacity-50"
             title="Export full list to CSV spreadsheet"
           >
             <Download size={15} className="text-cyan-400" />
-            <span>Export CSV</span>
+            <span>{isExportingCsv ? 'Exporting CSV...' : 'Export CSV'}</span>
           </button>
           <button 
             onClick={handlePrint}
@@ -553,11 +598,12 @@ export default function StudentOverview() {
                         <div className="inline-flex items-center justify-end gap-2">
                           <button
                             onClick={() => handleExportSingleStudentPdf(student)}
-                            className="px-2.5 py-1.5 rounded-xl bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 hover:text-cyan-200 border border-cyan-500/20 hover:border-cyan-500/40 text-xs font-bold inline-flex items-center gap-1.5 transition-all cursor-pointer active:scale-95 shadow-sm"
+                            disabled={exportingStudentId === student.id}
+                            className="px-2.5 py-1.5 rounded-xl bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 hover:text-cyan-200 border border-cyan-500/20 hover:border-cyan-500/40 text-xs font-bold inline-flex items-center gap-1.5 transition-all cursor-pointer active:scale-95 shadow-sm disabled:opacity-50"
                             title="Export PDF for this student"
                           >
-                            <FileDown size={13} />
-                            <span>Export PDF</span>
+                            <FileDown size={13} className={exportingStudentId === student.id ? 'animate-bounce' : ''} />
+                            <span>{exportingStudentId === student.id ? 'Exporting...' : 'Export PDF'}</span>
                           </button>
                           <button
                             onClick={() => setSelectedStudent(student)}
@@ -681,11 +727,12 @@ export default function StudentOverview() {
                   </button>
                   <button
                     onClick={() => handleExportSingleStudentPdf(student)}
-                    className="py-2.5 rounded-xl bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 hover:text-cyan-200 border border-cyan-500/20 hover:border-cyan-500/40 font-bold text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer active:scale-95 shadow-sm"
+                    disabled={exportingStudentId === student.id}
+                    className="py-2.5 rounded-xl bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 hover:text-cyan-200 border border-cyan-500/20 hover:border-cyan-500/40 font-bold text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer active:scale-95 shadow-sm disabled:opacity-50"
                     title="Export Student PDF"
                   >
-                    <FileDown size={14} />
-                    <span>Export PDF</span>
+                    <FileDown size={14} className={exportingStudentId === student.id ? 'animate-bounce' : ''} />
+                    <span>{exportingStudentId === student.id ? 'Exporting...' : 'Export PDF'}</span>
                   </button>
                 </div>
               </div>
@@ -731,11 +778,12 @@ export default function StudentOverview() {
               <div className="flex flex-wrap items-center gap-2">
                 <button
                   onClick={() => handleExportSingleStudentPdf(selectedStudent)}
-                  className="px-3 py-1.5 rounded-xl bg-cyan-600/20 hover:bg-cyan-600 text-cyan-300 hover:text-white border border-cyan-500/30 hover:border-cyan-500 text-xs font-bold inline-flex items-center gap-1.5 transition-all cursor-pointer shadow-sm active:scale-95"
+                  disabled={exportingStudentId === selectedStudent.id}
+                  className="px-3 py-1.5 rounded-xl bg-cyan-600/20 hover:bg-cyan-600 text-cyan-300 hover:text-white border border-cyan-500/30 hover:border-cyan-500 text-xs font-bold inline-flex items-center gap-1.5 transition-all cursor-pointer shadow-sm active:scale-95 disabled:opacity-50"
                   title="Export this student's complete dossier to PDF"
                 >
-                  <FileDown size={14} />
-                  <span>Export PDF</span>
+                  <FileDown size={14} className={exportingStudentId === selectedStudent.id ? 'animate-bounce' : ''} />
+                  <span>{exportingStudentId === selectedStudent.id ? 'Exporting...' : 'Export PDF'}</span>
                 </button>
                 <button
                   onClick={() => handleExportSingleStudentCsv(selectedStudent)}
@@ -907,11 +955,12 @@ export default function StudentOverview() {
               <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto justify-end">
                 <button
                   onClick={() => handleExportSingleStudentPdf(selectedStudent)}
-                  className="px-4 py-2.5 rounded-xl bg-cyan-600/30 hover:bg-cyan-600 text-cyan-200 hover:text-white border border-cyan-500/30 font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer shadow-lg active:scale-95"
+                  disabled={exportingStudentId === selectedStudent.id}
+                  className="px-4 py-2.5 rounded-xl bg-cyan-600/30 hover:bg-cyan-600 text-cyan-200 hover:text-white border border-cyan-500/30 font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer shadow-lg active:scale-95 disabled:opacity-50"
                   title="Export student complete profile & fees as PDF"
                 >
-                  <FileDown size={15} />
-                  <span>Export PDF</span>
+                  <FileDown size={15} className={exportingStudentId === selectedStudent.id ? 'animate-bounce' : ''} />
+                  <span>{exportingStudentId === selectedStudent.id ? 'Exporting...' : 'Export PDF'}</span>
                 </button>
                 <button
                   onClick={() => handleExportSingleStudentCsv(selectedStudent)}

@@ -54,8 +54,10 @@ async function startServer() {
     if (!item) {
       return res.status(404).send("This download link has expired. Please return to the app and generate the document again.");
     }
+    const isInline = req.query.inline === "1" || req.query.view === "1";
+    res.setHeader("Access-Control-Allow-Origin", "*");
     res.setHeader("Content-Type", item.mimeType);
-    res.setHeader("Content-Disposition", `attachment; filename="${item.filename}"`);
+    res.setHeader("Content-Disposition", `${isInline ? "inline" : "attachment"}; filename="${item.filename}"`);
     res.setHeader("Content-Length", item.buffer.length);
     res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
     res.send(item.buffer);
