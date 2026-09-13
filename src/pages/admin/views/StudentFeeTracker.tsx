@@ -108,8 +108,10 @@ export default function StudentFeeTracker() {
     return matchesSearch && matchesClass && matchesSession && matchesSubject && matchesStatus;
   }).sort((a, b) => {
     if (sortBy === 'due') {
-      const dueA = getStudentFeeStats(a.id).remainingBalance;
-      const dueB = getStudentFeeStats(b.id).remainingBalance;
+      const statsA = getStudentFeeStats(a.id);
+      const statsB = getStudentFeeStats(b.id);
+      const dueA = statsA.totalDueAssigned || statsA.remainingBalance;
+      const dueB = statsB.totalDueAssigned || statsB.remainingBalance;
       return dueB - dueA;
     } else if (sortBy === 'roll') {
       return (a.rollNumber || '').localeCompare(b.rollNumber || '');
@@ -450,23 +452,28 @@ export default function StudentFeeTracker() {
             )}
           </div>
 
-          <div className="flex items-center gap-3">
-            <span className="font-bold text-slate-500">Sort By:</span>
+          <div className="flex items-center gap-2">
+            <span className="font-bold text-slate-500 text-xs">Sort By:</span>
             <button 
               onClick={() => setSortBy('name')} 
-              className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all ${sortBy === 'name' ? 'bg-indigo-600 text-white' : 'bg-white/5 hover:bg-white/10 text-slate-400'}`}
+              className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer ${sortBy === 'name' ? 'bg-indigo-600 text-white shadow-md' : 'bg-white/5 hover:bg-white/10 text-slate-400 border border-white/5'}`}
             >
               Name (A-Z)
             </button>
             <button 
               onClick={() => setSortBy('due')} 
-              className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all ${sortBy === 'due' ? 'bg-amber-600 text-white' : 'bg-white/5 hover:bg-white/10 text-slate-400'}`}
+              className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer ${
+                sortBy === 'due' 
+                  ? 'bg-amber-500 text-slate-950 font-black shadow-lg shadow-amber-500/25 ring-1 ring-amber-400' 
+                  : 'bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white border border-white/5'
+              }`}
+              title="Sort by Total Dues"
             >
-              Highest Due
+              Total Dues
             </button>
             <button 
               onClick={() => setSortBy('roll')} 
-              className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all ${sortBy === 'roll' ? 'bg-indigo-600 text-white' : 'bg-white/5 hover:bg-white/10 text-slate-400'}`}
+              className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer ${sortBy === 'roll' ? 'bg-indigo-600 text-white shadow-md' : 'bg-white/5 hover:bg-white/10 text-slate-400 border border-white/5'}`}
             >
               Roll No
             </button>

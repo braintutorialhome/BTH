@@ -15,7 +15,9 @@ export default function FeeManagement() {
     studentId: '',
     amount: '',
     month: getISTMonthName(),
-    date: getISTToday()
+    date: getISTToday(),
+    paymentMethod: 'Cash',
+    notes: ''
   });
 
   const [studentSearch, setStudentSearch] = useState('');
@@ -37,12 +39,21 @@ export default function FeeManagement() {
       amount: parseFloat(newFee.amount),
       month: newFee.month,
       date: newFee.date,
+      paymentMethod: newFee.paymentMethod || 'Cash',
+      notes: newFee.notes || '',
       status: 'paid'
     });
     
     setShowAdd(false);
     setDropdownOpen(false);
-    setNewFee({ studentId: '', amount: '', month: getISTMonthName(), date: getISTToday() });
+    setNewFee({ 
+      studentId: '', 
+      amount: '', 
+      month: getISTMonthName(), 
+      date: getISTToday(),
+      paymentMethod: 'Cash',
+      notes: ''
+    });
     setStudentSearch('');
   };
 
@@ -235,15 +246,42 @@ export default function FeeManagement() {
                   />
                 </div>
               </div>
+              <div className="grid md:grid-cols-2 gap-8">
+                <div className="space-y-3">
+                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Billing Month</label>
+                  <input 
+                    required
+                    type="text" 
+                    value={newFee.month}
+                    onChange={(e) => setNewFee({...newFee, month: e.target.value})}
+                    className="input-glass w-full py-4 rounded-2xl"
+                    placeholder="e.g. April 2024"
+                  />
+                </div>
+                <div className="space-y-3">
+                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Payment Method</label>
+                  <select 
+                    value={newFee.paymentMethod}
+                    onChange={(e) => setNewFee({...newFee, paymentMethod: e.target.value})}
+                    className="input-glass w-full py-4 px-5 rounded-2xl cursor-pointer text-white font-medium bg-[#0b1120] border border-white/10 focus:border-indigo-500/50"
+                  >
+                    <option value="Cash" className="bg-slate-900 text-white">Cash</option>
+                    <option value="UPI / GPay" className="bg-slate-900 text-white">UPI / GPay</option>
+                    <option value="Bank Transfer" className="bg-slate-900 text-white">Bank Transfer</option>
+                    <option value="Cheque" className="bg-slate-900 text-white">Cheque</option>
+                    <option value="Online / Card" className="bg-slate-900 text-white">Online / Card</option>
+                    <option value="Other" className="bg-slate-900 text-white">Other</option>
+                  </select>
+                </div>
+              </div>
               <div className="space-y-3">
-                <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Billing Month</label>
+                <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Notes / Remarks (Optional)</label>
                 <input 
-                  required
                   type="text" 
-                  value={newFee.month}
-                  onChange={(e) => setNewFee({...newFee, month: e.target.value})}
+                  value={newFee.notes}
+                  onChange={(e) => setNewFee({...newFee, notes: e.target.value})}
                   className="input-glass w-full py-4 rounded-2xl"
-                  placeholder="e.g. April 2024"
+                  placeholder="e.g. Receipt #402, UPI Txn ID, or remarks..."
                 />
               </div>
               <button 
@@ -291,8 +329,20 @@ export default function FeeManagement() {
                          </div>
                       </div>
                     </td>
-                    <td className="px-10 py-6 font-bold text-slate-300 tracking-tight">{f.month}</td>
-                    <td className="px-10 py-6 font-bold text-slate-400 tracking-tighter">{safeFormat(f.date, 'dd MMM yyyy')}</td>
+                    <td className="px-10 py-6 font-bold text-slate-300 tracking-tight">
+                      <div>{f.month}</div>
+                      {f.notes && (
+                        <p className="text-[11px] font-medium text-slate-400 mt-0.5 max-w-xs truncate" title={f.notes}>
+                          {f.notes}
+                        </p>
+                      )}
+                    </td>
+                    <td className="px-10 py-6 font-bold text-slate-400 tracking-tighter">
+                      <div>{safeFormat(f.date, 'dd MMM yyyy')}</div>
+                      <span className="inline-block text-[10px] font-black text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded border border-indigo-500/20 uppercase tracking-widest mt-1">
+                        {f.paymentMethod || 'Cash'}
+                      </span>
+                    </td>
                     <td className="px-10 py-6 font-black text-emerald-400 text-lg">₹{f.amount}</td>
                     <td className="px-10 py-6 text-right">
                       <span className="bg-emerald-500/10 text-emerald-400 text-[9px] font-black uppercase tracking-[0.2em] px-3 py-1.5 rounded-lg border border-emerald-500/20 shadow-lg shadow-emerald-500/5">

@@ -440,7 +440,7 @@ export default function StudentOverview() {
               <option value="name">Name (A-Z)</option>
               <option value="roll">Roll Number</option>
               <option value="class">Class</option>
-              <option value="due">Highest Due</option>
+              <option value="due">Total Dues</option>
               <option value="paid">Highest Paid</option>
             </select>
           </div>
