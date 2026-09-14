@@ -7,9 +7,8 @@ import { jsPDF } from 'jspdf';
 export const isMobileOrWebView = (): boolean => {
   if (typeof window === 'undefined' || typeof navigator === 'undefined') return false;
   const ua = navigator.userAgent || '';
-  const isAndroidWebView = /wv|Android.*Version\/[\d.]+/i.test(ua) || (Boolean((window as any).chrome) && /Android/i.test(ua) && !/Version\/[\d.]+/i.test(ua));
+  const isAndroidWebView = /wv|Android.*Version\/[\d.]+/i.test(ua);
   const isMobileUa = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua);
-  const isTouchDevice = typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0);
   const hasNativeBridge = Boolean(
     (window as any).Android ||
     (window as any).AndroidInterface ||
@@ -17,7 +16,7 @@ export const isMobileOrWebView = (): boolean => {
     (window as any).AndroidBridge ||
     (window as any).webkit?.messageHandlers
   );
-  return isAndroidWebView || isMobileUa || (isTouchDevice && window.innerWidth < 1024) || hasNativeBridge;
+  return isAndroidWebView || (isMobileUa && hasNativeBridge) || hasNativeBridge;
 };
 
 /**
@@ -171,26 +170,24 @@ const triggerDirectDownload = (url: string, filename: string) => {
 /**
  * Browser anchor download fallback using blob object URL
  */
-const triggerBlobDownload = (blob: Blob, filename: string): boolean => {
+export const triggerBlobDownload = (blob: Blob, filename: string): boolean => {
   try {
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
-    link.style.position = 'fixed';
-    link.style.left = '-9999px';
-    link.style.top = '-9999px';
-    link.style.opacity = '0';
+    link.style.display = 'none';
     link.href = url;
     link.setAttribute('download', filename);
-    link.setAttribute('target', '_self');
     document.body.appendChild(link);
     link.click();
 
     setTimeout(() => {
       try {
-        document.body.removeChild(link);
+        if (link.parentNode) {
+          link.parentNode.removeChild(link);
+        }
         URL.revokeObjectURL(url);
       } catch {}
-    }, 10000);
+    }, 20000);
     return true;
   } catch (err) {
     console.warn('triggerBlobDownload failed:', err);
@@ -466,7 +463,8 @@ export const showMobileDownloadModal = (params: {
 export const exportFileForMobileAndWeb = async (
   blob: Blob,
   filename: string,
-  mimeType: string
+  mimeType: string,
+  alreadyTriggeredDirectSave: boolean = false
 ): Promise<void> => {
   const isMobile = isMobileOrWebView();
 
@@ -477,28 +475,31 @@ export const exportFileForMobileAndWeb = async (
     return;
   }
 
-  // 2. Stage file on backend server to obtain guaranteed HTTPS download URL
-  const staged = await stageFileOnServer(blob, filename, mimeType);
-
-  // 3. Immediately trigger direct download
-  if (staged?.downloadUrl) {
-    triggerDirectDownload(staged.downloadUrl, filename);
+  // 2. Immediately trigger direct download if not already handled
+  // Must execute immediately to preserve browser user activation
+  if (!alreadyTriggeredDirectSave) {
+    triggerBlobDownload(blob, filename);
   }
-  triggerBlobDownload(blob, filename);
 
-  // 4. On Mobile / APK WebView: Always open the interactive Action Modal
-  // This guarantees that if the user's APK lacks automatic DownloadManager listener,
-  // they have instant 1-tap options to Save, Share to WhatsApp/Drive, or Open in Chrome!
+  // 3. For Mobile APK WebViews, stage on server in background to provide Action Sheet modal
   if (isMobile) {
-    showMobileDownloadModal({
-      filename,
-      blob,
-      mimeType,
-      downloadUrl: staged?.downloadUrl,
-      viewUrl: staged?.viewUrl
+    stageFileOnServer(blob, filename, mimeType).then(staged => {
+      showMobileDownloadModal({
+        filename,
+        blob,
+        mimeType,
+        downloadUrl: staged?.downloadUrl,
+        viewUrl: staged?.viewUrl
+      });
+    }).catch(() => {
+      showMobileDownloadModal({
+        filename,
+        blob,
+        mimeType
+      });
     });
   } else {
-    // Desktop: Sleek toast
+    // Desktop / Web: Sleek toast
     showExportToast(`Downloaded ${filename}`);
   }
 };
@@ -507,12 +508,23 @@ export const exportFileForMobileAndWeb = async (
  * Specialized helper to export jsPDF instances on Android APK and Web
  */
 export const exportPdfDocument = async (doc: jsPDF, filename: string): Promise<void> => {
+  let directSaveDone = false;
+  try {
+    // Synchronous direct save to trigger browser download immediately within user gesture
+    doc.save(filename);
+    directSaveDone = true;
+  } catch (err) {
+    console.warn('doc.save direct trigger encountered error, falling back to blob:', err);
+  }
+
   try {
     const pdfBlob = doc.output('blob');
-    await exportFileForMobileAndWeb(pdfBlob, filename, 'application/pdf');
+    await exportFileForMobileAndWeb(pdfBlob, filename, 'application/pdf', directSaveDone);
   } catch (e) {
-    console.warn('Failed to export PDF blob, attempting direct save:', e);
-    doc.save(filename);
+    console.warn('exportFileForMobileAndWeb error:', e);
+    if (!directSaveDone) {
+      doc.save(filename);
+    }
   }
 };
 

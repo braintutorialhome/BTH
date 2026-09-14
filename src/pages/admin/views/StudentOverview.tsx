@@ -12,7 +12,7 @@ import { safeFormat, formatClassName, getISTToday } from '../../../lib/utils';
 import { exportStudentToPdf } from '../../../utils/studentPdfExport';
 import { exportStudentToCsv } from '../../../utils/studentCsvExport';
 import { exportStudentOverviewToPdf } from '../../../utils/studentOverviewPdfExport';
-import { exportCsvData } from '../../../utils/mobileExportHelper';
+import { exportCsvData, showExportToast } from '../../../utils/mobileExportHelper';
 
 export default function StudentOverview() {
   const { currentUser, students, fees, dueFees } = useStorage();
@@ -31,7 +31,7 @@ export default function StudentOverview() {
   const [sessionFilter, setSessionFilter] = useState('All');
   const [subjectFilter, setSubjectFilter] = useState('All');
   const [statusFilter, setStatusFilter] = useState<'All' | 'approved' | 'pending' | 'deleted'>('approved');
-  const [feeStatusFilter, setFeeStatusFilter] = useState<'All' | 'due' | 'cleared'>('All');
+  const [feeStatusFilter, setFeeStatusFilter] = useState<'All' | 'due' | 'cleared' | 'assigned'>('All');
   const [sortBy, setSortBy] = useState<'name' | 'roll' | 'due' | 'paid' | 'class'>('name');
   const [viewMode, setViewMode] = useState<'table' | 'grid'>('table');
 
@@ -90,7 +90,8 @@ export default function StudentOverview() {
       // Fee status filter
       const stats = getStudentFeeStats(student.id);
       if (feeStatusFilter === 'due' && stats.remainingBalance <= 0) return false;
-      if (feeStatusFilter === 'cleared' && stats.remainingBalance > 0) return false;
+      if (feeStatusFilter === 'cleared' && stats.totalDueAssigned > 0) return false;
+      if (feeStatusFilter === 'assigned' && stats.totalDueAssigned <= 0) return false;
 
       // Search match
       const query = searchTerm.toLowerCase();
@@ -169,6 +170,10 @@ export default function StudentOverview() {
 
   // Export Master Student Overview to official PDF report
   const handleExportOverviewPdf = async () => {
+    if (filteredStudents.length === 0) {
+      showExportToast('No students match current filters to export', false);
+      return;
+    }
     setIsExportingOverviewPdf(true);
     try {
       const items = filteredStudents.map(student => ({
@@ -179,8 +184,10 @@ export default function StudentOverview() {
         classFilter,
         statusFilter
       });
-    } catch (err) {
+      showExportToast(`Exported Student Overview PDF (${items.length} records)`);
+    } catch (err: any) {
       console.error('Failed to export overview PDF:', err);
+      showExportToast(err?.message || 'Failed to export overview PDF. Please try again.', false);
     } finally {
       setIsExportingOverviewPdf(false);
     }
@@ -197,8 +204,10 @@ export default function StudentOverview() {
       const studentPayments = fees.filter(f => f.studentId === student.id && f.status === 'paid');
       const studentDues = dueFees.filter(d => d.studentId === student.id);
       await exportStudentToPdf(student, stats, studentPayments, studentDues);
-    } catch (err) {
+      showExportToast(`Exported PDF for ${student.name}`);
+    } catch (err: any) {
       console.error('Failed to export single student PDF:', err);
+      showExportToast(err?.message || 'Failed to export student PDF. Please try again.', false);
     } finally {
       setExportingStudentId(null);
     }
@@ -421,11 +430,20 @@ export default function StudentOverview() {
             <select
               value={feeStatusFilter}
               onChange={(e) => setFeeStatusFilter(e.target.value as any)}
-              className="w-full bg-[#020712]/90 border border-white/10 text-white text-xs font-bold py-2.5 px-3 rounded-xl focus:outline-none focus:border-cyan-400"
+              className={`w-full text-xs font-bold py-2.5 px-3 rounded-xl focus:outline-none transition-all cursor-pointer ${
+                feeStatusFilter === 'assigned'
+                  ? 'bg-rose-950/40 border border-rose-500/50 text-rose-300 ring-1 ring-rose-500/30'
+                  : feeStatusFilter === 'cleared'
+                  ? 'bg-emerald-950/40 border border-emerald-500/50 text-emerald-300 ring-1 ring-emerald-500/30'
+                  : feeStatusFilter !== 'All'
+                  ? 'bg-amber-950/40 border border-amber-500/50 text-amber-300 ring-1 ring-amber-500/30'
+                  : 'bg-[#020712]/90 border border-white/10 text-white hover:border-white/20 focus:border-cyan-400'
+              }`}
             >
-              <option value="All">All Fee Statuses</option>
-              <option value="due">Due Pending Only</option>
-              <option value="cleared">Fully Cleared Only</option>
+              <option value="All" className="bg-slate-900 text-white">All Fee Statuses</option>
+              <option value="assigned" className="bg-slate-900 text-rose-300 font-bold">Total Dues Assigned</option>
+              <option value="due" className="bg-slate-900 text-amber-300">Due Pending Only</option>
+              <option value="cleared" className="bg-slate-900 text-emerald-300">Fully Cleared Only</option>
             </select>
           </div>
 

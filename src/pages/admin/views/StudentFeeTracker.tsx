@@ -23,7 +23,7 @@ export default function StudentFeeTracker() {
   const [classFilter, setClassFilter] = useState('All');
   const [sessionFilter, setSessionFilter] = useState('All');
   const [subjectFilter, setSubjectFilter] = useState('All');
-  const [statusFilter, setStatusFilter] = useState<'All' | 'Pending' | 'Cleared'>('All');
+  const [statusFilter, setStatusFilter] = useState<'All' | 'Pending' | 'Cleared' | 'Total Dues Assigned'>('All');
   const [sortBy, setSortBy] = useState<'name' | 'due' | 'roll'>('name');
 
   // Selected student for detailed drawer/modal
@@ -102,7 +102,9 @@ export default function StudentFeeTracker() {
     if (statusFilter === 'Pending') {
       matchesStatus = stats.remainingBalance > 0;
     } else if (statusFilter === 'Cleared') {
-      matchesStatus = stats.remainingBalance <= 0;
+      matchesStatus = stats.totalDueAssigned <= 0;
+    } else if (statusFilter === 'Total Dues Assigned') {
+      matchesStatus = stats.totalDueAssigned > 0;
     }
 
     return matchesSearch && matchesClass && matchesSession && matchesSubject && matchesStatus;
@@ -423,11 +425,20 @@ export default function StudentFeeTracker() {
             <select 
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value as any)}
-              className="input-glass w-full py-3 px-4 text-xs font-bold rounded-2xl appearance-none cursor-pointer"
+              className={`input-glass w-full py-3 px-4 text-xs font-bold rounded-2xl appearance-none cursor-pointer transition-all ${
+                statusFilter === 'Total Dues Assigned'
+                  ? 'border-rose-500/50 bg-rose-950/30 text-rose-300 ring-1 ring-rose-500/30'
+                  : statusFilter === 'Cleared'
+                  ? 'border-emerald-500/50 bg-emerald-950/30 text-emerald-300 ring-1 ring-emerald-500/30'
+                  : statusFilter !== 'All'
+                  ? 'border-amber-500/50 bg-amber-950/30 text-amber-300 ring-1 ring-amber-500/30'
+                  : ''
+              }`}
             >
               <option value="All" className="bg-slate-900 text-white">Status: All</option>
-              <option value="Pending" className="bg-slate-900 text-white">Status: Pending</option>
-              <option value="Cleared" className="bg-slate-900 text-white">Status: Cleared</option>
+              <option value="Total Dues Assigned" className="bg-slate-900 text-rose-300 font-bold">Status: Total Dues Assigned</option>
+              <option value="Pending" className="bg-slate-900 text-amber-300">Status: Pending</option>
+              <option value="Cleared" className="bg-slate-900 text-emerald-300">Status: Cleared</option>
             </select>
           </div>
         </div>

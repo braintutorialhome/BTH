@@ -59,9 +59,9 @@ export async function exportStudentOverviewToPdf(
   currentY += 23;
 
   // Aggregate Metrics Summary Bar
-  const totalPaidSum = items.reduce((acc, i) => acc + i.stats.totalPaid, 0);
-  const totalDueSum = items.reduce((acc, i) => acc + i.stats.totalDueAssigned, 0);
-  const totalBalanceSum = items.reduce((acc, i) => acc + i.stats.remainingBalance, 0);
+  const totalPaidSum = items.reduce((acc, i) => acc + (Number(i.stats?.totalPaid) || 0), 0);
+  const totalDueSum = items.reduce((acc, i) => acc + (Number(i.stats?.totalDueAssigned) || 0), 0);
+  const totalBalanceSum = items.reduce((acc, i) => acc + (Number(i.stats?.remainingBalance) || 0), 0);
 
   doc.setFillColor(248, 250, 252); // slate-50
   doc.setDrawColor(226, 232, 240);
@@ -72,11 +72,11 @@ export async function exportStudentOverviewToPdf(
   doc.setTextColor(30, 41, 59);
 
   let filterText = 'Active Filters: All Records';
-  if (filterSummary?.classFilter && filterSummary.classFilter !== 'all') {
+  if (filterSummary?.classFilter && filterSummary.classFilter !== 'All' && filterSummary.classFilter !== 'all') {
     filterText = `Class: ${formatClassName(filterSummary.classFilter)}`;
   }
-  if (filterSummary?.statusFilter && filterSummary.statusFilter !== 'all') {
-    filterText += ` • Status: ${filterSummary.statusFilter.toUpperCase()}`;
+  if (filterSummary?.statusFilter && filterSummary.statusFilter !== 'All' && filterSummary.statusFilter !== 'all') {
+    filterText += ` • Status: ${String(filterSummary.statusFilter).toUpperCase()}`;
   }
 
   doc.text(filterText, margin + 4, currentY + 7);
@@ -89,20 +89,21 @@ export async function exportStudentOverviewToPdf(
   // Table
   const tableData = items.map((item, index) => [
     (index + 1).toString(),
-    item.student.rollNumber || 'N/A',
-    item.student.name || 'Unnamed',
-    formatClassName(item.student.class || 'N/A'),
-    item.student.semester || 'Main',
-    item.student.mobile || item.student.whatsapp || 'N/A',
-    `Rs. ${item.stats.totalPaid.toLocaleString('en-IN')}`,
-    `Rs. ${item.stats.totalDueAssigned.toLocaleString('en-IN')}`,
-    `Rs. ${item.stats.remainingBalance.toLocaleString('en-IN')}`,
-    (item.student.status || 'active').toUpperCase()
+    item.student?.rollNumber || 'N/A',
+    item.student?.name || 'Unnamed',
+    formatClassName(item.student?.class || 'N/A'),
+    item.student?.semester || 'Main',
+    item.student?.mobile || item.student?.whatsapp || 'N/A',
+    `Rs. ${(item.stats?.totalPaid || 0).toLocaleString('en-IN')}`,
+    `Rs. ${(item.stats?.totalDueAssigned || 0).toLocaleString('en-IN')}`,
+    `Rs. ${(item.stats?.remainingBalance || 0).toLocaleString('en-IN')}`,
+    (item.student?.status || 'active').toUpperCase()
   ]);
 
   autoTable(doc, {
     startY: currentY,
-    margin: { left: margin, right: margin },
+    margin: { left: 10, right: 10 },
+    tableWidth: 'auto',
     head: [[
       '#',
       'Roll No',
@@ -133,15 +134,15 @@ export async function exportStudentOverviewToPdf(
     },
     columnStyles: {
       0: { cellWidth: 10, halign: 'center' },
-      1: { cellWidth: 18, halign: 'center', fontStyle: 'bold' },
-      2: { cellWidth: 50, fontStyle: 'bold' },
+      1: { cellWidth: 20, halign: 'center', fontStyle: 'bold' },
+      2: { cellWidth: 'auto', fontStyle: 'bold' },
       3: { cellWidth: 25, halign: 'center' },
-      4: { cellWidth: 20, halign: 'center' },
-      5: { cellWidth: 28, halign: 'center' },
-      6: { cellWidth: 28, halign: 'right', fontStyle: 'bold', textColor: [16, 149, 106] },
-      7: { cellWidth: 28, halign: 'right', fontStyle: 'bold', textColor: [217, 119, 6] },
-      8: { cellWidth: 28, halign: 'right', fontStyle: 'bold', textColor: [220, 38, 38] },
-      9: { cellWidth: 20, halign: 'center', fontStyle: 'bold' }
+      4: { cellWidth: 25, halign: 'center' },
+      5: { cellWidth: 30, halign: 'center' },
+      6: { cellWidth: 32, halign: 'right', fontStyle: 'bold', textColor: [16, 149, 106] },
+      7: { cellWidth: 32, halign: 'right', fontStyle: 'bold', textColor: [217, 119, 6] },
+      8: { cellWidth: 32, halign: 'right', fontStyle: 'bold', textColor: [220, 38, 38] },
+      9: { cellWidth: 22, halign: 'center', fontStyle: 'bold' }
     },
     didDrawPage: (data) => {
       const pageNumber = (doc.internal as any).getNumberOfPages();

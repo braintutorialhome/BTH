@@ -47,7 +47,7 @@ export async function exportStudentToPdf(
   doc.setFontSize(7);
   doc.setTextColor(203, 213, 225);
   doc.text(`Generated: ${dateStr}`, pageWidth - margin - 5, currentY + 7, { align: 'right' });
-  doc.text(`Status: ${student.status.toUpperCase()}`, pageWidth - margin - 5, currentY + 13.5, { align: 'right' });
+  doc.text(`Status: ${(student.status || 'active').toUpperCase()}`, pageWidth - margin - 5, currentY + 13.5, { align: 'right' });
 
   currentY += 23;
 
@@ -297,7 +297,7 @@ export async function exportStudentToPdf(
   }
 
   // Position footer with 2 line spaces (~11mm) above the signatory text
-  const finalTableY = (doc as any).lastAutoTable.finalY;
+  const finalTableY = (doc as any).lastAutoTable?.finalY ?? currentY;
   const footerY = Math.min(finalTableY + 11, pageHeight - margin - 10);
 
   // Authorized Signatory & Official Note
@@ -314,7 +314,7 @@ export async function exportStudentToPdf(
   doc.text('Authorized Signatory / Administrator', pageWidth - margin, footerY + 10, { align: 'right' });
 
   // Trigger download with mobile APK & Web support
-  const sanitizedStudentName = student.name.replace(/[^a-zA-Z0-9_-]/g, '_');
-  const filename = `Student_${sanitizedStudentName}_${student.rollNumber || student.id}.pdf`;
+  const sanitizedStudentName = (student.name || 'Student').replace(/[^a-zA-Z0-9_-]/g, '_');
+  const filename = `Student_${sanitizedStudentName}_${student.rollNumber || student.id || 'record'}.pdf`;
   await exportPdfDocument(doc, filename);
 }
