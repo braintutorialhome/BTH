@@ -4,7 +4,7 @@ import { BookOpen, FileText, Video, ExternalLink, Box } from 'lucide-react';
 import { safeFormat } from '../../../lib/utils';
 
 export default function StudentMaterials() {
-  const { materials } = useStorage();
+  const { materials = [] } = useStorage();
 
   return (
     <div className="space-y-12 pb-20">

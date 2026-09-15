@@ -24,6 +24,7 @@ interface StorageContextType {
   tests: Test[];
   testResults: TestResult[];
   materials: StudyMaterial[];
+  studyMaterials: StudyMaterial[];
   notices: Notice[];
   dueFees: DueFee[];
   externalTests: ExternalTest[];
@@ -633,7 +634,7 @@ export const StorageProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   return (
     <StorageContext.Provider value={{
-      students, fees, expenses, attendance, tests, testResults, materials, notices, dueFees, externalTests, resultLinks, remarks, users, currentUser,
+      students, fees, expenses, attendance, tests, testResults, materials, studyMaterials: materials, notices, dueFees, externalTests, resultLinks, remarks, users, currentUser,
       login, signup, logout, refreshCloudData, updateUser,
       scriptUrl, syncError, isInitialSyncing,
       addStudent, updateStudent, deleteStudent, removeStudentPermanently, approveStudent, rejectStudent,

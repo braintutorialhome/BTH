@@ -5,7 +5,7 @@ import { motion } from 'motion/react';
 import { formatDateIST } from '../../../lib/utils';
 
 const StudentResults: React.FC = () => {
-  const { resultLinks } = useStorage();
+  const { resultLinks = [] } = useStorage();
 
   return (
     <div className="max-w-4xl mx-auto space-y-8">

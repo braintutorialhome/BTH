@@ -13,14 +13,14 @@ interface StudentAttendanceProps {
 }
 
 export default function StudentAttendance({ student }: StudentAttendanceProps) {
-  const { attendance } = useStorage();
+  const { attendance = [] } = useStorage();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedMonth, setSelectedMonth] = useState<string>('all');
   const [sortOrder, setSortOrder] = useState<'desc' | 'asc'>('desc');
 
   // Filter attendance records strictly for this student where status is 'absent'
   const studentAbsentRecords = useMemo(() => {
-    return attendance.filter(a => {
+    return (attendance || []).filter(a => {
       const isThisStudent = a.studentId === student.id || (student.rollNumber && a.studentId === student.rollNumber);
       return isThisStudent && a.status === 'absent';
     });

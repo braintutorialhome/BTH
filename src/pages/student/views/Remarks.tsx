@@ -54,14 +54,14 @@ const CATEGORY_CONFIG: Record<RemarkCategory, { label: string; bg: string; text:
 };
 
 export default function StudentRemarks({ student }: StudentRemarksProps) {
-  const { remarks } = useStorage();
+  const { remarks = [] } = useStorage();
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [sortOrder, setSortOrder] = useState<'desc' | 'asc'>('desc');
 
   // Filter remarks strictly for this logged-in student (read-only)
   const studentRemarks = useMemo(() => {
-    return remarks.filter(r => 
+    return (remarks || []).filter(r => 
       r.studentId === student.id || 
       (student.rollNumber && r.studentId === student.rollNumber)
     );

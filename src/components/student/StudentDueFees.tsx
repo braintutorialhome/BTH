@@ -4,9 +4,9 @@ import { AlertCircle, IndianRupee, Calendar, ClipboardList } from 'lucide-react'
 import { motion } from 'motion/react';
 
 const StudentDueFees: React.FC = () => {
-  const { currentUser, dueFees } = useStorage();
+  const { currentUser, dueFees = [] } = useStorage();
   
-  const myDueFees = dueFees.filter(df => df.studentId === currentUser?.id);
+  const myDueFees = (dueFees || []).filter(df => df.studentId === currentUser?.id);
   const totalDue = myDueFees.reduce((sum, item) => sum + item.amount, 0);
 
   return (

@@ -8,13 +8,13 @@ import {
 import { safeFormat, formatClassName, formatDateIST } from '../../../lib/utils';
 
 export default function StudentOverview({ student }: { student: Student }) {
-  const { fees, dueFees } = useStorage();
+  const { fees = [], dueFees = [] } = useStorage();
 
   // Calculate fees statistics for this student
-  const studentPayments = fees.filter(f => f.studentId === student.id && f.status === 'paid');
+  const studentPayments = (fees || []).filter(f => f.studentId === student.id && f.status === 'paid');
   const totalPaid = studentPayments.reduce((acc, curr) => acc + (Number(curr.amount) || 0), 0);
 
-  const studentDues = dueFees.filter(d => d.studentId === student.id);
+  const studentDues = (dueFees || []).filter(d => d.studentId === student.id);
   const totalDueAssigned = studentDues.reduce((acc, curr) => acc + (Number(curr.amount) || 0), 0);
 
   const remainingBalance = totalDueAssigned - totalPaid;

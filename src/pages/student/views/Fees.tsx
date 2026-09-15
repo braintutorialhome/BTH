@@ -5,8 +5,8 @@ import { CreditCard, CheckCircle2, History, TrendingUp, DollarSign } from 'lucid
 import { safeFormat } from '../../../lib/utils';
 
 export default function StudentFees({ student }: { student: Student }) {
-  const { fees } = useStorage();
-  const myFees = fees.filter(f => f.studentId === student.id);
+  const { fees = [] } = useStorage();
+  const myFees = (fees || []).filter(f => f.studentId === student.id);
   const totalPaid = myFees.reduce((sum, f) => sum + f.amount, 0);
 
   return (

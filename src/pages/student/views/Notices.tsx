@@ -2,14 +2,12 @@ import React, { useState, useMemo } from 'react';
 import { useStorage } from '../../../hooks/useStorage';
 import { Student, Notice } from '../../../types';
 import { 
-  Bell, Megaphone, Calendar, AlertCircle, FileText, Search, 
-  Copy, Check, Send, Pin, Filter, Sparkles, Clock, X
+  Bell, Megaphone, Calendar, AlertCircle, Search, 
+  Pin, Filter, Sparkles, Clock, X
 } from 'lucide-react';
 import { safeFormat } from '../../../lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
 import { FormattedNoticeContent } from '../../../components/notice/FormattedNoticeContent';
-import { exportNoticeToPdf } from '../../../utils/noticePdfExport';
-import { showExportToast } from '../../../utils/mobileExportHelper';
 
 const CATEGORIES = [
   { id: 'All', label: 'All Notices' },
@@ -22,46 +20,13 @@ const CATEGORIES = [
 ];
 
 export default function StudentNotices({ student }: { student: Student }) {
-  const { notices } = useStorage();
+  const { notices = [] } = useStorage();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
-  const [copiedId, setCopiedId] = useState<string | null>(null);
-  const [exportingPdfId, setExportingPdfId] = useState<string | null>(null);
-
-  // Copy notice text
-  const handleCopyNotice = (notice: Notice) => {
-    const formatted = `📢 *${notice.title.toUpperCase()}*\n📅 Date: ${safeFormat(notice.date, 'dd MMM yyyy, hh:mm a')}\n\n${notice.content}\n\n— Brain Tutorial Home`;
-    navigator.clipboard.writeText(formatted).then(() => {
-      setCopiedId(notice.id);
-      showExportToast('Notice copied to clipboard');
-      setTimeout(() => setCopiedId(null), 2500);
-    });
-  };
-
-  // WhatsApp share
-  const handleShareWhatsApp = (notice: Notice) => {
-    const text = `📢 *${notice.title.toUpperCase()}*\n📅 Date: ${safeFormat(notice.date, 'dd MMM yyyy, hh:mm a')}\n\n${notice.content}\n\n— Brain Tutorial Home`;
-    const encoded = encodeURIComponent(text);
-    window.open(`https://api.whatsapp.com/send?text=${encoded}`, '_blank');
-  };
-
-  // Export PDF
-  const handleExportPdf = async (notice: Notice) => {
-    setExportingPdfId(notice.id);
-    try {
-      await exportNoticeToPdf(notice);
-      showExportToast('Official Notice PDF downloaded!');
-    } catch (err: any) {
-      console.error('PDF export error:', err);
-      showExportToast('Failed to download PDF', false);
-    } finally {
-      setExportingPdfId(null);
-    }
-  };
 
   // Filter notices relevant to this student (matching class or All)
   const studentNotices = useMemo(() => {
-    return notices
+    return (notices || [])
       .filter(n => {
         // Target class check: matches 'All', empty, or student's specific class
         if (n.targetClass && n.targetClass !== 'All' && student.class) {
@@ -247,46 +212,12 @@ export default function StudentNotices({ student }: { student: Student }) {
                 />
               </div>
 
-              {/* Footer Actions */}
-              <div className="pt-4 border-t border-white/5 flex flex-wrap items-center justify-between gap-3 relative z-10">
-                <div className="flex items-center gap-2">
-                  {/* Copy Button */}
-                  <button
-                    onClick={() => handleCopyNotice(n)}
-                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white text-xs font-semibold transition-all border border-white/5"
-                  >
-                    {copiedId === n.id ? (
-                      <>
-                        <Check size={14} className="text-emerald-400" />
-                        <span className="text-emerald-400 font-bold">Copied</span>
-                      </>
-                    ) : (
-                      <>
-                        <Copy size={14} />
-                        <span>Copy</span>
-                      </>
-                    )}
-                  </button>
-
-                  {/* Share on WhatsApp */}
-                  <button
-                    onClick={() => handleShareWhatsApp(n)}
-                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 text-xs font-semibold transition-all border border-emerald-500/20"
-                  >
-                    <Send size={14} />
-                    <span>Share</span>
-                  </button>
-
-                  {/* Download Official PDF */}
-                  <button
-                    onClick={() => handleExportPdf(n)}
-                    disabled={exportingPdfId === n.id}
-                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 text-xs font-semibold transition-all border border-cyan-500/20 disabled:opacity-50"
-                  >
-                    <FileText size={14} />
-                    <span>{exportingPdfId === n.id ? 'Downloading...' : 'PDF Letterhead'}</span>
-                  </button>
-                </div>
+              {/* Footer */}
+              <div className="pt-4 border-t border-white/5 flex items-center justify-between gap-3 relative z-10">
+                <span className="text-xs font-semibold text-slate-400 flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-indigo-400"></span>
+                  Official Announcement
+                </span>
 
                 <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">
                   Brain Tutorial Home Circular
