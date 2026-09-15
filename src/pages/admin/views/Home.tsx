@@ -1,8 +1,9 @@
 import React from 'react';
 import { motion } from 'motion/react';
+import { Link } from 'react-router-dom';
 import { useStorage } from '../../../hooks/useStorage';
 import { 
-  Users, FileCheck, CreditCard, Calendar, DollarSign
+  Users, FileCheck, CreditCard, Calendar, DollarSign, Eye, ArrowRight, ShieldCheck, IndianRupee, Sparkles
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { getISTToday } from '../../../lib/utils';
@@ -26,14 +27,16 @@ const StatCard = ({ label, value, icon: Icon, color, subValue }: any) => (
 
 export default function AdminHome() {
   const { 
-    students, expenses, fees, attendance
+    students = [], expenses = [], fees = [], attendance = [], dueFees = []
   } = useStorage();
 
   const totalStudents = students.filter(s => s.status === 'approved').length;
   const pendingAdmissions = students.filter(s => s.status === 'pending').length;
-  const totalFees = fees.reduce((sum, f) => sum + f.amount, 0);
-  const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
+  const totalFees = fees.reduce((sum, f) => sum + (Number(f.amount) || 0), 0);
+  const totalExpenses = expenses.reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
   const netBalance = totalFees - totalExpenses;
+  const totalDueRecords = dueFees.length;
+  const totalAssignedDues = dueFees.reduce((sum, d) => sum + (Number(d.amount) || 0), 0);
 
   const today = getISTToday();
   const attendanceToday = attendance.filter(a => a.date === today);
@@ -49,16 +52,116 @@ export default function AdminHome() {
 
   return (
     <div className="space-y-10">
-      <div className="flex items-center justify-between">
-        <h2 className="text-3xl font-black text-white tracking-tighter uppercase">Overview <span className="text-indigo-500">Center</span></h2>
+      {/* Top Header Row with Direct Action Buttons */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h2 className="text-3xl font-black text-white tracking-tighter uppercase">
+            Overview <span className="text-indigo-500">Center</span>
+          </h2>
+          <p className="text-xs text-slate-400 font-medium mt-1">
+            Institutional metrics, student directories, and fee intelligence
+          </p>
+        </div>
+
+        <div className="flex items-center gap-3 flex-wrap">
+          <Link
+            id="admin-overview-student-fee-tracker-btn"
+            to="/admin/student-fee-tracker"
+            className="px-4 py-2.5 rounded-2xl bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 hover:text-white border border-emerald-500/30 hover:border-emerald-500/50 font-bold text-xs uppercase tracking-wider flex items-center gap-2 transition-all shadow-lg shadow-emerald-950/20 active:scale-95 whitespace-nowrap"
+          >
+            <CreditCard size={15} className="text-emerald-400" />
+            <span>Student Fee Tracker</span>
+          </Link>
+          <Link
+            id="admin-overview-student-overview-btn"
+            to="/admin/student-overview"
+            className="px-4 py-2.5 rounded-2xl bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 hover:text-white border border-indigo-500/30 hover:border-indigo-500/50 font-bold text-xs uppercase tracking-wider flex items-center gap-2 transition-all shadow-lg shadow-indigo-950/20 active:scale-95 whitespace-nowrap"
+          >
+            <Eye size={15} className="text-indigo-400" />
+            <span>Student Overview</span>
+          </Link>
+        </div>
       </div>
 
-
+      {/* Primary KPI Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard label="Total Students" value={totalStudents} icon={Users} color="blue" />
         <StatCard label="Pending Admissions" value={pendingAdmissions} icon={FileCheck} color="amber" />
         <StatCard label="Fees Collected" value={`₹${totalFees}`} icon={CreditCard} color="emerald" />
         <StatCard label="Net Balance" value={`₹${netBalance}`} icon={DollarSign} color="indigo" subValue={netBalance < 0 ? 'Negative' : 'Profit'} />
+      </div>
+
+      {/* Featured Options: Student Overview & Student Fee Tracker */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Student Overview Card */}
+        <div className="relative group overflow-hidden rounded-[32px] p-7 bg-gradient-to-br from-indigo-950/40 via-white/[0.03] to-purple-950/20 border border-indigo-500/20 hover:border-indigo-500/40 transition-all duration-300 shadow-xl shadow-indigo-950/30">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 rounded-full blur-2xl pointer-events-none group-hover:bg-indigo-500/20 transition-all" />
+          
+          <div className="flex items-start justify-between mb-4">
+            <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 group-hover:scale-105 transition-transform">
+              <Eye size={22} />
+            </div>
+            <span className="text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full bg-indigo-500/10 text-indigo-300 border border-indigo-500/20 flex items-center gap-1.5">
+              <Sparkles size={11} /> 360° Directory
+            </span>
+          </div>
+
+          <h3 className="text-xl font-black text-white uppercase tracking-tight mb-2 group-hover:text-indigo-200 transition-colors">
+            Student Overview
+          </h3>
+          <p className="text-xs text-slate-400 font-medium leading-relaxed mb-6">
+            Comprehensive student directory with class filters, contact cards, attendance records, financial balances, and single-click PDF & CSV report exports.
+          </p>
+
+          <div className="flex items-center justify-between pt-4 border-t border-white/5">
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-bold text-slate-400">Approved:</span>
+              <span className="text-xs font-black text-indigo-300">{totalStudents} Students</span>
+            </div>
+            <Link
+              to="/admin/student-overview"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-black uppercase tracking-wider transition-all shadow-md shadow-indigo-600/30 active:scale-95"
+            >
+              <span>Open Overview</span>
+              <ArrowRight size={14} />
+            </Link>
+          </div>
+        </div>
+
+        {/* Student Fee Tracker Card */}
+        <div className="relative group overflow-hidden rounded-[32px] p-7 bg-gradient-to-br from-emerald-950/40 via-white/[0.03] to-teal-950/20 border border-emerald-500/20 hover:border-emerald-500/40 transition-all duration-300 shadow-xl shadow-emerald-950/30">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-2xl pointer-events-none group-hover:bg-emerald-500/20 transition-all" />
+          
+          <div className="flex items-start justify-between mb-4">
+            <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 group-hover:scale-105 transition-transform">
+              <CreditCard size={22} />
+            </div>
+            <span className="text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-300 border border-emerald-500/20 flex items-center gap-1.5">
+              <IndianRupee size={11} /> Active Ledger
+            </span>
+          </div>
+
+          <h3 className="text-xl font-black text-white uppercase tracking-tight mb-2 group-hover:text-emerald-200 transition-colors">
+            Student Fee Tracker
+          </h3>
+          <p className="text-xs text-slate-400 font-medium leading-relaxed mb-6">
+            Detailed fee manager to assign monthly dues, record partial or full fee collections, edit payment dates, inspect overdue balances, and print receipts.
+          </p>
+
+          <div className="flex items-center justify-between pt-4 border-t border-white/5">
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-bold text-slate-400">Total Dues:</span>
+              <span className="text-xs font-black text-emerald-300">₹{totalAssignedDues} ({totalDueRecords} records)</span>
+            </div>
+            <Link
+              to="/admin/student-fee-tracker"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black uppercase tracking-wider transition-all shadow-md shadow-emerald-600/30 active:scale-95"
+            >
+              <span>Open Fee Tracker</span>
+              <ArrowRight size={14} />
+            </Link>
+          </div>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

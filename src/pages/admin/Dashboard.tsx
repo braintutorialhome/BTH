@@ -205,6 +205,22 @@ export default function AdminDashboard() {
                 </div>
               )}
               <Link 
+                id="admin-header-fee-tracker-btn"
+                to="/admin/student-fee-tracker" 
+                className="hidden xl:flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 hover:text-white border border-emerald-500/20 text-xs font-black uppercase tracking-wider transition-all"
+              >
+                <CreditCard size={13} className="text-emerald-400" />
+                <span>Fee Tracker</span>
+              </Link>
+              <Link 
+                id="admin-header-student-overview-btn"
+                to="/admin/student-overview" 
+                className="hidden xl:flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-300 hover:text-white border border-indigo-500/20 text-xs font-black uppercase tracking-wider transition-all"
+              >
+                <Eye size={13} className="text-indigo-400" />
+                <span>Student Overview</span>
+              </Link>
+              <Link 
                 id="admin-header-attendance-btn"
                 to="/admin/attendance" 
                 className="glass-button px-5 py-2.5 text-xs font-black uppercase tracking-widest text-slate-300"
