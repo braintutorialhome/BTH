@@ -93,6 +93,10 @@ export interface Notice {
   content: string;
   date: string;
   isImportant: boolean;
+  category?: 'General' | 'Exam' | 'Holiday' | 'Fee' | 'Schedule' | 'Urgent' | 'Academic' | 'Event' | string;
+  targetClass?: string;
+  isPinned?: boolean;
+  updatedAt?: string;
 }
 
 export interface DueFee {

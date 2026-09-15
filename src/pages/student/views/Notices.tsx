@@ -1,81 +1,311 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useStorage } from '../../../hooks/useStorage';
-import { Student } from '../../../types';
-import { Bell, Megaphone, Calendar, ShieldCheck, AlertCircle, Trophy, FileText } from 'lucide-react';
+import { Student, Notice } from '../../../types';
+import { 
+  Bell, Megaphone, Calendar, AlertCircle, FileText, Search, 
+  Copy, Check, Send, Pin, Filter, Sparkles, Clock, X
+} from 'lucide-react';
 import { safeFormat } from '../../../lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
+import { FormattedNoticeContent } from '../../../components/notice/FormattedNoticeContent';
+import { exportNoticeToPdf } from '../../../utils/noticePdfExport';
+import { showExportToast } from '../../../utils/mobileExportHelper';
+
+const CATEGORIES = [
+  { id: 'All', label: 'All Notices' },
+  { id: 'Urgent', label: 'High Priority' },
+  { id: 'Exam', label: 'Exams & Tests' },
+  { id: 'Holiday', label: 'Holidays' },
+  { id: 'Fee', label: 'Fee Updates' },
+  { id: 'Schedule', label: 'Timetable' },
+  { id: 'General', label: 'General' }
+];
 
 export default function StudentNotices({ student }: { student: Student }) {
   const { notices } = useStorage();
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('All');
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [exportingPdfId, setExportingPdfId] = useState<string | null>(null);
+
+  // Copy notice text
+  const handleCopyNotice = (notice: Notice) => {
+    const formatted = `📢 *${notice.title.toUpperCase()}*\n📅 Date: ${safeFormat(notice.date, 'dd MMM yyyy, hh:mm a')}\n\n${notice.content}\n\n— Brain Tutorial Home`;
+    navigator.clipboard.writeText(formatted).then(() => {
+      setCopiedId(notice.id);
+      showExportToast('Notice copied to clipboard');
+      setTimeout(() => setCopiedId(null), 2500);
+    });
+  };
+
+  // WhatsApp share
+  const handleShareWhatsApp = (notice: Notice) => {
+    const text = `📢 *${notice.title.toUpperCase()}*\n📅 Date: ${safeFormat(notice.date, 'dd MMM yyyy, hh:mm a')}\n\n${notice.content}\n\n— Brain Tutorial Home`;
+    const encoded = encodeURIComponent(text);
+    window.open(`https://api.whatsapp.com/send?text=${encoded}`, '_blank');
+  };
+
+  // Export PDF
+  const handleExportPdf = async (notice: Notice) => {
+    setExportingPdfId(notice.id);
+    try {
+      await exportNoticeToPdf(notice);
+      showExportToast('Official Notice PDF downloaded!');
+    } catch (err: any) {
+      console.error('PDF export error:', err);
+      showExportToast('Failed to download PDF', false);
+    } finally {
+      setExportingPdfId(null);
+    }
+  };
+
+  // Filter notices relevant to this student (matching class or All)
+  const studentNotices = useMemo(() => {
+    return notices
+      .filter(n => {
+        // Target class check: matches 'All', empty, or student's specific class
+        if (n.targetClass && n.targetClass !== 'All' && student.class) {
+          if (n.targetClass.toLowerCase() !== student.class.toLowerCase()) {
+            return false;
+          }
+        }
+
+        // Search match
+        if (searchTerm) {
+          const q = searchTerm.toLowerCase();
+          const matchTitle = (n.title || '').toLowerCase().includes(q);
+          const matchContent = (n.content || '').toLowerCase().includes(q);
+          if (!matchTitle && !matchContent) return false;
+        }
+
+        // Category filter
+        if (selectedCategory !== 'All') {
+          if (selectedCategory === 'Urgent') {
+            if (!n.isImportant && n.category !== 'Urgent') return false;
+          } else if (n.category !== selectedCategory) {
+            return false;
+          }
+        }
+
+        return true;
+      })
+      .sort((a, b) => {
+        // Pinned first
+        if (a.isPinned && !b.isPinned) return -1;
+        if (!a.isPinned && b.isPinned) return 1;
+        // Newest date first
+        return new Date(b.date).getTime() - new Date(a.date).getTime();
+      });
+  }, [notices, student.class, searchTerm, selectedCategory]);
 
   return (
-    <div className="space-y-16 pb-20">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
-        <div className="space-y-2">
-          <p className="text-xs font-black uppercase tracking-widest text-indigo-500">Notices</p>
-          <h1 className="text-3xl font-black text-white tracking-tighter uppercase">Notices</h1>
+    <div className="space-y-10 pb-20 max-w-5xl">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 bg-white/5 p-6 md:p-8 rounded-[36px] border border-white/5">
+        <div>
+          <div className="flex items-center gap-2">
+            <p className="text-xs font-black uppercase tracking-widest text-indigo-400">Notice Board</p>
+            {student.class && (
+              <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">
+                {student.class}
+              </span>
+            )}
+          </div>
+          <h1 className="text-3xl md:text-4xl font-black text-white tracking-tighter uppercase mt-1">
+            Official Notices
+          </h1>
+          <p className="text-xs text-slate-400 mt-1">
+            Stay updated with institute circulars, schedules, holidays, and exam announcements
+          </p>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <div className="px-4 py-2 rounded-2xl bg-white/5 border border-white/5 text-right">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Active Circulars</p>
+            <p className="text-xl font-black text-white">{studentNotices.length}</p>
+          </div>
         </div>
       </div>
 
+      {/* Search & Category Filter Pills */}
+      <div className="glass p-5 rounded-3xl border border-white/5 space-y-4">
+        {/* Search */}
+        <div className="relative">
+          <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+          <input 
+            type="text"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="Search circulars, exams, holidays, schedules..."
+            className="input-glass w-full pl-11 pr-4 py-3 rounded-2xl text-xs font-semibold"
+          />
+          {searchTerm && (
+            <button 
+              onClick={() => setSearchTerm('')}
+              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
+            >
+              <X size={14} />
+            </button>
+          )}
+        </div>
+
+        {/* Categories */}
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs">
+          {CATEGORIES.map(cat => (
+            <button
+              key={cat.id}
+              onClick={() => setSelectedCategory(cat.id)}
+              className={`px-3.5 py-1.5 rounded-full font-bold uppercase tracking-wider text-[10px] transition-all whitespace-nowrap border ${
+                selectedCategory === cat.id
+                  ? 'bg-indigo-600 text-white border-indigo-500 shadow-md shadow-indigo-600/20'
+                  : 'bg-white/5 text-slate-400 border-white/5 hover:text-white hover:bg-white/10'
+              }`}
+            >
+              {cat.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Notice Cards */}
       <AnimatePresence mode="wait">
         <motion.div 
-          key="notices"
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: 20 }}
-          className="max-w-5xl space-y-10"
+          key={selectedCategory + searchTerm}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -10 }}
+          className="space-y-6"
         >
-          {notices.slice().reverse().map(n => (
-            <div key={n.id} className={`glass p-12 rounded-[60px] border relative overflow-hidden group transition-all hover:translate-x-3 ${
-              n.isImportant ? 'border-orange-500/20 bg-gradient-to-r from-orange-500/5 to-transparent' : 'border-white/5'
-            } shadow-2xl`}>
-               {n.isImportant && (
-                 <div className="absolute top-0 right-0 p-12 opacity-5 scale-150 rotate-12 group-hover:scale-[1.8] group-hover:rotate-0 transition-all duration-1000 pointer-events-none">
-                   <Bell size={180} />
-                 </div>
-               )}
-               
-               <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-10 relative z-10 font-black">
-                 <div className="flex items-center gap-4">
-                   <div className={`p-4 rounded-3xl ${n.isImportant ? 'bg-orange-500/20 text-orange-400 border border-orange-500/20 shadow-[0_0_20px_rgba(249,115,22,0.1)]' : 'bg-white/5 text-slate-500 border border-white/5'} transition-all group-hover:rotate-6`}>
-                     <Megaphone size={28} />
-                   </div>
-                   <div className="space-y-1">
-                      <p className={`text-xs uppercase tracking-widest ${n.isImportant ? 'text-orange-400' : 'text-slate-600'}`}>{n.isImportant ? 'Priority Notice' : 'Notice'}</p>
-                      <span className="text-xs uppercase tracking-widest text-slate-500">
-                          {safeFormat(n.date, 'dd MMMM yyyy, hh:mm a')} IST
-                      </span>
-                   </div>
-                 </div>
-                 
-                 {n.isImportant && (
-                   <span className="bg-orange-500/10 text-orange-400 text-xs font-black tracking-widest uppercase px-4 py-2 rounded-full border border-orange-500/20 flex items-center gap-2 animate-pulse">
-                      <AlertCircle size={12} /> Critcal Intel
-                   </span>
-                 )}
-               </div>
-               
-               <div className="relative z-10 space-y-4">
-                 <h3 className="text-3xl font-black text-white tracking-tighter uppercase leading-tight group-hover:text-indigo-400 transition-colors">{n.title}</h3>
-                 <p className={`text-xl leading-relaxed max-w-4xl ${n.isImportant ? 'text-slate-300 font-medium italic' : 'text-slate-500'}`}>
-                   {n.content}
-                 </p>
-               </div>
-  
-               <div className="mt-12 flex items-center gap-3 relative z-10">
-                  <div className="w-10 h-1 bg-white/5 rounded-full overflow-hidden">
-                     <div className={`h-full ${n.isImportant ? 'bg-orange-500' : 'bg-indigo-600'}`} style={{ width: '100%' }}></div>
-                  </div>
-                  <span className="text-xs font-black text-slate-700 uppercase tracking-widest">End of stream</span>
-               </div>
-            </div>
-          ))}
-          {notices.length === 0 && (
-            <div className="py-40 text-center glass rounded-[80px] border-2 border-dashed border-white/5">
-              <div className="w-24 h-24 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-8 text-slate-800">
-                 <Megaphone size={48} />
+          {studentNotices.map(n => (
+            <article 
+              key={n.id} 
+              className={`glass p-8 md:p-10 rounded-[36px] border relative overflow-hidden transition-all duration-300 ${
+                n.isPinned
+                  ? 'border-amber-500/30 bg-gradient-to-r from-amber-500/5 to-transparent shadow-xl ring-1 ring-amber-500/20'
+                  : n.isImportant 
+                  ? 'border-rose-500/30 bg-gradient-to-r from-rose-500/5 to-transparent shadow-xl' 
+                  : 'border-white/5 shadow-lg'
+              }`}
+            >
+              {/* Background watermark icon for priority notices */}
+              {n.isImportant && (
+                <div className="absolute top-0 right-0 p-8 opacity-5 pointer-events-none">
+                  <Bell size={140} />
+                </div>
+              )}
+
+              {/* Header Badges */}
+              <div className="flex flex-wrap items-center justify-between gap-3 mb-6 relative z-10 pb-4 border-b border-white/5">
+                <div className="flex flex-wrap items-center gap-2">
+                  {/* Pinned Tag */}
+                  {n.isPinned && (
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                      <Pin size={11} className="rotate-45" /> Pinned
+                    </span>
+                  )}
+
+                  {/* Priority Tag */}
+                  {n.isImportant && (
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-rose-500/20 text-rose-300 border border-rose-500/30 animate-pulse">
+                      <AlertCircle size={11} /> High Priority Notice
+                    </span>
+                  )}
+
+                  {/* Category Tag */}
+                  {n.category && (
+                    <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-indigo-500/10 text-indigo-300 border border-indigo-500/20">
+                      {n.category}
+                    </span>
+                  )}
+
+                  {/* Class Target */}
+                  {n.targetClass && n.targetClass !== 'All' && (
+                    <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-cyan-500/10 text-cyan-300 border border-cyan-500/20">
+                      🎓 For {n.targetClass}
+                    </span>
+                  )}
+                </div>
+
+                {/* Date */}
+                <span className="text-xs font-bold text-slate-400">
+                  {safeFormat(n.date, 'dd MMMM yyyy, hh:mm a')} IST
+                </span>
               </div>
-              <p className="text-slate-600 font-black uppercase tracking-widest text-xs">Frequency silence • No notices active</p>
+
+              {/* Notice Title */}
+              <h2 className="text-2xl md:text-3xl font-black text-white tracking-tight uppercase leading-tight mb-5 relative z-10">
+                {n.title}
+              </h2>
+
+              {/* Paragraphs Arranged faithfully as provided */}
+              <div className="relative z-10 mb-8 max-w-4xl">
+                <FormattedNoticeContent 
+                  content={n.content} 
+                  className={`text-base md:text-lg leading-relaxed ${
+                    n.isImportant ? 'text-slate-200' : 'text-slate-300'
+                  }`}
+                />
+              </div>
+
+              {/* Footer Actions */}
+              <div className="pt-4 border-t border-white/5 flex flex-wrap items-center justify-between gap-3 relative z-10">
+                <div className="flex items-center gap-2">
+                  {/* Copy Button */}
+                  <button
+                    onClick={() => handleCopyNotice(n)}
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white text-xs font-semibold transition-all border border-white/5"
+                  >
+                    {copiedId === n.id ? (
+                      <>
+                        <Check size={14} className="text-emerald-400" />
+                        <span className="text-emerald-400 font-bold">Copied</span>
+                      </>
+                    ) : (
+                      <>
+                        <Copy size={14} />
+                        <span>Copy</span>
+                      </>
+                    )}
+                  </button>
+
+                  {/* Share on WhatsApp */}
+                  <button
+                    onClick={() => handleShareWhatsApp(n)}
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 text-xs font-semibold transition-all border border-emerald-500/20"
+                  >
+                    <Send size={14} />
+                    <span>Share</span>
+                  </button>
+
+                  {/* Download Official PDF */}
+                  <button
+                    onClick={() => handleExportPdf(n)}
+                    disabled={exportingPdfId === n.id}
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 text-xs font-semibold transition-all border border-cyan-500/20 disabled:opacity-50"
+                  >
+                    <FileText size={14} />
+                    <span>{exportingPdfId === n.id ? 'Downloading...' : 'PDF Letterhead'}</span>
+                  </button>
+                </div>
+
+                <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">
+                  Brain Tutorial Home Circular
+                </span>
+              </div>
+            </article>
+          ))}
+
+          {studentNotices.length === 0 && (
+            <div className="py-24 text-center glass rounded-[40px] border-2 border-dashed border-white/5">
+              <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-600">
+                <Megaphone size={32} />
+              </div>
+              <p className="text-white font-bold text-base">No announcements found</p>
+              <p className="text-slate-500 text-xs mt-1">
+                {searchTerm || selectedCategory !== 'All' 
+                  ? 'No notices match your search criteria' 
+                  : 'All quiet on the board. Check back later for updates.'}
+              </p>
             </div>
           )}
         </motion.div>

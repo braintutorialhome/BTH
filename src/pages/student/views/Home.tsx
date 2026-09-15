@@ -189,7 +189,7 @@ export default function StudentHome({ student }: { student: Student }) {
           {notices.length > 0 ? (
             <div className="space-y-6">
               <h2 className="text-3xl font-black text-white tracking-tight leading-tight">{notices[notices.length - 1].title}</h2>
-              <p className="text-slate-400 text-lg leading-relaxed line-clamp-3">
+              <p className="text-slate-400 text-lg leading-relaxed line-clamp-3 whitespace-pre-line">
                 {notices[notices.length - 1].content}
               </p>
               <Link to="/student/notices" className="indigo-button px-8 py-4 text-xs font-black uppercase tracking-widest inline-block mt-4">
