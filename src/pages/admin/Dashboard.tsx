@@ -122,9 +122,9 @@ export default function AdminDashboard() {
       title: 'Main Hub',
       items: [
         { to: '/admin/dashboard', icon: BarChart2, label: 'Dashboard' },
-        { to: '/admin/student-fee-tracker', icon: Users, label: 'Fee Tracker' },
+        { to: '/admin/student-fee-tracker', icon: Users, label: 'Student Fee Tracker' },
         { to: '/admin/student-overview', icon: Eye, label: 'Student Overview' },
-        { to: '/admin/students', icon: Users, label: 'Student Records' },
+        { to: '/admin/students', icon: Users, label: 'Students' },
         { 
           to: '/admin/admissions', 
           icon: FileCheck, 
@@ -137,7 +137,7 @@ export default function AdminDashboard() {
     {
       title: 'Fees & Accounts',
       items: [
-        { to: '/admin/fees', icon: CreditCard, label: 'Fees Status' },
+        { to: '/admin/fees', icon: CreditCard, label: 'Fees & Collections' },
         { 
           to: '/admin/due-fees', 
           icon: AlertCircle, 
@@ -173,7 +173,7 @@ export default function AdminDashboard() {
     {
       title: 'Communication',
       items: [
-        { to: '/admin/student-remarks', icon: MessageSquareQuote, label: 'Remarks & Notes' },
+        { to: '/admin/student-remarks', icon: MessageSquareQuote, label: 'Student Remarks' },
         { 
           to: '/admin/notices', 
           icon: Bell, 
@@ -186,22 +186,22 @@ export default function AdminDashboard() {
     {
       title: 'System & Settings',
       items: [
-        { to: '/admin/settings', icon: Settings, label: 'System Settings' }
+        { to: '/admin/settings', icon: Settings, label: 'Settings' }
       ]
     }
   ];
 
   const viewNames: Record<string, string> = {
     '/admin/dashboard': 'System Dashboard',
-    '/admin/student-fee-tracker': 'Student & Fee Management (Admin Only)',
+    '/admin/student-fee-tracker': 'Student Fee Tracker',
     '/admin/student-overview': 'Student Overview (Read-Only)',
     '/admin/admissions': 'Admission Panel',
-    '/admin/students': 'Student Records',
+    '/admin/students': 'Students',
     '/admin/fees': 'Fees & Collections',
     '/admin/expenses': 'Expense Tracker',
     '/admin/accounts': 'Institutional Accounts',
     '/admin/attendance': 'Attendance System',
-    '/admin/settings': 'System Settings',
+    '/admin/settings': 'Settings',
     '/admin/test-master': 'Exam Portal (External)',
     '/admin/results': 'Result Management',
     '/admin/materials': 'Study Materials',
