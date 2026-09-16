@@ -210,6 +210,80 @@ export function getISTMonthName(date: Date | string | number = new Date()): stri
 }
 
 /**
+ * Returns previous month name with the current year in Asia/Kolkata time zone (e.g. 'August 2026' when current is September 2026).
+ */
+export function getISTPreviousMonthWithCurrentYear(date: Date | string | number = new Date()): string {
+  try {
+    const d = toISTDate(date) || new Date();
+    const currentYear = getISTYear(d);
+
+    // Subtract 1 month safely from IST date (setting day to 15 avoids month-length spillover)
+    const prevMonthDate = new Date(d.getFullYear(), d.getMonth() - 1, 15);
+    const prevMonthName = new Intl.DateTimeFormat('en-IN', {
+      timeZone: IST_TIMEZONE,
+      month: 'long'
+    }).format(prevMonthDate);
+
+    return `${prevMonthName} ${currentYear}`;
+  } catch {
+    const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    const now = new Date();
+    const prevIdx = (now.getMonth() + 11) % 12;
+    return `${months[prevIdx]} ${now.getFullYear()}`;
+  }
+}
+
+/**
+ * Returns quick-access options for billing months:
+ * previous 3 months and current month, displaying only Month and Year (e.g. ['June 2026', 'July 2026', 'August 2026', 'September 2026']).
+ * Strictly does not contain day/date numbers.
+ */
+export function getBillingMonthQuickOptions(referenceDate: Date | string | number = new Date()): { label: string; value: string; isCurrent: boolean }[] {
+  try {
+    const d = toISTDate(referenceDate) || new Date();
+    const currentMonthIdx = d.getMonth();
+    const fullYear = d.getFullYear();
+
+    // Previous 3 months (-3, -2, -1) and current month (0)
+    const offsets = [-3, -2, -1, 0];
+    return offsets.map(offset => {
+      const targetDate = new Date(fullYear, currentMonthIdx + offset, 15);
+      const monthName = new Intl.DateTimeFormat('en-IN', {
+        timeZone: IST_TIMEZONE,
+        month: 'long'
+      }).format(targetDate);
+      const year = new Intl.DateTimeFormat('en-IN', {
+        timeZone: IST_TIMEZONE,
+        year: 'numeric'
+      }).format(targetDate);
+
+      const label = `${monthName} ${year}`;
+      return {
+        label,
+        value: label,
+        isCurrent: offset === 0
+      };
+    });
+  } catch {
+    const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    const now = new Date();
+    const y = now.getFullYear();
+    const m = now.getMonth();
+    return [-3, -2, -1, 0].map(offset => {
+      const targetDate = new Date(y, m + offset, 15);
+      const monthName = months[targetDate.getMonth()];
+      const year = targetDate.getFullYear();
+      const label = `${monthName} ${year}`;
+      return {
+        label,
+        value: label,
+        isCurrent: offset === 0
+      };
+    });
+  }
+}
+
+/**
  * Returns full current year in Asia/Kolkata time zone.
  */
 export function getISTYear(date: Date | string | number = new Date()): number {

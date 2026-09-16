@@ -6,7 +6,7 @@ import {
   Upload, Save, ChevronRight, DollarSign, FileText, ArrowUpRight, ArrowDownRight, RefreshCw, FileDown, FileSpreadsheet
 } from 'lucide-react';
 import { Student, Fee, DueFee } from '../../../types';
-import { safeFormat, formatClassName, getISTToday, getISTMonthName } from '../../../lib/utils';
+import { safeFormat, formatClassName, getISTToday, getISTMonthName, getISTPreviousMonthWithCurrentYear, getBillingMonthQuickOptions } from '../../../lib/utils';
 import { exportStudentToPdf } from '../../../utils/studentPdfExport';
 import { exportStudentToCsv } from '../../../utils/studentCsvExport';
 import { exportCsvData } from '../../../utils/mobileExportHelper';
@@ -42,7 +42,7 @@ export default function StudentFeeTracker() {
   const [profileForm, setProfileForm] = useState<Student | null>(null);
   const [paymentForm, setPaymentForm] = useState({
     amount: '',
-    month: getISTMonthName(),
+    month: getISTPreviousMonthWithCurrentYear(),
     date: getISTToday(),
     paymentMethod: 'Cash',
     notes: ''
@@ -265,7 +265,7 @@ export default function StudentFeeTracker() {
     setIsAddingPayment(false);
     setPaymentForm({
       amount: '',
-      month: getISTMonthName(),
+      month: getISTPreviousMonthWithCurrentYear(),
       date: getISTToday(),
       paymentMethod: 'Cash',
       notes: ''
@@ -688,7 +688,7 @@ export default function StudentFeeTracker() {
                     setIsAddingDue(false);
                     setPaymentForm({
                       amount: '',
-                      month: getISTMonthName(),
+                      month: getISTPreviousMonthWithCurrentYear(),
                       date: getISTToday(),
                       paymentMethod: 'Cash',
                       notes: ''
@@ -894,15 +894,37 @@ export default function StudentFeeTracker() {
                   </div>
 
                   <div>
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 block">Billing Month / Term</label>
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Billing Month / Term</label>
+                      <span className="text-[9px] font-bold text-emerald-400 uppercase tracking-wider">
+                        Default: Prev Month
+                      </span>
+                    </div>
                     <input 
                       type="text" 
                       value={paymentForm.month} 
                       onChange={e => setPaymentForm({ ...paymentForm, month: e.target.value })} 
-                      placeholder="e.g. April 2026" 
+                      placeholder={`e.g. ${getISTPreviousMonthWithCurrentYear()}`} 
                       className="input-glass w-full py-2.5 px-4 text-xs font-bold" 
                       required 
                     />
+                    <div className="flex flex-wrap items-center gap-1.5 mt-2">
+                      {getBillingMonthQuickOptions().map((opt) => (
+                        <button
+                          key={opt.value}
+                          type="button"
+                          onClick={() => setPaymentForm({ ...paymentForm, month: opt.value })}
+                          className={`text-[10px] font-bold px-2.5 py-1 rounded-lg transition-all ${
+                            paymentForm.month === opt.value
+                              ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/50 shadow-sm shadow-emerald-500/10'
+                              : 'bg-white/5 text-slate-400 hover:text-white hover:bg-white/10 border border-white/5'
+                          }`}
+                          title={`Select ${opt.label}`}
+                        >
+                          {opt.label}
+                        </button>
+                      ))}
+                    </div>
                   </div>
 
                   <div>

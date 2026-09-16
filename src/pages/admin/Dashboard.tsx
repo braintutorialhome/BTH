@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Routes, Route, Link, useLocation, useNavigate } from 'react-router-dom';
 import { 
   BarChart2, Users, FileCheck, CreditCard, Wallet, Calendar, BookMarked, Bell, LogOut, Menu, X, Plus, Trash2, Edit2, TrendingUp, TrendingDown, DollarSign, Settings, AlertCircle, ExternalLink, Eye, MessageSquareQuote
 } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
 import { useStorage } from '../../hooks/useStorage';
 import AdminHome from './views/Home';
 import StudentManagement from './views/Students';
@@ -21,30 +22,74 @@ import StudentFeeTracker from './views/StudentFeeTracker';
 import StudentOverview from './views/StudentOverview';
 import StudentRemarksManagement from './views/StudentRemarks';
 
-const NavItem = ({ to, icon: Icon, label, active, onClick }: any) => (
+interface NavItemProps {
+  to: string;
+  icon: React.ElementType;
+  label: string;
+  badge?: string | number;
+  badgeColor?: string;
+  active?: boolean;
+  onClick?: () => void;
+  key?: string;
+}
+
+interface NavGroup {
+  title: string;
+  items: Omit<NavItemProps, 'active' | 'onClick'>[];
+}
+
+const NavItem = ({ to, icon: Icon, label, active, onClick, badge, badgeColor }: NavItemProps) => (
   <Link 
     to={to} 
     onClick={onClick}
-    className={`flex items-center gap-3 px-5 py-3.5 rounded-2xl transition-all font-bold text-sm tracking-tight ${
+    className={`flex items-center justify-between px-4 py-2.5 rounded-2xl transition-all font-bold text-xs tracking-tight relative group ${
       active 
-        ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/30 border border-indigo-400/20' 
-        : 'text-slate-400 hover:text-white hover:bg-white/5 border border-transparent hover:border-white/5'
+        ? 'text-white' 
+        : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'
     }`}
   >
-    <Icon size={18} />
-    <span>{label}</span>
+    {active && (
+      <motion.div 
+        layoutId="admin-nav-active"
+        className="absolute inset-0 bg-indigo-600 rounded-2xl shadow-lg shadow-indigo-600/30 border border-indigo-400/20"
+        transition={{ type: 'spring', bounce: 0.2, duration: 0.5 }}
+      />
+    )}
+    <div className="flex items-center gap-3 relative z-10 min-w-0">
+      <Icon size={16} className={`relative z-10 transition-transform group-hover:scale-110 shrink-0 ${active ? 'text-white' : 'text-slate-500 group-hover:text-indigo-400'}`} />
+      <span className="relative z-10 truncate">{label}</span>
+    </div>
+    {badge !== undefined && badge !== null && (
+      <span className={`relative z-10 text-[9px] font-black px-2 py-0.5 rounded-full ${
+        badgeColor || (active ? 'bg-white/20 text-white' : 'bg-white/10 text-slate-300')
+      }`}>
+        {badge}
+      </span>
+    )}
   </Link>
 );
 
 export default function AdminDashboard() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { logout, currentUser, syncError, isInitialSyncing, refreshCloudData, scriptUrl } = useStorage();
+  const { 
+    logout, 
+    currentUser, 
+    syncError, 
+    isInitialSyncing, 
+    refreshCloudData, 
+    scriptUrl,
+    students,
+    dueFees,
+    notices,
+    materials,
+    externalTests
+  } = useStorage();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const [currentTime, setCurrentTime] = useState(new Date());
 
-  React.useEffect(() => {
+  useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
@@ -66,23 +111,84 @@ export default function AdminDashboard() {
     navigate('/login');
   };
 
-  const navItems = [
-    { to: '/admin/dashboard', icon: BarChart2, label: 'Dashboard' },
-    { to: '/admin/student-fee-tracker', icon: Users, label: 'Student Fee Tracker' },
-    { to: '/admin/student-overview', icon: Eye, label: 'Student Overview' },
-    { to: '/admin/admissions', icon: FileCheck, label: 'Admissions' },
-    { to: '/admin/students', icon: Users, label: 'Students' },
-    { to: '/admin/fees', icon: CreditCard, label: 'Fees' },
-    { to: '/admin/expenses', icon: Wallet, label: 'Expenses' },
-    { to: '/admin/accounts', icon: DollarSign, label: 'Accounts' },
-    { to: '/admin/attendance', icon: Calendar, label: 'Attendance' },
-    { to: '/admin/settings', icon: Settings, label: 'Settings' },
-    { to: '/admin/test-master', icon: ExternalLink, label: 'Exam Portal' },
-    { to: '/admin/results', icon: FileCheck, label: 'Results' },
-    { to: '/admin/materials', icon: BookMarked, label: 'Materials' },
-    { to: '/admin/due-fees', icon: AlertCircle, label: 'Due Fees' },
-    { to: '/admin/student-remarks', icon: MessageSquareQuote, label: 'Student Remarks' },
-    { to: '/admin/notices', icon: Bell, label: 'Notices' },
+  const pendingAdmissions = students.filter(s => s.status === 'pending').length;
+  const duesCount = dueFees.length;
+  const noticesCount = notices.length;
+  const materialsCount = materials.length;
+  const externalTestsCount = externalTests.length;
+
+  const navGroups: NavGroup[] = [
+    {
+      title: 'Main Hub',
+      items: [
+        { to: '/admin/dashboard', icon: BarChart2, label: 'Dashboard' },
+        { to: '/admin/student-fee-tracker', icon: Users, label: 'Fee Tracker' },
+        { to: '/admin/student-overview', icon: Eye, label: 'Student Overview' },
+        { to: '/admin/students', icon: Users, label: 'Student Records' },
+        { 
+          to: '/admin/admissions', 
+          icon: FileCheck, 
+          label: 'Admissions',
+          badge: pendingAdmissions > 0 ? pendingAdmissions : undefined,
+          badgeColor: 'bg-amber-500 text-slate-950 font-black'
+        }
+      ]
+    },
+    {
+      title: 'Fees & Accounts',
+      items: [
+        { to: '/admin/fees', icon: CreditCard, label: 'Fees Status' },
+        { 
+          to: '/admin/due-fees', 
+          icon: AlertCircle, 
+          label: 'Due Fees',
+          badge: duesCount > 0 ? duesCount : undefined,
+          badgeColor: 'bg-rose-500 text-white animate-pulse'
+        },
+        { to: '/admin/expenses', icon: Wallet, label: 'Expenses' },
+        { to: '/admin/accounts', icon: DollarSign, label: 'Accounts' }
+      ]
+    },
+    {
+      title: 'Academics & Tests',
+      items: [
+        { 
+          to: '/admin/test-master', 
+          icon: ExternalLink, 
+          label: 'Exam Portal',
+          badge: externalTestsCount > 0 ? externalTestsCount : undefined,
+          badgeColor: 'bg-amber-500/20 text-amber-300'
+        },
+        { to: '/admin/results', icon: FileCheck, label: 'Exam Results' },
+        { 
+          to: '/admin/materials', 
+          icon: BookMarked, 
+          label: 'Study Materials',
+          badge: materialsCount > 0 ? materialsCount : undefined,
+          badgeColor: 'bg-cyan-500/20 text-cyan-300'
+        },
+        { to: '/admin/attendance', icon: Calendar, label: 'Attendance' }
+      ]
+    },
+    {
+      title: 'Communication',
+      items: [
+        { to: '/admin/student-remarks', icon: MessageSquareQuote, label: 'Remarks & Notes' },
+        { 
+          to: '/admin/notices', 
+          icon: Bell, 
+          label: 'Notices Board',
+          badge: noticesCount > 0 ? noticesCount : undefined,
+          badgeColor: 'bg-indigo-500/20 text-indigo-300'
+        }
+      ]
+    },
+    {
+      title: 'System & Settings',
+      items: [
+        { to: '/admin/settings', icon: Settings, label: 'System Settings' }
+      ]
+    }
   ];
 
   const viewNames: Record<string, string> = {
@@ -106,46 +212,70 @@ export default function AdminDashboard() {
 
   return (
     <div className="min-h-screen bg-transparent flex font-sans overflow-hidden">
+      {/* Sidebar overlay for mobile */}
+      <AnimatePresence>
+        {isSidebarOpen && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setIsSidebarOpen(false)}
+            className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-40 lg:hidden"
+          />
+        )}
+      </AnimatePresence>
+
       {/* Sidebar Navigation */}
       <aside className={`
-        fixed inset-y-0 left-0 z-50 w-72 h-full bg-white/5 backdrop-blur-3xl border-r border-white/10 flex flex-col p-6 transform transition-transform duration-300 lg:translate-x-0 lg:static
+        fixed inset-y-0 left-0 z-50 w-80 h-full bg-slate-900/60 backdrop-blur-3xl border-r border-white/10 flex flex-col p-6 transform transition-transform duration-300 lg:translate-x-0 lg:static flex-shrink-0
         ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
       `}>
         <div className="flex flex-col h-full">
-          <div className="flex items-center gap-3 mb-10">
-            <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center font-bold text-xl shadow-lg shadow-indigo-600/30">
+          <div className="flex items-center gap-3 mb-8">
+            <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center font-bold text-xl shadow-lg shadow-indigo-600/30 shrink-0">
               <span className="text-white tracking-tighter">BTH</span>
             </div>
-            <div>
-              <h1 className="text-lg font-black leading-tight uppercase tracking-widest text-white">Brain Tutorial Home</h1>
-              <p className="text-[10px] text-slate-500 font-black uppercase tracking-[0.2em]">Admin Portal</p>
+            <div className="truncate">
+              <h1 className="text-sm font-black leading-tight uppercase tracking-widest text-white truncate">Brain Tutorial Home</h1>
+              <p className="text-[10px] text-slate-500 font-black uppercase tracking-[0.2em] truncate">Admin Portal</p>
             </div>
-            <button className="ml-auto lg:hidden text-slate-400" onClick={() => setIsSidebarOpen(false)}>
+            <button className="ml-auto lg:hidden text-slate-400 hover:text-white" onClick={() => setIsSidebarOpen(false)}>
               <X size={20} />
             </button>
           </div>
           
-          <nav className="flex-1 space-y-1.5 overflow-y-auto pr-2 custom-scrollbar">
-            {navItems.map(item => (
-              <NavItem 
-                key={item.to} 
-                {...item} 
-                active={location.pathname === item.to}
-                onClick={() => setIsSidebarOpen(false)}
-              />
+          <nav className="flex-1 space-y-6 overflow-y-auto custom-scrollbar pr-1">
+            {navGroups.map((group, groupIdx) => (
+              <div key={group.title || groupIdx} className="space-y-1.5">
+                <div className="px-3">
+                  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">
+                    {group.title}
+                  </p>
+                </div>
+                <div className="space-y-1">
+                  {group.items.map((item) => (
+                    <NavItem 
+                      key={item.to} 
+                      {...item} 
+                      active={location.pathname === item.to}
+                      onClick={() => setIsSidebarOpen(false)}
+                    />
+                  ))}
+                </div>
+              </div>
             ))}
           </nav>
 
-          <div className="mt-8 pt-6 border-t border-white/5">
-             <div className="p-4 rounded-2xl bg-gradient-to-br from-indigo-600/20 to-purple-600/20 border border-white/10 mb-4">
-                <p className="text-[10px] text-indigo-400 font-black uppercase tracking-widest mb-1">Support</p>
+          <div className="mt-6 pt-5 border-t border-white/5 space-y-3">
+             <div className="p-3.5 rounded-2xl bg-white/[0.03] border border-white/5">
+                <p className="text-[10px] text-indigo-400 font-black uppercase tracking-widest mb-0.5">Admin Support</p>
                 <p className="text-xs text-slate-400 font-medium">+91 9647046334</p>
              </div>
              <button 
                 onClick={handleLogout}
-                className="w-full flex items-center gap-3 px-5 py-3.5 rounded-2xl transition-all font-bold text-sm text-rose-400 hover:bg-rose-400/10 hover:text-rose-300"
+                className="w-full flex items-center justify-center gap-2.5 px-4 py-3 rounded-xl bg-rose-500/[0.08] hover:bg-rose-500/15 border border-rose-500/20 text-rose-400 hover:text-rose-300 font-bold text-xs uppercase tracking-widest transition-all"
               >
-                <LogOut size={18} />
+                <LogOut size={15} />
                 <span>Sign Out</span>
               </button>
           </div>

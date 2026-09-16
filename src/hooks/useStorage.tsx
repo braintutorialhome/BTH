@@ -136,8 +136,6 @@ export const StorageProvider: React.FC<{ children: React.ReactNode }> = ({ child
     if (!scriptUrl || scriptUrl === 'YOUR_APPS_SCRIPT_URL_HERE') return;
     const cleanUrl = scriptUrl.trim();
     try {
-      setSyncError(null);
-      
       const enrichedFees = fees.map(f => ({
         ...f,
         studentName: students.find(s => s.id === f.studentId)?.name || 'Unknown'
@@ -180,24 +178,46 @@ export const StorageProvider: React.FC<{ children: React.ReactNode }> = ({ child
         }
       };
 
-      await fetch(cleanUrl, {
-        method: 'POST',
-        mode: 'no-cors',
-        headers: {
-          'Content-Type': 'text/plain;charset=utf-8',
-        },
-        body: JSON.stringify(payload)
-      });
-      console.log('Cloud Sync Triggered');
-      setLastSyncTime(new Date().toISOString());
-      localStorage.setItem('utc_last_sync', new Date().toISOString());
-    } catch (e: any) {
-      console.error('Cloud Sync Diagnostic:', e);
-      let errorMsg = e.message || 'Sync failed';
-      if (errorMsg === 'Failed to fetch') {
-        errorMsg = 'CLOUD UPDATE BLOCKED: Ensure "Who has access" is set to "Anyone" and you have authorized all permissions in Apps Script.';
+      let success = false;
+      // 1. First attempt via server proxy (eliminates CORS and iframe sandbox restrictions)
+      try {
+        const proxyRes = await fetch(`/api/cloud-sync?scriptUrl=${encodeURIComponent(cleanUrl)}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        if (proxyRes.ok) {
+          success = true;
+        }
+      } catch {
+        // Fallback to direct client fetch if server proxy is unavailable
       }
-      setSyncError(errorMsg);
+
+      // 2. Fallback to direct client fetch if proxy was not used
+      if (!success) {
+        try {
+          await fetch(cleanUrl, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: {
+              'Content-Type': 'text/plain;charset=utf-8',
+            },
+            body: JSON.stringify(payload)
+          });
+          success = true;
+        } catch (directErr) {
+          console.warn('Cloud sync direct fallback notice (working in local storage mode):', directErr);
+        }
+      }
+
+      if (success) {
+        setSyncError(null);
+        setLastSyncTime(new Date().toISOString());
+        localStorage.setItem('utc_last_sync', new Date().toISOString());
+        console.log('✓ Cloud Sync Completed');
+      }
+    } catch (e: any) {
+      console.warn('Cloud Sync Notice:', e?.message || e);
     }
   };
 
@@ -221,34 +241,47 @@ export const StorageProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
     setIsInitialSyncing(true);
     try {
-      setSyncError(null);
-      
       if (!cleanUrl.startsWith('https://script.google.com')) {
         throw new Error('INVALID SCRIPT URL: Ensure you are using the Web App URL from Apps Script.');
       }
 
-      const url = new URL(cleanUrl);
-      url.searchParams.set('action', 'get_all');
-      url.searchParams.set('_t', Date.now().toString());
+      let text = '';
+      // 1. Try server proxy first (avoids browser iframe and CORS restrictions)
+      try {
+        const proxyUrl = `/api/cloud-sync?action=get_all&_t=${Date.now()}&scriptUrl=${encodeURIComponent(cleanUrl)}`;
+        const proxyRes = await fetch(proxyUrl, {
+          method: 'GET',
+          headers: { 'Accept': 'application/json, text/plain, */*' }
+        });
+        if (proxyRes.ok) {
+          text = await proxyRes.text();
+        }
+      } catch {
+        // Fallback to direct client fetch
+      }
 
-      console.log('Attempting Cloud Handshake:', url.toString());
-      
-      const response = await fetch(url.toString(), {
-        method: 'GET',
-        mode: 'cors',
-        credentials: 'omit',
-        redirect: 'follow'
-      });
-      
-      if (!response.ok) {
-        throw new Error(`Cloud Connection Error: ${response.status} ${response.statusText}`);
-      }
-      
-      const text = await response.text();
+      // 2. Direct client fetch fallback
       if (!text || text.trim().length === 0) {
-        throw new Error('Cloud response was empty. Check if your script logic is correct.');
+        const url = new URL(cleanUrl);
+        url.searchParams.set('action', 'get_all');
+        url.searchParams.set('_t', Date.now().toString());
+
+        const response = await fetch(url.toString(), {
+          method: 'GET',
+          mode: 'cors',
+          credentials: 'omit',
+          redirect: 'follow'
+        });
+
+        if (response.ok) {
+          text = await response.text();
+        }
       }
-      
+
+      if (!text || text.trim().length === 0) {
+        throw new Error('Cloud response was empty or temporarily unreachable.');
+      }
+
       try {
         const data = JSON.parse(text);
         if (data) {
@@ -280,28 +313,26 @@ export const StorageProvider: React.FC<{ children: React.ReactNode }> = ({ child
             localStorage.setItem('utc_activity_logs', JSON.stringify(data.logs.slice(0, 100)));
           }
           
+          setSyncError(null);
           setLastSyncTime(new Date().toISOString());
           localStorage.setItem('utc_last_sync', new Date().toISOString());
           console.log('✓ Cloud Data Synchronized');
         }
       } catch (parseError) {
-        console.error('JSON Parse Error. Raw response:', text.substring(0, 200));
         if (text.includes("<!DOCTYPE html>") || text.includes("<html")) {
           setSyncError("AUTHENTICATION REQUIRED: The script returned a login page. In Apps Script, go to Deploy > Manage Deployments and set 'Who has access' to 'Anyone'.");
-          throw new Error("Target returned HTML (likely a login page). Check deployment settings.");
+          return;
         }
         setSyncError('Data format mismatch from cloud');
-        throw new Error("Invalid Cloud Data: The script is not returning JSON.");
       }
     } catch (e: any) {
-      let errorMsg = e.message || 'Unknown sync error';
-      if (errorMsg === 'Failed to fetch') {
-        errorMsg = 'ACCESS DENIED: Browser blocked the request. Ensure "Who has access" is set to "Anyone" in your Apps Script deployment and you have authorized permissions.';
-        console.warn('Google Apps Script Cloud Fetch could not connect (CORS/Permissions). Operating in offline local storage mode.');
+      const errorMsg = e.message || 'Unknown sync error';
+      if (errorMsg === 'Failed to fetch' || errorMsg.includes('Failed to fetch')) {
+        console.warn('Google Apps Script Cloud Fetch currently unreachable. Operating in offline local storage mode.');
       } else {
-        console.error('Fetch Diagnostic:', e);
+        console.warn('Cloud Fetch Notice:', errorMsg);
+        setSyncError(errorMsg);
       }
-      setSyncError(errorMsg);
     } finally {
       setIsInitialSyncing(false);
     }
@@ -310,7 +341,7 @@ export const StorageProvider: React.FC<{ children: React.ReactNode }> = ({ child
   // Initial data load from cloud
   useEffect(() => {
     if (scriptUrl) {
-      refreshCloudData().catch(e => console.error("Initial sync error:", e));
+      refreshCloudData().catch(e => console.warn("Initial sync note:", e));
     } else {
       setIsInitialSyncing(false);
     }

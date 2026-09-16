@@ -7,6 +7,7 @@ async function startServer() {
   const PORT = 3000;
 
   app.use(express.json({ limit: "50mb" }));
+  app.use(express.text({ limit: "50mb", type: ["text/plain", "application/json"] }));
 
   // API health checks for deployment and container probes
   app.get("/api/health", (req, res) => {
@@ -61,6 +62,70 @@ async function startServer() {
     res.setHeader("Content-Length", item.buffer.length);
     res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
     res.send(item.buffer);
+  });
+
+  const DEFAULT_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwUIvbJKdfJopEH2E2V5Kf84gltgu-FQUEksdJQ_gbIQEJHmSPOkEcnEJboexKbCpf8FA/exec";
+
+  // Cloud Sync Proxy: Handles GET from Google Apps Script without CORS/redirect issues
+  app.get("/api/cloud-sync", async (req, res) => {
+    try {
+      const rawTargetUrl = (req.query.scriptUrl as string) || DEFAULT_SCRIPT_URL;
+      const cleanUrl = rawTargetUrl.trim();
+      const action = (req.query.action as string) || "get_all";
+
+      const url = new URL(cleanUrl);
+      url.searchParams.set("action", action);
+      url.searchParams.set("_t", Date.now().toString());
+
+      const response = await fetch(url.toString(), {
+        method: "GET",
+        headers: { "Accept": "application/json, text/plain, */*" }
+      });
+
+      if (!response.ok) {
+        return res.status(response.status).json({ error: `Apps Script status ${response.status}: ${response.statusText}` });
+      }
+
+      const text = await response.text();
+      res.setHeader("Content-Type", "application/json; charset=utf-8");
+      try {
+        const json = JSON.parse(text);
+        return res.json(json);
+      } catch {
+        return res.send(text);
+      }
+    } catch (err: any) {
+      console.warn("Cloud Sync GET proxy notice:", err?.message);
+      return res.status(502).json({ error: err?.message || "Failed to contact Google Apps Script" });
+    }
+  });
+
+  // Cloud Sync Proxy: Handles POST backup to Google Apps Script
+  app.post("/api/cloud-sync", async (req, res) => {
+    try {
+      const rawTargetUrl = (req.query.scriptUrl as string) || DEFAULT_SCRIPT_URL;
+      const cleanUrl = rawTargetUrl.trim();
+      const bodyPayload = typeof req.body === "string" ? req.body : JSON.stringify(req.body);
+
+      const response = await fetch(cleanUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "text/plain;charset=utf-8",
+        },
+        body: bodyPayload,
+      });
+
+      const text = await response.text();
+      try {
+        const json = JSON.parse(text);
+        return res.json(json);
+      } catch {
+        return res.json({ status: "success", raw: text.substring(0, 100) });
+      }
+    } catch (err: any) {
+      console.warn("Cloud Sync POST proxy notice:", err?.message);
+      return res.status(502).json({ error: err?.message || "Failed to post to Google Apps Script" });
+    }
   });
 
   // Vite middleware for development vs static production serving

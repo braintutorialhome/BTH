@@ -140,19 +140,19 @@ export default function StudentDashboard() {
       ]
     },
     {
+      title: 'Fees & Accounts',
+      items: [
+        { to: '/student/fees', icon: CreditCard, label: 'Fees Status' },
+        { to: '/student/due-fees', icon: AlertCircle, label: 'Due Fees', badge: myDuesCount > 0 ? myDuesCount : undefined, badgeColor: 'bg-rose-500 text-white animate-pulse' }
+      ]
+    },
+    {
       title: 'Academics & Tests',
       items: [
         { to: '/student/test-master', icon: ExternalLink, label: 'Exam Portal', badge: externalTests.length > 0 ? externalTests.length : undefined, badgeColor: 'bg-amber-500/20 text-amber-300' },
         { to: '/student/results', icon: FileCheck, label: 'Exam Results' },
         { to: '/student/materials', icon: BookMarked, label: 'Study Materials', badge: materials.length > 0 ? materials.length : undefined, badgeColor: 'bg-cyan-500/20 text-cyan-300' },
         { to: '/student/attendance', icon: CalendarX, label: 'Attendance', badge: myAbsentCount > 0 ? `${myAbsentCount} Abs` : undefined, badgeColor: 'bg-rose-500/20 text-rose-300' }
-      ]
-    },
-    {
-      title: 'Fees & Accounts',
-      items: [
-        { to: '/student/fees', icon: CreditCard, label: 'Fees Status' },
-        { to: '/student/due-fees', icon: AlertCircle, label: 'Due Fees', badge: myDuesCount > 0 ? myDuesCount : undefined, badgeColor: 'bg-rose-500 text-white animate-pulse' }
       ]
     },
     {

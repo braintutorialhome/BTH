@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useStorage } from '../../../hooks/useStorage';
 import { CreditCard, Plus, X, Trash2 } from 'lucide-react';
-import { safeFormat, getISTMonthName, getISTToday } from '../../../lib/utils';
+import { safeFormat, getISTMonthName, getISTToday, getISTPreviousMonthWithCurrentYear, getBillingMonthQuickOptions } from '../../../lib/utils';
 
 export default function FeeManagement() {
   const { students, fees, addFee, deleteFee } = useStorage();
@@ -14,7 +14,7 @@ export default function FeeManagement() {
   const [newFee, setNewFee] = useState({
     studentId: '',
     amount: '',
-    month: getISTMonthName(),
+    month: getISTPreviousMonthWithCurrentYear(),
     date: getISTToday(),
     paymentMethod: 'Cash',
     notes: ''
@@ -49,7 +49,7 @@ export default function FeeManagement() {
     setNewFee({ 
       studentId: '', 
       amount: '', 
-      month: getISTMonthName(), 
+      month: getISTPreviousMonthWithCurrentYear(), 
       date: getISTToday(),
       paymentMethod: 'Cash',
       notes: ''
@@ -248,15 +248,37 @@ export default function FeeManagement() {
               </div>
               <div className="grid md:grid-cols-2 gap-8">
                 <div className="space-y-3">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Billing Month</label>
+                  <div className="flex items-center justify-between">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Billing Month / Term</label>
+                    <span className="text-[9px] font-bold text-emerald-400 uppercase tracking-wider">
+                      Default: Prev Month
+                    </span>
+                  </div>
                   <input 
                     required
                     type="text" 
                     value={newFee.month}
                     onChange={(e) => setNewFee({...newFee, month: e.target.value})}
-                    className="input-glass w-full py-4 rounded-2xl"
-                    placeholder="e.g. April 2024"
+                    className="input-glass w-full py-4 rounded-2xl text-xs font-bold"
+                    placeholder={`e.g. ${getISTPreviousMonthWithCurrentYear()}`}
                   />
+                  <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                    {getBillingMonthQuickOptions().map((opt) => (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        onClick={() => setNewFee({ ...newFee, month: opt.value })}
+                        className={`text-[10px] font-bold px-2.5 py-1 rounded-lg transition-all ${
+                          newFee.month === opt.value
+                            ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/50 shadow-sm shadow-emerald-500/10'
+                            : 'bg-white/5 text-slate-400 hover:text-white hover:bg-white/10 border border-white/5'
+                        }`}
+                        title={`Select ${opt.label}`}
+                      >
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
                 </div>
                 <div className="space-y-3">
                   <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Payment Method</label>
