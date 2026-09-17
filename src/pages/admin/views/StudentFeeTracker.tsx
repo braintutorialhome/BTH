@@ -3,7 +3,8 @@ import { useStorage } from '../../../hooks/useStorage';
 import { 
   Search, Filter, Users, CreditCard, IndianRupee, Plus, Edit2, Trash2, X, 
   CheckCircle, AlertCircle, Phone, MapPin, Calendar, BookOpen, User, Camera, 
-  Upload, Save, ChevronRight, DollarSign, FileText, ArrowUpRight, ArrowDownRight, RefreshCw, FileDown, FileSpreadsheet
+  Upload, Save, ChevronRight, DollarSign, FileText, ArrowUpRight, ArrowDownRight, RefreshCw, FileDown, FileSpreadsheet,
+  LayoutGrid, Table as TableIcon
 } from 'lucide-react';
 import { Student, Fee, DueFee } from '../../../types';
 import { safeFormat, formatClassName, getISTToday, getISTMonthName, getISTPreviousMonthWithCurrentYear, getBillingMonthQuickOptions } from '../../../lib/utils';
@@ -25,6 +26,7 @@ export default function StudentFeeTracker() {
   const [subjectFilter, setSubjectFilter] = useState('All');
   const [statusFilter, setStatusFilter] = useState<'All' | 'Pending' | 'Cleared' | 'Total Dues Assigned'>('All');
   const [sortBy, setSortBy] = useState<'name' | 'due' | 'roll'>('name');
+  const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
 
   // Selected student for detailed drawer/modal
   const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
@@ -497,98 +499,283 @@ export default function StudentFeeTracker() {
               <FileDown size={13} />
               <span>Export CSV</span>
             </button>
+
+            {/* View Mode Toggle: Card View vs Table View */}
+            <div className="flex p-1 bg-[#020712]/90 border border-white/10 rounded-xl ml-2">
+              <button 
+                onClick={() => setViewMode('grid')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer ${
+                  viewMode === 'grid' 
+                    ? 'bg-indigo-600 text-white shadow-md' 
+                    : 'text-slate-400 hover:text-white'
+                }`}
+                title="Card View"
+              >
+                <LayoutGrid size={14} />
+                <span className="hidden sm:inline">Card View</span>
+              </button>
+              <button 
+                onClick={() => setViewMode('table')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer ${
+                  viewMode === 'table' 
+                    ? 'bg-indigo-600 text-white shadow-md' 
+                    : 'text-slate-400 hover:text-white'
+                }`}
+                title="Table View"
+              >
+                <TableIcon size={14} />
+                <span className="hidden sm:inline">Table View</span>
+              </button>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Student List View */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredStudents.map(student => {
-          const stats = getStudentFeeStats(student.id);
+      {/* Student List View - Card View or Table View */}
+      {viewMode === 'grid' ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredStudents.map(student => {
+            const stats = getStudentFeeStats(student.id);
 
-          return (
-            <div 
-              key={student.id} 
-              onClick={() => handleOpenDetail(student)}
-              className="glass p-6 rounded-[32px] border border-white/10 hover:border-indigo-500/40 transition-all duration-300 group cursor-pointer flex flex-col justify-between hover:shadow-2xl hover:shadow-indigo-500/10"
-            >
-              <div className="space-y-4">
-                {/* Header info */}
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex items-center gap-3">
-                    <div className="w-14 h-14 rounded-2xl bg-indigo-600 text-white flex items-center justify-center font-black text-xl shadow-lg shadow-indigo-600/20 overflow-hidden shrink-0 group-hover:scale-105 transition-transform">
-                      {student.avatarUrl ? (
-                        <img src={student.avatarUrl} alt={student.name} referrerPolicy="no-referrer" className="w-full h-full object-cover" />
-                      ) : (
-                        student.name.charAt(0)
-                      )}
+            return (
+              <div 
+                key={student.id} 
+                onClick={() => handleOpenDetail(student)}
+                className="glass p-6 rounded-[32px] border border-white/10 hover:border-indigo-500/40 transition-all duration-300 group cursor-pointer flex flex-col justify-between hover:shadow-2xl hover:shadow-indigo-500/10"
+              >
+                <div className="space-y-4">
+                  {/* Header info */}
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-14 h-14 rounded-2xl bg-indigo-600 text-white flex items-center justify-center font-black text-xl shadow-lg shadow-indigo-600/20 overflow-hidden shrink-0 group-hover:scale-105 transition-transform">
+                        {student.avatarUrl ? (
+                          <img src={student.avatarUrl} alt={student.name} referrerPolicy="no-referrer" className="w-full h-full object-cover" />
+                        ) : (
+                          student.name.charAt(0)
+                        )}
+                      </div>
+                      <div>
+                        <h3 className="font-black text-base text-white tracking-tight group-hover:text-indigo-400 transition-colors line-clamp-1">
+                          {student.name}
+                        </h3>
+                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                          Class: {student.class} • {student.subject}{student.semester ? ` • Session: ${student.semester}` : ''}
+                        </p>
+                        <p className="text-[9px] font-semibold text-slate-500">
+                          Roll No: <span className="text-slate-300 font-bold">{student.rollNumber || 'N/A'}</span>
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <h3 className="font-black text-base text-white tracking-tight group-hover:text-indigo-400 transition-colors line-clamp-1">
-                        {student.name}
-                      </h3>
-                      <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">
-                        Class: {student.class} • {student.subject}{student.semester ? ` • Session: ${student.semester}` : ''}
-                      </p>
-                      <p className="text-[9px] font-semibold text-slate-500">
-                        Roll No: <span className="text-slate-300 font-bold">{student.rollNumber || 'N/A'}</span>
-                      </p>
+
+                    {stats.remainingBalance > 0 ? (
+                      <span className="px-2.5 py-1 bg-amber-500/10 border border-amber-500/30 text-amber-400 text-[9px] font-black uppercase tracking-widest rounded-xl shrink-0">
+                        Pending
+                      </span>
+                    ) : (
+                      <span className="px-2.5 py-1 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[9px] font-black uppercase tracking-widest rounded-xl shrink-0">
+                        Cleared
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Guardian & Contact */}
+                  <div className="p-3 bg-white/5 rounded-2xl space-y-1 text-xs">
+                    <div className="flex items-center justify-between text-slate-400">
+                      <span className="text-[10px] font-bold uppercase text-slate-500">Guardian:</span>
+                      <span className="font-bold text-white line-clamp-1">{student.fatherName || 'Not specified'}</span>
+                    </div>
+                    <div className="flex items-center justify-between text-slate-400">
+                      <span className="text-[10px] font-bold uppercase text-slate-500">Mobile:</span>
+                      <span className="font-bold text-indigo-300">{student.mobile || 'N/A'}</span>
                     </div>
                   </div>
 
-                  {stats.remainingBalance > 0 ? (
-                    <span className="px-2.5 py-1 bg-amber-500/10 border border-amber-500/30 text-amber-400 text-[9px] font-black uppercase tracking-widest rounded-xl shrink-0">
-                      Pending
-                    </span>
-                  ) : (
-                    <span className="px-2.5 py-1 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[9px] font-black uppercase tracking-widest rounded-xl shrink-0">
-                      Cleared
-                    </span>
-                  )}
+                  {/* Fee Breakdown Pills */}
+                  <div className="grid grid-cols-2 gap-2 pt-2 border-t border-white/5 text-center">
+                    <div className="p-2 bg-slate-900/40 rounded-xl border border-white/5">
+                      <p className="text-[8px] font-black uppercase text-slate-500">Total Dues</p>
+                      <p className="text-xs font-black text-white">₹{stats.totalDueAssigned.toLocaleString()}</p>
+                    </div>
+                    <div className="p-2 bg-emerald-950/30 rounded-xl border border-emerald-500/10">
+                      <p className="text-[8px] font-black uppercase text-emerald-500">Paid</p>
+                      <p className="text-xs font-black text-emerald-400">₹{stats.totalPaid.toLocaleString()}</p>
+                    </div>
+                  </div>
                 </div>
 
-                {/* Guardian & Contact */}
-                <div className="p-3 bg-white/5 rounded-2xl space-y-1 text-xs">
-                  <div className="flex items-center justify-between text-slate-400">
-                    <span className="text-[10px] font-bold uppercase text-slate-500">Guardian:</span>
-                    <span className="font-bold text-white line-clamp-1">{student.fatherName || 'Not specified'}</span>
-                  </div>
-                  <div className="flex items-center justify-between text-slate-400">
-                    <span className="text-[10px] font-bold uppercase text-slate-500">Mobile:</span>
-                    <span className="font-bold text-indigo-300">{student.mobile || 'N/A'}</span>
-                  </div>
-                </div>
-
-                {/* Fee Breakdown Pills */}
-                <div className="grid grid-cols-2 gap-2 pt-2 border-t border-white/5 text-center">
-                  <div className="p-2 bg-slate-900/40 rounded-xl border border-white/5">
-                    <p className="text-[8px] font-black uppercase text-slate-500">Total Dues</p>
-                    <p className="text-xs font-black text-white">₹{stats.totalDueAssigned.toLocaleString()}</p>
-                  </div>
-                  <div className="p-2 bg-emerald-950/30 rounded-xl border border-emerald-500/10">
-                    <p className="text-[8px] font-black uppercase text-emerald-500">Paid</p>
-                    <p className="text-xs font-black text-emerald-400">₹{stats.totalPaid.toLocaleString()}</p>
-                  </div>
+                {/* View Action */}
+                <div className="mt-4 pt-4 border-t border-white/5 flex items-center justify-between text-xs font-black uppercase tracking-widest text-indigo-400 group-hover:text-indigo-300">
+                  <span>View Full Profile & Fees</span>
+                  <ChevronRight size={16} className="group-hover:translate-x-1 transition-transform" />
                 </div>
               </div>
+            );
+          })}
 
-              {/* View Action */}
-              <div className="mt-4 pt-4 border-t border-white/5 flex items-center justify-between text-xs font-black uppercase tracking-widest text-indigo-400 group-hover:text-indigo-300">
-                <span>View Full Profile & Fees</span>
-                <ChevronRight size={16} className="group-hover:translate-x-1 transition-transform" />
-              </div>
+          {filteredStudents.length === 0 && (
+            <div className="col-span-full py-16 text-center glass rounded-[36px] border border-white/10 space-y-3">
+              <Users size={40} className="mx-auto text-slate-600" />
+              <p className="text-sm font-black text-white uppercase tracking-wider">No matching students found</p>
+              <p className="text-xs font-semibold text-slate-500">Try adjusting your search keywords or filter dropdowns</p>
             </div>
-          );
-        })}
+          )}
+        </div>
+      ) : (
+        /* Table View */
+        <div className="glass rounded-[32px] border border-white/10 overflow-hidden shadow-2xl">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="border-b border-white/10 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 bg-white/[0.02]">
+                  <th className="py-4 px-6">Student Details</th>
+                  <th className="py-4 px-4">Class & Batch</th>
+                  <th className="py-4 px-4">Contact</th>
+                  <th className="py-4 px-4">Total Dues</th>
+                  <th className="py-4 px-4">Total Paid</th>
+                  <th className="py-4 px-4">Balance</th>
+                  <th className="py-4 px-4">Status</th>
+                  <th className="py-4 px-6 text-right">Action</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-white/5 text-xs font-medium text-slate-300">
+                {filteredStudents.map(student => {
+                  const stats = getStudentFeeStats(student.id);
+                  const isCleared = stats.remainingBalance <= 0;
 
-        {filteredStudents.length === 0 && (
-          <div className="col-span-full py-16 text-center glass rounded-[36px] border border-white/10 space-y-3">
-            <Users size={40} className="mx-auto text-slate-600" />
-            <p className="text-sm font-black text-white uppercase tracking-wider">No matching students found</p>
-            <p className="text-xs font-semibold text-slate-500">Try adjusting your search keywords or filter dropdowns</p>
+                  return (
+                    <tr 
+                      key={student.id}
+                      onClick={() => handleOpenDetail(student)}
+                      className="hover:bg-white/[0.03] transition-colors group cursor-pointer"
+                    >
+                      {/* Student Details */}
+                      <td className="py-4 px-6">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-2xl bg-indigo-600 text-white flex items-center justify-center font-black text-sm shadow-md shadow-indigo-600/20 overflow-hidden shrink-0 group-hover:scale-105 transition-transform">
+                            {student.avatarUrl ? (
+                              <img src={student.avatarUrl} alt={student.name} referrerPolicy="no-referrer" className="w-full h-full object-cover" />
+                            ) : (
+                              student.name.charAt(0)
+                            )}
+                          </div>
+                          <div>
+                            <p className="font-bold text-white text-sm group-hover:text-indigo-300 transition-colors line-clamp-1">
+                              {student.name}
+                            </p>
+                            <p className="text-[11px] text-slate-400 flex items-center gap-1.5 mt-0.5">
+                              <span>Roll: <strong className="text-slate-200">{student.rollNumber || 'N/A'}</strong></span>
+                              <span className="text-slate-600">•</span>
+                              <span className="text-[10px] text-slate-500 font-mono">ID: {student.id}</span>
+                            </p>
+                          </div>
+                        </div>
+                      </td>
+
+                      {/* Class & Batch */}
+                      <td className="py-4 px-4">
+                        <div className="flex items-center gap-1.5">
+                          <span className="px-2 py-0.5 rounded-md bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 text-[10px] font-black uppercase">
+                            Class {student.class}
+                          </span>
+                          {student.semester && (
+                            <span className="px-2 py-0.5 rounded-md bg-white/5 text-slate-300 text-[10px] font-bold">
+                              {student.semester}
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-[11px] text-slate-400 mt-1 line-clamp-1">
+                          {student.subject || 'All Subjects'}
+                        </p>
+                      </td>
+
+                      {/* Contact */}
+                      <td className="py-4 px-4 space-y-1">
+                        <p className="flex items-center gap-1 text-[11px] text-slate-300">
+                          <Phone size={11} className="text-cyan-400 shrink-0" />
+                          <span>{student.mobile || 'N/A'}</span>
+                        </p>
+                        {student.fatherName && (
+                          <p className="text-[10px] text-slate-400 line-clamp-1">
+                            Guardian: {student.fatherName}
+                          </p>
+                        )}
+                      </td>
+
+                      {/* Total Dues */}
+                      <td className="py-4 px-4">
+                        <p className="font-black text-white text-sm">
+                          ₹{stats.totalDueAssigned.toLocaleString('en-IN')}
+                        </p>
+                        <p className="text-[10px] text-slate-400 font-medium">
+                          {stats.dueCount} {stats.dueCount === 1 ? 'due' : 'dues'}
+                        </p>
+                      </td>
+
+                      {/* Total Paid */}
+                      <td className="py-4 px-4">
+                        <p className="font-black text-emerald-400 text-sm">
+                          ₹{stats.totalPaid.toLocaleString('en-IN')}
+                        </p>
+                        <p className="text-[10px] text-slate-400 font-medium">
+                          {stats.paymentCount} payments
+                        </p>
+                      </td>
+
+                      {/* Remaining Balance */}
+                      <td className="py-4 px-4">
+                        {isCleared ? (
+                          <span className="font-black text-emerald-400 text-xs">
+                            ₹0 (Settled)
+                          </span>
+                        ) : (
+                          <span className="font-black text-amber-400 text-sm">
+                            ₹{stats.remainingBalance.toLocaleString('en-IN')}
+                          </span>
+                        )}
+                      </td>
+
+                      {/* Status */}
+                      <td className="py-4 px-4">
+                        {isCleared ? (
+                          <span className="px-2.5 py-1 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[9px] font-black uppercase tracking-widest rounded-xl">
+                            Cleared
+                          </span>
+                        ) : (
+                          <span className="px-2.5 py-1 bg-amber-500/10 border border-amber-500/30 text-amber-400 text-[9px] font-black uppercase tracking-widest rounded-xl">
+                            Pending
+                          </span>
+                        )}
+                      </td>
+
+                      {/* Action */}
+                      <td className="py-4 px-6 text-right">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleOpenDetail(student);
+                          }}
+                          className="px-3 py-1.5 rounded-xl bg-indigo-600/20 hover:bg-indigo-600 text-indigo-300 hover:text-white border border-indigo-500/30 hover:border-indigo-500 text-xs font-bold inline-flex items-center gap-1.5 transition-all cursor-pointer active:scale-95 shadow-sm"
+                        >
+                          <span>Manage</span>
+                          <ChevronRight size={14} className="group-hover:translate-x-0.5 transition-transform" />
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
           </div>
-        )}
-      </div>
+
+          {filteredStudents.length === 0 && (
+            <div className="py-16 text-center space-y-3">
+              <Users size={40} className="mx-auto text-slate-600" />
+              <p className="text-sm font-black text-white uppercase tracking-wider">No matching students found</p>
+              <p className="text-xs font-semibold text-slate-500">Try adjusting your search keywords or filter dropdowns</p>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* DETAILED STUDENT PROFILE & FEE VIEW MODAL */}
       {selectedStudent && selectedStudentStats && (

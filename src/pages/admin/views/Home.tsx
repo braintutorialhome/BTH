@@ -83,14 +83,6 @@ export default function AdminHome() {
         </div>
       </div>
 
-      {/* Primary KPI Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <StatCard label="Total Students" value={totalStudents} icon={Users} color="blue" />
-        <StatCard label="Pending Admissions" value={pendingAdmissions} icon={FileCheck} color="amber" />
-        <StatCard label="Fees Collected" value={`₹${totalFees}`} icon={CreditCard} color="emerald" />
-        <StatCard label="Net Balance" value={`₹${netBalance}`} icon={DollarSign} color="indigo" subValue={netBalance < 0 ? 'Negative' : 'Profit'} />
-      </div>
-
       {/* Featured Options: Student Overview & Student Fee Tracker */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Student Overview Card */}
@@ -162,6 +154,14 @@ export default function AdminHome() {
             </Link>
           </div>
         </div>
+      </div>
+
+      {/* Primary KPI Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <StatCard label="Total Students" value={totalStudents} icon={Users} color="blue" />
+        <StatCard label="Pending Admissions" value={pendingAdmissions} icon={FileCheck} color="amber" />
+        <StatCard label="Fees Collected" value={`₹${totalFees}`} icon={CreditCard} color="emerald" />
+        <StatCard label="Net Balance" value={`₹${netBalance}`} icon={DollarSign} color="indigo" subValue={netBalance < 0 ? 'Negative' : 'Profit'} />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

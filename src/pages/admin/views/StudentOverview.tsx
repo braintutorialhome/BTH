@@ -33,7 +33,7 @@ export default function StudentOverview() {
   const [statusFilter, setStatusFilter] = useState<'All' | 'approved' | 'pending' | 'deleted'>('approved');
   const [feeStatusFilter, setFeeStatusFilter] = useState<'All' | 'due' | 'cleared' | 'assigned'>('All');
   const [sortBy, setSortBy] = useState<'name' | 'roll' | 'due' | 'paid' | 'class'>('name');
-  const [viewMode, setViewMode] = useState<'table' | 'grid'>('table');
+  const [viewMode, setViewMode] = useState<'table' | 'grid'>('grid');
 
   // Selected student for comprehensive read-only profile modal
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
@@ -357,7 +357,7 @@ export default function StudentOverview() {
               <button 
                 onClick={() => setViewMode('grid')}
                 className={`p-2 rounded-xl transition-all ${viewMode === 'grid' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:text-white'}`}
-                title="Grid View"
+                title="Card View"
               >
                 <LayoutGrid size={18} />
               </button>
