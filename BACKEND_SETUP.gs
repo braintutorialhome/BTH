@@ -29,6 +29,7 @@ const SHEETS = {
   USERS: "User",
   RESULTS: "Results",
   EXAM_PORTAL: "Exam Portal",
+  REMARKS: "Student Remarks",
   SYSTEM: "System Logs"
 };
 
@@ -83,6 +84,7 @@ function doGet(e) {
     data.testResults = getSheetData(SHEETS.TEST_RESULTS);
     data.attendance = getSheetData(SHEETS.ATTENDANCE);
     data.users = getSheetData(SHEETS.USERS);
+    data.remarks = getSheetData(SHEETS.REMARKS);
     data.logs = getSheetData(SHEETS.LOGS);
 
     return ContentService.createTextOutput(JSON.stringify(data))
@@ -98,7 +100,7 @@ function doPost(e) {
     const action = payload.action;
     const data = payload.data;
 
-    if (action === "SYNC_ALL" && data) {
+    if ((action === "SYNC_ALL" || payload.type === "BACKUP") && data) {
       const ss = SpreadsheetApp.getActiveSpreadsheet();
       
       // Helper to clear and write sheet
@@ -110,7 +112,13 @@ function doPost(e) {
           sheet.clear();
         }
         
-        if (!items || items.length === 0) return;
+        if (!items || items.length === 0) {
+          // Provide default headers so new sheets are created cleanly even with 0 initial records
+          if (sheetName === SHEETS.REMARKS) {
+            sheet.appendRow(['id', 'studentId', 'studentName', 'rollNumber', 'class', 'title', 'category', 'remark', 'addedBy', 'date', 'updatedAt']);
+          }
+          return;
+        }
         
         const headers = Object.keys(items[0]);
         sheet.appendRow(headers);
@@ -143,6 +151,7 @@ function doPost(e) {
       writeToSheet(SHEETS.USERS, data.users);
       writeToSheet(SHEETS.RESULTS, data.resultLinks);
       writeToSheet(SHEETS.EXAM_PORTAL, data.externalTests);
+      writeToSheet(SHEETS.REMARKS, data.remarks);
       writeToSheet(SHEETS.LOGS, data.logs);
       
       // Background log

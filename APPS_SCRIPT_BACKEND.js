@@ -101,6 +101,21 @@ function doPost(e) {
       addRow("Attendance", [data.id, data.date, data.studentId, data.status]);
       return success({"message": "Attendance marked"});
     }
+
+    if (action === "ADD_REMARK") {
+      addRow("Student_Remarks", [data.id, data.studentId, data.studentName || 'N/A', data.rollNumber || 'N/A', data.class || 'N/A', data.title || '', data.category || 'general', data.remark, data.addedBy || 'Faculty', data.date, data.updatedAt || '']);
+      return success({"message": "Remark added"});
+    }
+
+    if (action === "UPDATE_REMARK") {
+      updateRow("Student_Remarks", data.id, [data.id, data.studentId, data.studentName || 'N/A', data.rollNumber || 'N/A', data.class || 'N/A', data.title || '', data.category || 'general', data.remark, data.addedBy || 'Faculty', data.date, data.updatedAt || '']);
+      return success({"message": "Remark updated"});
+    }
+
+    if (action === "DELETE_REMARK") {
+      deleteRow("Student_Remarks", data.id);
+      return success({"message": "Remark deleted"});
+    }
     
     if (type === "BACKUP") {
       updateBackupSheets(data);
@@ -225,6 +240,28 @@ function updateBackupSheets(data) {
     const rows = attendance.map(a => [a.id, a.date, a.studentId, a.status]);
     aSheet.getRange(2, 1, rows.length, rows[0].length).setValues(rows);
   }
+
+  // 10. Update Student Remarks
+  const remarks = data.remarks || [];
+  const remSheet = getOrCreateSheet("Student_Remarks");
+  remSheet.clear();
+  remSheet.appendRow(['ID', 'Student ID', 'Student Name', 'Roll Number', 'Class', 'Title', 'Category', 'Remark', 'Added By', 'Date', 'Updated At']);
+  if (remarks && remarks.length > 0) {
+    const rows = remarks.map(r => [
+      r.id, 
+      r.studentId, 
+      r.studentName || 'N/A', 
+      r.rollNumber || 'N/A', 
+      r.class || 'N/A', 
+      r.title || '', 
+      r.category || 'general', 
+      r.remark || '', 
+      r.addedBy || 'Faculty', 
+      r.date || '', 
+      r.updatedAt || ''
+    ]);
+    remSheet.getRange(2, 1, rows.length, rows[0].length).setValues(rows);
+  }
 }
 
 function getOrCreateSheet(name) {
@@ -241,6 +278,7 @@ function getOrCreateSheet(name) {
     if (name === "Tests") sheet.appendRow(['ID', 'Title', 'Description', 'Questions (JSON)', 'Duration']);
     if (name === "TestResults") sheet.appendRow(['ID', 'Test ID', 'Student ID', 'Score', 'Total Questions', 'Date']);
     if (name === "Attendance") sheet.appendRow(['ID', 'Date', 'Student ID', 'Status']);
+    if (name === "Student_Remarks") sheet.appendRow(['ID', 'Student ID', 'Student Name', 'Roll Number', 'Class', 'Title', 'Category', 'Remark', 'Added By', 'Date', 'Updated At']);
   }
   return sheet;
 }
@@ -266,6 +304,7 @@ function doGet() {
   const tests = getSheetData("Tests", ['id', 'title', 'description', 'questions', 'durationMinutes']);
   const testResults = getSheetData("TestResults", ['id', 'testId', 'studentId', 'score', 'totalQuestions', 'date']);
   const attendance = getSheetData("Attendance", ['id', 'date', 'studentId', 'status']);
+  const remarks = getSheetData("Student_Remarks", ['id', 'studentId', 'studentName', 'rollNumber', 'class', 'title', 'category', 'remark', 'addedBy', 'date', 'updatedAt']);
   
   // Post-process JSON fields
   const processedTests = tests.map(t => {
@@ -277,7 +316,7 @@ function doGet() {
   });
 
   return ContentService.createTextOutput(JSON.stringify({
-    students, fees, expenses, users, notices, materials, tests: processedTests, testResults, attendance
+    students, fees, expenses, users, notices, materials, tests: processedTests, testResults, attendance, remarks
   })).setMimeType(ContentService.MimeType.JSON);
 }
 

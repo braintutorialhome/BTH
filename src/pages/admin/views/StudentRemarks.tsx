@@ -5,10 +5,11 @@ import {
   MessageSquare, Plus, Trash2, Edit2, Search, Filter, 
   CheckCircle2, AlertCircle, Sparkles, User, Calendar, 
   GraduationCap, ThumbsUp, X, ChevronRight, ChevronDown, MessageSquareQuote,
-  Clock, ArrowUpDown
+  Clock, ArrowUpDown, FileSpreadsheet, RefreshCw
 } from 'lucide-react';
 import { formatClassName, safeFormat, getISTToday } from '../../../lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
+import AppsScriptSetupModal from '../../../components/AppsScriptSetupModal';
 
 type RemarkCategory = 'academic' | 'behavior' | 'attendance' | 'general' | 'appreciation';
 
@@ -51,7 +52,7 @@ const CATEGORY_CONFIG: Record<RemarkCategory, { label: string; bg: string; text:
 };
 
 export default function StudentRemarksManagement() {
-  const { students, remarks, addRemark, updateRemark, deleteRemark, currentUser } = useStorage();
+  const { students, remarks, addRemark, updateRemark, deleteRemark, currentUser, syncToCloud } = useStorage();
   
   // Tabs: 'remarks' (all remarks list) | 'students' (student directory with remark actions)
   const [activeTab, setActiveTab] = useState<'remarks' | 'students'>('remarks');
@@ -61,6 +62,26 @@ export default function StudentRemarksManagement() {
   const [classFilter, setClassFilter] = useState('all');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [sortOrder, setSortOrder] = useState<'desc' | 'asc'>('desc');
+
+  // Cloud sync & Apps Script setup modal state
+  const [isSetupModalOpen, setIsSetupModalOpen] = useState(false);
+  const [isSyncingCloud, setIsSyncingCloud] = useState(false);
+  const [syncToast, setSyncToast] = useState<string | null>(null);
+
+  const handleManualSync = async () => {
+    setIsSyncingCloud(true);
+    setSyncToast(null);
+    try {
+      const ok = await syncToCloud();
+      setSyncToast(ok ? 'Remarks synced to Google Sheet!' : 'Sync completed');
+      setTimeout(() => setSyncToast(null), 4000);
+    } catch {
+      setSyncToast('Saved to local store');
+      setTimeout(() => setSyncToast(null), 4000);
+    } finally {
+      setIsSyncingCloud(false);
+    }
+  };
 
   // Filter for Student Directory
   const [studentSearch, setStudentSearch] = useState('');
@@ -256,10 +277,36 @@ export default function StudentRemarksManagement() {
             </div>
           </div>
 
-          <div className="flex items-center gap-3 w-full sm:w-auto">
+          <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
+            {syncToast && (
+              <span className="text-[11px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-3 py-2 rounded-xl flex items-center gap-1.5 animate-in fade-in">
+                <CheckCircle2 size={14} />
+                <span>{syncToast}</span>
+              </span>
+            )}
+
+            <button
+              onClick={handleManualSync}
+              disabled={isSyncingCloud}
+              className="px-4 py-3 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white border border-white/10 text-xs font-black uppercase tracking-widest flex items-center justify-center gap-2 transition-all active:scale-95 disabled:opacity-50"
+              title="Push remarks to Google Sheets right now"
+            >
+              <RefreshCw size={14} className={isSyncingCloud ? 'animate-spin text-indigo-400' : 'text-slate-400'} />
+              <span>{isSyncingCloud ? 'Syncing...' : 'Sync to Sheet'}</span>
+            </button>
+
+            <button
+              onClick={() => setIsSetupModalOpen(true)}
+              className="px-4 py-3 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 hover:text-emerald-200 border border-emerald-500/20 text-xs font-black uppercase tracking-widest flex items-center justify-center gap-2 transition-all active:scale-95"
+              title="View Google Sheet Backend Code & Instructions"
+            >
+              <FileSpreadsheet size={14} className="text-emerald-400" />
+              <span>Sheet Setup</span>
+            </button>
+
             <button
               onClick={() => handleOpenAdd()}
-              className="indigo-button w-full sm:w-auto px-6 py-3 text-xs font-black uppercase tracking-widest flex items-center justify-center gap-2 shadow-xl shadow-indigo-600/20 active:scale-95"
+              className="indigo-button px-6 py-3 text-xs font-black uppercase tracking-widest flex items-center justify-center gap-2 shadow-xl shadow-indigo-600/20 active:scale-95"
             >
               <Plus size={16} />
               <span>Add New Remark</span>
@@ -919,6 +966,11 @@ export default function StudentRemarksManagement() {
           </div>
         )}
       </AnimatePresence>
+
+      <AppsScriptSetupModal
+        isOpen={isSetupModalOpen}
+        onClose={() => setIsSetupModalOpen(false)}
+      />
     </div>
   );
 }

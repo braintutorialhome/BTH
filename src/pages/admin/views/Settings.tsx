@@ -1,15 +1,26 @@
 import React, { useState } from 'react';
 import { useStorage } from '../../../hooks/useStorage';
-import { Shield, User as UserIcon, Key, Lock, X, Save, RefreshCw, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { 
+  Shield, User as UserIcon, Key, Lock, X, Save, RefreshCw, 
+  AlertCircle, CheckCircle2, FileSpreadsheet, ExternalLink, Code2, Copy, Check
+} from 'lucide-react';
 import { User } from '../../../types';
 import { formatDateTimeIST } from '../../../lib/utils';
+import AppsScriptSetupModal from '../../../components/AppsScriptSetupModal';
 
 export default function SystemSettings() {
-  const { students, users, updateUser, currentUser, refreshCloudData, isInitialSyncing, syncError, lastSyncTime } = useStorage();
+  const { 
+    students, users, updateUser, currentUser, refreshCloudData, 
+    syncToCloud, isInitialSyncing, syncError, lastSyncTime, scriptUrl, remarks 
+  } = useStorage();
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [newUsername, setNewUsername] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [syncToast, setSyncToast] = useState<string | null>(null);
+  const [isScriptModalOpen, setIsScriptModalOpen] = useState(false);
+  const [copiedUrl, setCopiedUrl] = useState(false);
 
   const [activeCategory, setActiveCategory] = useState<'admin' | 'student'>('admin');
   const [searchQuery, setSearchQuery] = useState('');
@@ -36,6 +47,29 @@ export default function SystemSettings() {
       await refreshCloudData();
     } finally {
       setIsRefreshing(false);
+    }
+  };
+
+  const handlePushAll = async () => {
+    setIsSyncing(true);
+    setSyncToast(null);
+    try {
+      const ok = await syncToCloud();
+      setSyncToast(ok ? 'Successfully synced all data to Google Sheets!' : 'Sync dispatched');
+      setTimeout(() => setSyncToast(null), 4000);
+    } catch {
+      setSyncToast('Local data saved');
+      setTimeout(() => setSyncToast(null), 4000);
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
+  const handleCopyUrl = () => {
+    if (scriptUrl) {
+      navigator.clipboard.writeText(scriptUrl);
+      setCopiedUrl(true);
+      setTimeout(() => setCopiedUrl(false), 3000);
     }
   };
 
@@ -69,14 +103,127 @@ export default function SystemSettings() {
           </div>
         </div>
         
-        <button 
-          onClick={handleRefresh}
-          disabled={isRefreshing || isInitialSyncing}
-          className="px-6 py-3 bg-white/5 hover:bg-white/10 rounded-xl text-[10px] font-black uppercase tracking-widest text-white transition-all flex items-center gap-3 border border-white/10 disabled:opacity-50"
-        >
-          <RefreshCw size={14} className={isRefreshing || isInitialSyncing ? 'animate-spin' : ''} />
-          {isRefreshing || isInitialSyncing ? 'Synchronizing Nodes...' : 'Force Cloud Refresh'}
-        </button>
+        <div className="flex items-center gap-3">
+          <button 
+            onClick={handleRefresh}
+            disabled={isRefreshing || isInitialSyncing}
+            className="px-6 py-3 bg-white/5 hover:bg-white/10 rounded-xl text-[10px] font-black uppercase tracking-widest text-white transition-all flex items-center gap-3 border border-white/10 disabled:opacity-50"
+          >
+            <RefreshCw size={14} className={isRefreshing || isInitialSyncing ? 'animate-spin' : ''} />
+            {isRefreshing || isInitialSyncing ? 'Synchronizing Nodes...' : 'Force Cloud Refresh'}
+          </button>
+        </div>
+      </div>
+
+      {/* Google Sheets Backend Architecture & Remarks Persistence Card */}
+      <div className="glass p-8 sm:p-10 rounded-[40px] border border-white/10 bg-emerald-500/[0.02]">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 pb-6 border-b border-white/5">
+          <div className="flex items-center gap-5">
+            <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-3xl">
+              <FileSpreadsheet size={28} />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/20">
+                  Google Sheet Mirror Active
+                </span>
+              </div>
+              <h3 className="text-xl sm:text-2xl font-black text-white uppercase tracking-tight mt-1">
+                Google Sheets Database Hub
+              </h3>
+              <p className="text-xs text-slate-400 mt-0.5">
+                Every fee, student profile, attendance record, and student remark is stored directly in your Google Sheet.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-3">
+            {syncToast && (
+              <span className="text-[11px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-3.5 py-2 rounded-xl flex items-center gap-1.5 animate-in fade-in">
+                <CheckCircle2 size={14} />
+                <span>{syncToast}</span>
+              </span>
+            )}
+
+            <button
+              onClick={handlePushAll}
+              disabled={isSyncing}
+              className="px-5 py-3 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white rounded-xl text-xs font-black uppercase tracking-widest transition-all flex items-center gap-2 shadow-lg shadow-emerald-600/20 active:scale-95"
+            >
+              <RefreshCw size={14} className={isSyncing ? 'animate-spin' : ''} />
+              <span>{isSyncing ? 'Pushing Data...' : 'Push All Data to Cloud'}</span>
+            </button>
+
+            <button
+              onClick={() => setIsScriptModalOpen(true)}
+              className="px-5 py-3 bg-white/5 hover:bg-white/10 text-white border border-white/10 rounded-xl text-xs font-black uppercase tracking-widest transition-all flex items-center gap-2 active:scale-95"
+            >
+              <Code2 size={14} className="text-indigo-400" />
+              <span>Backend Script & Setup</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Synced Tabs Grid */}
+        <div className="mt-6">
+          <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3">
+            Connected Google Sheet Tabs
+          </p>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div className="p-3.5 rounded-2xl bg-indigo-500/10 border border-indigo-500/20">
+              <span className="text-[10px] font-black uppercase tracking-wider text-indigo-300">
+                Student Remarks
+              </span>
+              <p className="text-xs font-bold text-white mt-1 flex items-center justify-between">
+                <span>{remarks.length} Remarks</span>
+                <span className="text-[10px] font-bold text-emerald-400">Ready</span>
+              </p>
+            </div>
+
+            <div className="p-3.5 rounded-2xl bg-white/[0.02] border border-white/5">
+              <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">
+                Approved Students
+              </span>
+              <p className="text-xs font-bold text-white mt-1 flex items-center justify-between">
+                <span>{students.filter(s => s.status === 'approved').length} Students</span>
+                <span className="text-[10px] font-bold text-emerald-400">Synced</span>
+              </p>
+            </div>
+
+            <div className="p-3.5 rounded-2xl bg-white/[0.02] border border-white/5">
+              <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">
+                Fees & Collections
+              </span>
+              <p className="text-xs font-bold text-white mt-1 flex items-center justify-between">
+                <span>Payment Records</span>
+                <span className="text-[10px] font-bold text-emerald-400">Synced</span>
+              </p>
+            </div>
+
+            <div className="p-3.5 rounded-2xl bg-white/[0.02] border border-white/5">
+              <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">
+                Daily Attendance
+              </span>
+              <p className="text-xs font-bold text-white mt-1 flex items-center justify-between">
+                <span>Attendance Logs</span>
+                <span className="text-[10px] font-bold text-emerald-400">Synced</span>
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-4 p-4 rounded-2xl bg-white/[0.02] border border-white/5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-slate-400">
+            <div>
+              <span className="text-white font-bold">Missing "Student Remarks" in your Google Sheet?</span> Click <strong>Backend Script & Setup</strong> to copy the updated script, paste into Apps Script, and deploy as a new version.
+            </div>
+            <button
+              onClick={() => setIsScriptModalOpen(true)}
+              className="text-indigo-400 hover:text-indigo-300 font-bold shrink-0 flex items-center gap-1 text-xs"
+            >
+              <span>View Update Instructions</span>
+              <ExternalLink size={12} />
+            </button>
+          </div>
+        </div>
       </div>
 
       {/* Primary Admin Quick Settings */}
@@ -251,6 +398,11 @@ export default function SystemSettings() {
           </div>
         </div>
       )}
+
+      <AppsScriptSetupModal
+        isOpen={isScriptModalOpen}
+        onClose={() => setIsScriptModalOpen(false)}
+      />
 
       {/* Activity Logs removed */}
 

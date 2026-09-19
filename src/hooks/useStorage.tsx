@@ -79,6 +79,8 @@ interface StorageContextType {
   clearAllData: () => void;
   scriptUrl: string;
   refreshCloudData: () => Promise<void>;
+  syncToCloud: () => Promise<boolean>;
+  lastSyncTime: string | null;
   syncError: string | null;
   isInitialSyncing: boolean;
 }
@@ -151,6 +153,23 @@ export const StorageProvider: React.FC<{ children: React.ReactNode }> = ({ child
         studentName: students.find(s => s.id === tr.studentId)?.name || 'Unknown'
       }));
 
+      const enrichedRemarks = remarks.map(r => {
+        const student = students.find(s => s.id === r.studentId);
+        return {
+          id: r.id,
+          studentId: r.studentId,
+          studentName: student?.name || 'Unknown',
+          rollNumber: student?.rollNumber || 'N/A',
+          class: student?.class || 'N/A',
+          title: r.title || 'General Remark',
+          category: r.category || 'general',
+          remark: r.remark || '',
+          addedBy: r.addedBy || 'Faculty',
+          date: r.date || new Date().toISOString(),
+          updatedAt: r.updatedAt || ''
+        };
+      });
+
       // Allow compressed avatarUrl to be synced to the cloud so students can see their photo on any device
       const cleanStudents = students;
 
@@ -172,7 +191,7 @@ export const StorageProvider: React.FC<{ children: React.ReactNode }> = ({ child
           dueFees,
           externalTests,
           resultLinks,
-          remarks,
+          remarks: enrichedRemarks,
           users,
           logs: JSON.parse(localStorage.getItem('utc_activity_logs') || '[]')
         }
@@ -214,10 +233,13 @@ export const StorageProvider: React.FC<{ children: React.ReactNode }> = ({ child
         setSyncError(null);
         setLastSyncTime(new Date().toISOString());
         localStorage.setItem('utc_last_sync', new Date().toISOString());
-        console.log('✓ Cloud Sync Completed');
+        console.log('✓ Cloud Sync Completed (including Student Remarks)');
+        return true;
       }
+      return false;
     } catch (e: any) {
       console.warn('Cloud Sync Notice:', e?.message || e);
+      return false;
     }
   };
 
@@ -303,7 +325,21 @@ export const StorageProvider: React.FC<{ children: React.ReactNode }> = ({ child
           if (data.dueFees) setDueFees(data.dueFees);
           if (data.externalTests) setExternalTests(data.externalTests);
           if (data.resultLinks) setResultLinks(data.resultLinks);
-          if (data.remarks) setRemarks(data.remarks);
+          if (data.remarks && Array.isArray(data.remarks)) {
+            const parsedRemarks: StudentRemark[] = data.remarks
+              .filter((r: any) => r && (r.id || r.ID || r.remark || r.Remark))
+              .map((r: any) => ({
+                id: String(r.id || r.ID || uuid()),
+                studentId: String(r.studentId || r['Student ID'] || r.studentid || ''),
+                title: r.title || r.Title || '',
+                category: (r.category || r.Category || 'general') as any,
+                remark: r.remark || r.Remark || '',
+                addedBy: r.addedBy || r['Added By'] || 'Faculty',
+                date: r.date || r.Date || new Date().toISOString(),
+                updatedAt: r.updatedAt || r['Updated At'] || ''
+              }));
+            setRemarks(parsedRemarks);
+          }
           if (data.materials) setMaterials(data.materials);
           if (data.tests) setTests(data.tests);
           if (data.testResults) setTestResults(data.testResults);
@@ -667,7 +703,7 @@ export const StorageProvider: React.FC<{ children: React.ReactNode }> = ({ child
     <StorageContext.Provider value={{
       students, fees, expenses, attendance, tests, testResults, materials, studyMaterials: materials, notices, dueFees, externalTests, resultLinks, remarks, users, currentUser,
       login, signup, logout, refreshCloudData, updateUser,
-      scriptUrl, syncError, isInitialSyncing,
+      scriptUrl, syncError, isInitialSyncing, syncToCloud, lastSyncTime,
       addStudent, updateStudent, deleteStudent, removeStudentPermanently, approveStudent, rejectStudent,
       addFee, updateFee, deleteFee, addExpense, updateExpense, deleteExpense, markAttendance,
       deleteAttendance, updateAttendance,

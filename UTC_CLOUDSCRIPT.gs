@@ -24,6 +24,7 @@ const CONFIG = {
     MATERIALS: "Materials",
     NOTICES: "Notices",
     USERS: "Users",
+    REMARKS: "Student_Remarks",
     LOGS: "System_Logs",
     ACTIVITY: "UI_Activity_Logs"
   }
@@ -50,7 +51,7 @@ function doPost(e) {
 }
 
 function updateBackupSheets(data) {
-  const { students, approvedStudents, pendingAdmissions, fees, expenses, users, notices, materials, tests, testResults, attendance, logs } = data;
+  const { students, approvedStudents, pendingAdmissions, fees, expenses, users, notices, materials, tests, testResults, attendance, remarks, logs } = data;
   
   const studentHeaders = ['ID', 'Name', 'Father Name', 'DOB', 'Gender', 'Subject', 'Class', 'Semester', 'Mobile', 'Address', 'Admission Date', 'Status', 'Roll Number'];
   const studentMapper = s => [s.id, s.name, s.fatherName, s.dob, s.gender, s.subject, s.class, s.semester, s.mobile, s.address, s.admissionDate, s.status, s.rollNumber || 'N/A'];
@@ -96,7 +97,11 @@ function updateBackupSheets(data) {
   syncSheet(CONFIG.SHEETS.ATTENDANCE, ['ID', 'Date', 'Student ID', 'Student Name', 'Status'], 
     attendance, a => [a.id, a.date, a.studentId, a.studentName || 'N/A', a.status]);
 
-  // 10. UI Activity Logs
+  // 10. Student Remarks
+  syncSheet(CONFIG.SHEETS.REMARKS, ['ID', 'Student ID', 'Student Name', 'Roll Number', 'Class', 'Title', 'Category', 'Remark', 'Added By', 'Date', 'Updated At'],
+    remarks, r => [r.id, r.studentId, r.studentName || 'N/A', r.rollNumber || 'N/A', r.class || 'N/A', r.title || '', r.category || 'general', r.remark || '', r.addedBy || 'Faculty', r.date || '', r.updatedAt || '']);
+
+  // 11. UI Activity Logs
   syncSheet(CONFIG.SHEETS.ACTIVITY, ['Timestamp', 'User', 'Action', 'Details'], 
     logs, l => [l.timestamp, l.user, l.action, l.details]);
 }
@@ -160,7 +165,8 @@ function doGet() {
     materials: getSheetData(CONFIG.SHEETS.MATERIALS, ['id', 'title', 'type', 'url', 'uploadDate', 'description']),
     tests: getSheetData(CONFIG.SHEETS.TESTS, ['id', 'title', 'description', 'questions', 'durationMinutes']),
     testResults: getSheetData(CONFIG.SHEETS.RESULTS, ['id', 'testId', 'studentId', 'studentName', 'score', 'totalQuestions', 'date']),
-    attendance: getSheetData(CONFIG.SHEETS.ATTENDANCE, ['id', 'date', 'studentId', 'studentName', 'status'])
+    attendance: getSheetData(CONFIG.SHEETS.ATTENDANCE, ['id', 'date', 'studentId', 'studentName', 'status']),
+    remarks: getSheetData(CONFIG.SHEETS.REMARKS, ['id', 'studentId', 'studentName', 'rollNumber', 'class', 'title', 'category', 'remark', 'addedBy', 'date', 'updatedAt'])
   };
   
   // Parse JSON fields
