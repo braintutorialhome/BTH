@@ -58,8 +58,22 @@ function doGet(e) {
           if (typeof val === 'string' && (val.startsWith('{') || val.startsWith('['))) {
              try { val = JSON.parse(val); } catch(e) {}
           }
-          obj[header] = val;
+          const cleanHeader = String(header).trim();
+          obj[cleanHeader] = val;
+          const lower = cleanHeader.toLowerCase().replace(/[\s_-]/g, '');
+          if (lower === 'whatsapp' || lower === 'whatsappnumber') {
+            obj['whatsapp'] = val !== undefined && val !== null ? String(val).trim() : '';
+          }
+          if (lower === 'mobile' || lower === 'phonenumber' || lower === 'contact') {
+            obj['mobile'] = val !== undefined && val !== null ? String(val).trim() : '';
+          }
+          if (lower === 'rollnumber' || lower === 'rollno') {
+            obj['rollNumber'] = val !== undefined && val !== null ? String(val).trim() : '';
+          }
         });
+        if (!obj['whatsapp']) {
+          obj['whatsapp'] = obj['WhatsApp'] || obj['WhatsApp Number'] || obj['whatsappNumber'] || obj['Whats App'] || '';
+        }
         return obj;
       });
     };
@@ -112,20 +126,42 @@ function doPost(e) {
           sheet.clear();
         }
         
+        const isStudentSheet = (sheetName === SHEETS.APPROVED || sheetName === SHEETS.PENDING || sheetName === SHEETS.DELETED);
+        const STUDENT_HEADERS = [
+          'id', 'rollNumber', 'name', 'fatherName', 'dob', 'gender', 'subject', 'class', 'semester', 
+          'dateOfJoining', 'mobile', 'whatsapp', 'address', 'admissionDate', 'status', 'avatarUrl'
+        ];
+        
         if (!items || items.length === 0) {
           // Provide default headers so new sheets are created cleanly even with 0 initial records
           if (sheetName === SHEETS.REMARKS) {
             sheet.appendRow(['id', 'studentId', 'studentName', 'rollNumber', 'class', 'title', 'category', 'remark', 'addedBy', 'date', 'updatedAt']);
+          } else if (isStudentSheet) {
+            sheet.appendRow(STUDENT_HEADERS);
           }
           return;
         }
         
-        const headers = Object.keys(items[0]);
+        let headers;
+        if (isStudentSheet) {
+          headers = STUDENT_HEADERS;
+        } else {
+          const keySet = {};
+          items.forEach(it => {
+            if (it && typeof it === 'object') {
+              Object.keys(it).forEach(k => { keySet[k] = true; });
+            }
+          });
+          headers = Object.keys(keySet);
+        }
         sheet.appendRow(headers);
         
         const rows = items.map(item => {
           return headers.map(header => {
-            const val = item[header];
+            let val = item[header];
+            if (header === 'whatsapp' && (val === undefined || val === null || val === '')) {
+              val = item['WhatsApp'] || item['WhatsApp Number'] || item['whatsappNumber'] || item['Whats App'] || "";
+            }
             if (val && typeof val === 'object') return JSON.stringify(val);
             return val !== undefined ? val : "";
           });

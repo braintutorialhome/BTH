@@ -53,8 +53,8 @@ function doPost(e) {
 function updateBackupSheets(data) {
   const { students, approvedStudents, pendingAdmissions, fees, expenses, users, notices, materials, tests, testResults, attendance, remarks, logs } = data;
   
-  const studentHeaders = ['ID', 'Name', 'Father Name', 'DOB', 'Gender', 'Subject', 'Class', 'Semester', 'Mobile', 'Address', 'Admission Date', 'Status', 'Roll Number'];
-  const studentMapper = s => [s.id, s.name, s.fatherName, s.dob, s.gender, s.subject, s.class, s.semester, s.mobile, s.address, s.admissionDate, s.status, s.rollNumber || 'N/A'];
+  const studentHeaders = ['ID', 'Name', 'Father Name', 'DOB', 'Gender', 'Subject', 'Class', 'Semester', 'Mobile', 'WhatsApp', 'Address', 'Admission Date', 'Status', 'Roll Number'];
+  const studentMapper = s => [s.id, s.name, s.fatherName, s.dob, s.gender, s.subject, s.class, s.semester, s.mobile, s.whatsapp || s.WhatsApp || s['WhatsApp Number'] || '', s.address, s.admissionDate, s.status, s.rollNumber || 'N/A'];
 
   // 1. Students Master
   syncSheet(CONFIG.SHEETS.STUDENTS_ALL, studentHeaders, students, studentMapper);
@@ -157,7 +157,7 @@ function doGet() {
   const output = {
     status: "online",
     version: CONFIG.VERSION,
-    students: getSheetData(CONFIG.SHEETS.STUDENTS_ALL, ['id', 'name', 'fatherName', 'dob', 'gender', 'subject', 'class', 'semester', 'mobile', 'address', 'admissionDate', 'status', 'rollNumber']),
+    students: getSheetData(CONFIG.SHEETS.STUDENTS_ALL, ['id', 'name', 'fatherName', 'dob', 'gender', 'subject', 'class', 'semester', 'mobile', 'whatsapp', 'address', 'admissionDate', 'status', 'rollNumber']),
     fees: getSheetData(CONFIG.SHEETS.FEES, ['id', 'studentId', 'studentName', 'amount', 'date', 'status', 'month']),
     expenses: getSheetData(CONFIG.SHEETS.EXPENSES, ['id', 'title', 'amount', 'date', 'category', 'description']),
     users: getSheetData(CONFIG.SHEETS.USERS, ['id', 'username', 'password', 'role', 'name']),

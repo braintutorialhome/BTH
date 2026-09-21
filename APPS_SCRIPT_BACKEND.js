@@ -163,9 +163,9 @@ function updateBackupSheets(data) {
   // 1. Update Students
   const sSheet = getOrCreateSheet("Students");
   sSheet.clear();
-  sSheet.appendRow(['ID', 'Name', 'Father Name', 'DOB', 'Gender', 'Subject', 'Class', 'Semester', 'Mobile', 'Address', 'Admission Date', 'Status', 'Roll Number']);
+  sSheet.appendRow(['ID', 'Name', 'Father Name', 'DOB', 'Gender', 'Subject', 'Class', 'Semester', 'Mobile', 'WhatsApp', 'Address', 'Admission Date', 'Status', 'Roll Number']);
   if (students && students.length > 0) {
-    const rows = students.map(s => [s.id, s.name, s.fatherName, s.dob, s.gender, s.subject, s.class, s.semester, s.mobile, s.address, s.admissionDate, s.status, s.rollNumber || 'N/A']);
+    const rows = students.map(s => [s.id, s.name, s.fatherName, s.dob, s.gender, s.subject, s.class, s.semester, s.mobile, s.whatsapp || s.WhatsApp || s['WhatsApp Number'] || '', s.address, s.admissionDate, s.status, s.rollNumber || 'N/A']);
     sSheet.getRange(2, 1, rows.length, rows[0].length).setValues(rows);
   }
   
@@ -269,7 +269,7 @@ function getOrCreateSheet(name) {
   let sheet = ss.getSheetByName(name);
   if (!sheet) {
     sheet = ss.insertSheet(name);
-    if (name === "Students") sheet.appendRow(['ID', 'Name', 'Father Name', 'DOB', 'Gender', 'Subject', 'Class', 'Semester', 'Mobile', 'Address', 'Admission Date', 'Status', 'Roll Number']);
+    if (name === "Students") sheet.appendRow(['ID', 'Name', 'Father Name', 'DOB', 'Gender', 'Subject', 'Class', 'Semester', 'Mobile', 'WhatsApp', 'Address', 'Admission Date', 'Status', 'Roll Number']);
     if (name === "Fees") sheet.appendRow(['ID', 'Student ID', 'Amount', 'Date', 'Status', 'Month']);
     if (name === "Expenses") sheet.appendRow(['ID', 'Title', 'Amount', 'Date', 'Category', 'Description']);
     if (name === "Users") sheet.appendRow(['ID', 'Username', 'Password', 'Role', 'Name']);
@@ -295,7 +295,7 @@ function error(msg) {
 
 // Full Data Fetch
 function doGet() {
-  const students = getSheetData("Students", ['id', 'name', 'fatherName', 'dob', 'gender', 'subject', 'class', 'semester', 'mobile', 'address', 'admissionDate', 'status', 'rollNumber']);
+  const students = getSheetData("Students", ['id', 'name', 'fatherName', 'dob', 'gender', 'subject', 'class', 'semester', 'mobile', 'whatsapp', 'address', 'admissionDate', 'status', 'rollNumber']);
   const fees = getSheetData("Fees", ['id', 'studentId', 'amount', 'date', 'status', 'month']);
   const expenses = getSheetData("Expenses", ['id', 'title', 'amount', 'date', 'category', 'description']);
   const users = getSheetData("Users", ['id', 'username', 'password', 'role', 'name']);

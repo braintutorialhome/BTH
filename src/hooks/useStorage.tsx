@@ -170,8 +170,25 @@ export const StorageProvider: React.FC<{ children: React.ReactNode }> = ({ child
         };
       });
 
-      // Allow compressed avatarUrl to be synced to the cloud so students can see their photo on any device
-      const cleanStudents = students;
+      // Guarantee all student fields including whatsapp are present on every student record
+      const cleanStudents = students.map(s => ({
+        id: s.id,
+        rollNumber: s.rollNumber || 'N/A',
+        name: s.name || '',
+        fatherName: s.fatherName || '',
+        dob: s.dob || '',
+        gender: s.gender || '',
+        subject: s.subject || '',
+        class: s.class || '',
+        semester: s.semester || '',
+        dateOfJoining: s.dateOfJoining || '',
+        mobile: s.mobile ? String(s.mobile).trim() : '',
+        whatsapp: s.whatsapp ? String(s.whatsapp).trim() : '',
+        address: s.address || '',
+        admissionDate: s.admissionDate || '',
+        status: s.status,
+        avatarUrl: s.avatarUrl || ''
+      }));
 
       const payload = {
         type: 'BACKUP',
@@ -309,10 +326,13 @@ export const StorageProvider: React.FC<{ children: React.ReactNode }> = ({ child
         if (data) {
           if (data.students) {
             setStudents(prevStudents => {
-              return data.students.map((newStudent: Student) => {
+              return data.students.map((newStudent: any) => {
                 const existing = prevStudents.find(s => s.id === newStudent.id);
+                const rawWhatsapp = newStudent.whatsapp || newStudent.WhatsApp || newStudent['WhatsApp Number'] || newStudent['whatsappNumber'] || newStudent['Whats App'] || '';
                 return {
                   ...newStudent,
+                  mobile: newStudent.mobile !== undefined && newStudent.mobile !== null ? String(newStudent.mobile).trim() : (existing?.mobile || ''),
+                  whatsapp: rawWhatsapp ? String(rawWhatsapp).trim() : (existing?.whatsapp || ''),
                   avatarUrl: existing?.avatarUrl || newStudent.avatarUrl || ''
                 };
               });
@@ -493,6 +513,8 @@ export const StorageProvider: React.FC<{ children: React.ReactNode }> = ({ child
     const newStudent: Student = { 
       ...s, 
       id: shortId(), 
+      mobile: s.mobile ? String(s.mobile).trim() : '',
+      whatsapp: s.whatsapp ? String(s.whatsapp).trim() : '',
       admissionDate: new Date().toISOString(), 
       status: 'pending',
       rollNumber: 'N/A'
@@ -502,8 +524,13 @@ export const StorageProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
 
   const updateStudent = (s: Student) => {
-    setStudents(prev => prev.map(st => st.id === s.id ? s : st));
-    addLog('STUDENT_UPDATE', `Updated profile/roll number for student: ${s.name}`);
+    const sanitizedStudent: Student = {
+      ...s,
+      mobile: s.mobile ? String(s.mobile).trim() : '',
+      whatsapp: s.whatsapp ? String(s.whatsapp).trim() : ''
+    };
+    setStudents(prev => prev.map(st => st.id === s.id ? sanitizedStudent : st));
+    addLog('STUDENT_UPDATE', `Updated profile for student: ${s.name}${sanitizedStudent.whatsapp ? ` (WhatsApp: ${sanitizedStudent.whatsapp})` : ''}`);
   };
 
   const deleteStudent = (id: string) => {

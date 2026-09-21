@@ -4,7 +4,7 @@ import {
   Search, Filter, Users, CreditCard, IndianRupee, Plus, Edit2, Trash2, X, 
   CheckCircle, AlertCircle, Phone, MapPin, Calendar, BookOpen, User, Camera, 
   Upload, Save, ChevronRight, DollarSign, FileText, ArrowUpRight, ArrowDownRight, RefreshCw, FileDown, FileSpreadsheet,
-  LayoutGrid, Table as TableIcon
+  LayoutGrid, Table as TableIcon, MessageSquare
 } from 'lucide-react';
 import { Student, Fee, DueFee } from '../../../types';
 import { safeFormat, formatClassName, getISTToday, getISTMonthName, getISTPreviousMonthWithCurrentYear, getBillingMonthQuickOptions } from '../../../lib/utils';
@@ -94,7 +94,8 @@ export default function StudentFeeTracker() {
       String(student.rollNumber || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
       String(student.id || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
       String(student.fatherName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-      String(student.mobile || '').toLowerCase().includes(searchTerm.toLowerCase());
+      String(student.mobile || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      String(student.whatsapp || '').toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesClass = classFilter === 'All' || student.class === classFilter;
     const matchesSession = sessionFilter === 'All' || student.semester === sessionFilter;
@@ -148,7 +149,7 @@ export default function StudentFeeTracker() {
   const handleExportFeeCSV = async () => {
     const headers = [
       'Student ID', 'Roll No', 'Full Name', 'Father Name', 'Class', 'Session',
-      'Subject', 'Mobile', 'Total Dues Assigned (INR)', 'Total Fees Paid (INR)',
+      'Subject', 'Mobile', 'WhatsApp', 'Total Dues Assigned (INR)', 'Total Fees Paid (INR)',
       'Remaining Balance (INR)', 'Fee Status'
     ];
 
@@ -164,6 +165,7 @@ export default function StudentFeeTracker() {
         `"${s.semester || 'N/A'}"`,
         `"${(s.subject || 'N/A').replace(/"/g, '""')}"`,
         `"${s.mobile || 'N/A'}"`,
+        `"${s.whatsapp || 'N/A'}"`,
         stats.totalDueAssigned,
         stats.totalPaid,
         stats.remainingBalance,
@@ -233,7 +235,13 @@ export default function StudentFeeTracker() {
   const handleSaveProfile = (e: React.FormEvent) => {
     e.preventDefault();
     if (profileForm) {
-      updateStudent(profileForm);
+      const sanitized: Student = {
+        ...profileForm,
+        mobile: profileForm.mobile ? String(profileForm.mobile).trim() : '',
+        whatsapp: profileForm.whatsapp ? String(profileForm.whatsapp).trim() : ''
+      };
+      updateStudent(sanitized);
+      setProfileForm(sanitized);
       setIsEditingProfile(false);
     }
   };
@@ -588,6 +596,17 @@ export default function StudentFeeTracker() {
                       <span className="text-[10px] font-bold uppercase text-slate-500">Mobile:</span>
                       <span className="font-bold text-indigo-300">{student.mobile || 'N/A'}</span>
                     </div>
+                    <div className="flex items-center justify-between text-slate-400">
+                      <span className="text-[10px] font-bold uppercase text-slate-500">WhatsApp:</span>
+                      {student.whatsapp ? (
+                        <span className="font-bold text-emerald-400 flex items-center gap-1 text-[11px]">
+                          <MessageSquare size={11} />
+                          {student.whatsapp}
+                        </span>
+                      ) : (
+                        <span className="text-slate-600 italic text-[10px]">None</span>
+                      )}
+                    </div>
                   </div>
 
                   {/* Fee Breakdown Pills */}
@@ -690,10 +709,16 @@ export default function StudentFeeTracker() {
 
                       {/* Contact */}
                       <td className="py-4 px-4 space-y-1">
-                        <p className="flex items-center gap-1 text-[11px] text-slate-300">
+                        <p className="flex items-center gap-1.5 text-[11px] text-slate-300">
                           <Phone size={11} className="text-cyan-400 shrink-0" />
                           <span>{student.mobile || 'N/A'}</span>
                         </p>
+                        {student.whatsapp && (
+                          <p className="flex items-center gap-1.5 text-[11px] text-emerald-400 font-medium">
+                            <MessageSquare size={11} className="text-emerald-400 shrink-0" />
+                            <span>{student.whatsapp}</span>
+                          </p>
+                        )}
                         {student.fatherName && (
                           <p className="text-[10px] text-slate-400 line-clamp-1">
                             Guardian: {student.fatherName}
@@ -850,7 +875,12 @@ export default function StudentFeeTracker() {
             <div className="flex flex-wrap items-center justify-between gap-3 p-4 bg-white/5 rounded-2xl border border-white/10">
               <div className="flex items-center gap-2">
                 <button 
-                  onClick={() => setIsEditingProfile(!isEditingProfile)}
+                  onClick={() => {
+                    if (!isEditingProfile && selectedStudent) {
+                      setProfileForm({ ...selectedStudent });
+                    }
+                    setIsEditingProfile(!isEditingProfile);
+                  }}
                   className="px-4 py-2.5 bg-white/10 hover:bg-white/20 text-white rounded-xl text-xs font-black uppercase tracking-widest transition-all flex items-center gap-2 border border-white/10"
                 >
                   <Edit2 size={14} /> {isEditingProfile ? 'Close Edit Form' : 'Edit Student Details'}
@@ -1239,7 +1269,20 @@ export default function StudentFeeTracker() {
                 </div>
                 <div>
                   <p className="text-[10px] font-bold text-slate-500 uppercase">WhatsApp Number</p>
-                  <p className="font-bold text-indigo-300 mt-0.5">{selectedStudent.whatsapp || 'N/A'}</p>
+                  {selectedStudent.whatsapp ? (
+                    <a 
+                      href={`https://wa.me/91${String(selectedStudent.whatsapp).replace(/\D/g, '')}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 font-bold text-emerald-400 hover:text-emerald-300 transition-colors mt-0.5"
+                      title="Open WhatsApp Chat"
+                    >
+                      <MessageSquare size={12} />
+                      <span>{selectedStudent.whatsapp}</span>
+                    </a>
+                  ) : (
+                    <p className="font-bold text-slate-500 italic mt-0.5">Not provided</p>
+                  )}
                 </div>
                 <div>
                   <p className="text-[10px] font-bold text-slate-500 uppercase">Gender / DOB</p>

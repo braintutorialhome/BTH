@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useStorage } from '../../../hooks/useStorage';
-import { Search, User, Trash2, Edit2, Filter, Phone, MapPin, X, Save, Hash, RotateCcw, AlertTriangle, Camera, Upload, Calendar } from 'lucide-react';
+import { Search, User, Trash2, Edit2, Filter, Phone, MapPin, X, Save, Hash, RotateCcw, AlertTriangle, Camera, Upload, Calendar, MessageSquare } from 'lucide-react';
 import { Student } from '../../../types';
 import { formatClassName } from '../../../lib/utils';
 
@@ -70,7 +70,8 @@ export default function StudentManagement() {
     const matchesSearch = String(s.name || '').toLowerCase().includes(searchTerm.toLowerCase()) || 
                           String(s.rollNumber || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
                           String(s.id || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          String(s.mobile || '').toLowerCase().includes(searchTerm.toLowerCase());
+                          String(s.mobile || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          String(s.whatsapp || '').toLowerCase().includes(searchTerm.toLowerCase());
     const matchesClass = filterClass === 'All' || s.class === filterClass;
     const matchesSession = filterSession === 'All' || s.semester === filterSession;
     return matchesSearch && matchesClass && matchesSession;
@@ -79,7 +80,10 @@ export default function StudentManagement() {
   const handleUpdate = (e: React.FormEvent) => {
     e.preventDefault();
     if (editingStudent) {
-      updateStudent(editingStudent);
+      updateStudent({
+        ...editingStudent,
+        whatsapp: editingStudent.whatsapp ? editingStudent.whatsapp.trim() : ''
+      });
       setEditingStudent(null);
     }
   };
@@ -203,9 +207,27 @@ export default function StudentManagement() {
                 </p>
               </div>
 
-              <div className="space-y-3 pt-6 border-t border-white/5">
-                <div className="flex items-center gap-3 text-xs font-bold text-slate-400">
-                  <Phone size={14} className={activeTab === 'deleted' ? 'text-rose-500' : 'text-indigo-500'} /> {s.mobile}
+              <div className="space-y-2.5 pt-6 border-t border-white/5">
+                <div className="flex items-center justify-between gap-2 text-xs font-bold text-slate-400">
+                  <span className="flex items-center gap-2">
+                    <Phone size={14} className={activeTab === 'deleted' ? 'text-rose-500' : 'text-indigo-500'} />
+                    <span>{s.mobile || 'N/A'}</span>
+                  </span>
+                  {s.whatsapp ? (
+                    <a
+                      href={`https://wa.me/91${String(s.whatsapp).replace(/\D/g, '')}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                      className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/20 text-[11px] font-bold transition-all shrink-0"
+                      title="Direct WhatsApp Chat"
+                    >
+                      <MessageSquare size={12} />
+                      <span>{s.whatsapp}</span>
+                    </a>
+                  ) : (
+                    <span className="text-[10px] text-slate-600 font-medium italic">No WhatsApp</span>
+                  )}
                 </div>
                 <div className="flex items-center gap-3 text-xs font-bold text-slate-400">
                   <MapPin size={14} className={activeTab === 'deleted' ? 'text-rose-500' : 'text-indigo-500'} /> {s.address}

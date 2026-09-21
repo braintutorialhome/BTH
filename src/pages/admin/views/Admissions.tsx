@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useStorage } from '../../../hooks/useStorage';
-import { Check, X, FileText, User, MapPin, Calendar, Edit2, Save, Phone, Info, Camera, Upload, Trash2 } from 'lucide-react';
+import { Check, X, FileText, User, MapPin, Calendar, Edit2, Save, Phone, Info, Camera, Upload, Trash2, MessageSquare } from 'lucide-react';
 import { safeFormat, formatClassName } from '../../../lib/utils';
 import { Student } from '../../../types';
 
@@ -56,7 +56,11 @@ export default function AdmissionManagement() {
   const handleUpdate = (e: React.FormEvent) => {
     e.preventDefault();
     if (editingStudent) {
-      updateStudent(editingStudent);
+      updateStudent({
+        ...editingStudent,
+        mobile: editingStudent.mobile ? String(editingStudent.mobile).trim() : '',
+        whatsapp: editingStudent.whatsapp ? String(editingStudent.whatsapp).trim() : ''
+      });
       setEditingStudent(null);
     }
   };
@@ -95,6 +99,19 @@ export default function AdmissionManagement() {
                        <span className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-slate-500">
                          <User size={14} className="text-indigo-400" /> {s.fatherName}
                        </span>
+                       <span className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-slate-500">
+                         <Phone size={14} className="text-indigo-400" /> {s.mobile || 'N/A'}
+                       </span>
+                       {s.whatsapp && (
+                         <a 
+                           href={`https://wa.me/91${String(s.whatsapp).replace(/\D/g, '')}`}
+                           target="_blank"
+                           rel="noopener noreferrer"
+                           className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-emerald-400 hover:text-emerald-300 transition-colors"
+                         >
+                           <MessageSquare size={14} className="text-emerald-400" /> WA: {s.whatsapp}
+                         </a>
+                       )}
                        <span className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-slate-500">
                          <MapPin size={14} className="text-indigo-400" /> {s.address}
                        </span>
