@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Routes, Route, Link, useLocation, useNavigate } from 'react-router-dom';
 import { 
-  BarChart2, User, CreditCard, BookMarked, Bell, LogOut, Menu, X, ArrowRight, Phone, MessageSquare, Compass, AlertCircle, ExternalLink, FileCheck, Eye, CalendarX, MessageSquareQuote
+  BarChart2, User, CreditCard, BookMarked, Bell, LogOut, Menu, X, ArrowRight, Phone, MessageSquare, Compass, AlertCircle, ExternalLink, FileCheck, Eye, CalendarX, MessageSquareQuote, Info
 } from 'lucide-react';
 import { useStorage } from '../../hooks/useStorage';
 import { motion, AnimatePresence } from 'motion/react';
@@ -16,6 +16,7 @@ import StudentMaterials from './views/Materials';
 import StudentNotices from './views/Notices';
 import StudentDueFees from '../../components/student/StudentDueFees';
 import StudentRemarks from './views/Remarks';
+import AboutUsView from '../../components/AboutUsView';
 
 interface NavGroup {
   title: string;
@@ -247,13 +248,33 @@ export default function StudentDashboard() {
             ))}
           </nav>
 
-          <div className="mt-6 pt-6 border-t border-white/5 space-y-2.5 mb-4">
+          <div className="mt-auto pt-5 border-t border-white/5 space-y-2 mb-3">
+             <Link 
+               id="student-sidebar-about-us"
+               to="/student/about-us" 
+               onClick={() => setIsSidebarOpen(false)}
+               className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl border transition-all duration-200 group ${
+                 location.pathname === '/student/about-us'
+                   ? 'bg-cyan-500/15 border-cyan-500/40 text-cyan-300 shadow-md shadow-cyan-950/30'
+                   : 'bg-white/[0.02] border-white/5 hover:bg-white/5 hover:border-cyan-500/20 text-slate-400 hover:text-slate-200'
+               }`}
+             >
+               <div className="flex items-center gap-2.5">
+                 <div className="w-7 h-7 rounded-lg bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400 group-hover:scale-105 transition-transform">
+                   <Info size={14} />
+                 </div>
+                 <span className="font-['Space_Grotesk'] font-bold text-[11px] uppercase tracking-[0.16em]">
+                   About Us
+                 </span>
+               </div>
+             </Link>
+
              <a 
                href="tel:+919647046334" 
-               className="group flex items-center gap-3 px-3.5 py-2.5 rounded-xl bg-white/[0.02] hover:bg-cyan-500/10 border border-white/5 hover:border-cyan-500/30 transition-all duration-300 shadow-sm"
+               className="group flex items-center gap-3 px-3.5 py-2 rounded-xl bg-white/[0.02] hover:bg-cyan-500/10 border border-white/5 hover:border-cyan-500/30 transition-all duration-300 shadow-sm"
              >
-               <div className="w-7 h-7 rounded-lg bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400 group-hover:scale-105 group-hover:bg-cyan-500/20 transition-all">
-                 <Phone size={13} className="text-cyan-400" />
+               <div className="w-6 h-6 rounded-lg bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400 group-hover:scale-105 transition-all">
+                 <Phone size={12} className="text-cyan-400" />
                </div>
                <span className="font-['Space_Grotesk'] font-bold text-[11px] uppercase tracking-[0.16em] text-slate-300 group-hover:text-white transition-colors">
                  Help Desk
@@ -263,11 +284,11 @@ export default function StudentDashboard() {
                href="https://wa.me/919647046334" 
                target="_blank"
                rel="noopener noreferrer"
-               className="group flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-white/[0.02] hover:bg-emerald-500/10 border border-white/5 hover:border-emerald-500/30 transition-all duration-300 shadow-sm"
+               className="group flex items-center justify-between px-3.5 py-2 rounded-xl bg-white/[0.02] hover:bg-emerald-500/10 border border-white/5 hover:border-emerald-500/30 transition-all duration-300 shadow-sm"
              >
                <div className="flex items-center gap-3">
-                 <div className="w-7 h-7 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 group-hover:scale-105 group-hover:bg-emerald-500/20 transition-all">
-                   <MessageSquare size={13} className="text-emerald-400" />
+                 <div className="w-6 h-6 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 group-hover:scale-105 transition-all">
+                   <MessageSquare size={12} className="text-emerald-400" />
                  </div>
                  <span className="font-['Space_Grotesk'] font-bold text-[11px] uppercase tracking-[0.16em] text-slate-300 group-hover:text-emerald-300 transition-colors">
                    Instant Chat
@@ -323,7 +344,7 @@ export default function StudentDashboard() {
             <span className="text-xs font-black uppercase tracking-widest text-slate-400">Student Portal</span>
             <span className="text-slate-600">•</span>
             <span className="text-xs font-bold text-indigo-400 uppercase tracking-wider">
-              {location.pathname.replace('/student/', '').replace('/', '') || 'Dashboard'}
+              {location.pathname.includes('about-us') ? 'About Us' : location.pathname.replace('/student/', '').replace('/', '') || 'Dashboard'}
             </span>
           </div>
 
@@ -365,7 +386,7 @@ export default function StudentDashboard() {
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-6 lg:p-12 custom-scrollbar">
+        <div className="flex-1 overflow-y-auto overflow-x-hidden p-6 lg:p-12 custom-scrollbar">
           <AnimatePresence mode="wait">
              <motion.div
                key={location.pathname}
@@ -387,6 +408,7 @@ export default function StudentDashboard() {
                   <Route path="materials" element={<StudentMaterials />} />
                   <Route path="remarks" element={<StudentRemarks student={currentStudent} />} />
                   <Route path="notices" element={<StudentNotices student={currentStudent} />} />
+                  <Route path="about-us" element={<AboutUsView userRole="student" />} />
                   <Route path="/" element={<StudentHome student={currentStudent} />} />
                 </Routes>
              </motion.div>

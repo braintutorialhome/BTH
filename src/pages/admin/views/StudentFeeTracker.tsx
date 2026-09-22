@@ -7,7 +7,7 @@ import {
   LayoutGrid, Table as TableIcon, MessageSquare
 } from 'lucide-react';
 import { Student, Fee, DueFee } from '../../../types';
-import { safeFormat, formatClassName, getISTToday, getISTMonthName, getISTPreviousMonthWithCurrentYear, getBillingMonthQuickOptions } from '../../../lib/utils';
+import { safeFormat, formatDateIST, formatClassName, getISTToday, getISTMonthName, getISTPreviousMonthWithCurrentYear, getBillingMonthQuickOptions } from '../../../lib/utils';
 import { exportStudentToPdf } from '../../../utils/studentPdfExport';
 import { exportStudentToCsv } from '../../../utils/studentCsvExport';
 import { exportCsvData } from '../../../utils/mobileExportHelper';
@@ -1055,6 +1055,19 @@ export default function StudentFeeTracker() {
                   </div>
 
                   <div>
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 block">Gender</label>
+                    <select
+                      value={profileForm.gender || 'Male'}
+                      onChange={e => setProfileForm({ ...profileForm, gender: e.target.value })}
+                      className="input-glass w-full py-2.5 px-4 text-xs font-bold cursor-pointer"
+                    >
+                      <option value="Male">Male</option>
+                      <option value="Female">Female</option>
+                      <option value="Other">Other</option>
+                    </select>
+                  </div>
+
+                  <div>
                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 block">Date of Birth</label>
                     <input 
                       type="date" 
@@ -1285,12 +1298,20 @@ export default function StudentFeeTracker() {
                   )}
                 </div>
                 <div>
-                  <p className="text-[10px] font-bold text-slate-500 uppercase">Gender / DOB</p>
-                  <p className="font-bold text-white mt-0.5">{selectedStudent.gender || 'N/A'} • {selectedStudent.dob || 'N/A'}</p>
+                  <p className="text-[10px] font-bold text-slate-500 uppercase">Gender</p>
+                  <p className="font-bold text-white mt-0.5">{selectedStudent.gender || 'N/A'}</p>
+                </div>
+                <div>
+                  <p className="text-[10px] font-bold text-slate-500 uppercase">Date of Birth</p>
+                  <p className="font-bold text-white mt-0.5">{selectedStudent.dob ? (formatDateIST(selectedStudent.dob) !== 'N/A' ? formatDateIST(selectedStudent.dob) : selectedStudent.dob) : 'N/A'}</p>
                 </div>
                 <div>
                   <p className="text-[10px] font-bold text-slate-500 uppercase">Date of Joining</p>
-                  <p className="font-bold text-white mt-0.5">{selectedStudent.dateOfJoining || safeFormat(selectedStudent.admissionDate, 'dd MMM yyyy')}</p>
+                  <p className="font-bold text-white mt-0.5">
+                    {selectedStudent.dateOfJoining 
+                      ? (formatDateIST(selectedStudent.dateOfJoining) !== 'N/A' ? formatDateIST(selectedStudent.dateOfJoining) : selectedStudent.dateOfJoining) 
+                      : (selectedStudent.admissionDate && formatDateIST(selectedStudent.admissionDate) !== 'N/A' ? formatDateIST(selectedStudent.admissionDate) : 'N/A')}
+                  </p>
                 </div>
                 <div className="col-span-2">
                   <p className="text-[10px] font-bold text-slate-500 uppercase">Address</p>

@@ -32,6 +32,7 @@ const SHEETS = {
   RESULTS: "Results",
   EXAM_PORTAL: "Exam Portal",
   REMARKS: "Student Remarks",
+  TEACHER_PROFILE: "Teacher Profile",
   SYSTEM: "System Logs"
 };
 
@@ -97,6 +98,7 @@ function doGet(e) {
     data.attendance = getSheetData(SHEETS.ATTENDANCE);
     data.users = getSheetData(SHEETS.USERS);
     data.remarks = getSheetData(SHEETS.REMARKS);
+    data.teacherProfile = getSheetData(SHEETS.TEACHER_PROFILE);
     data.logs = getSheetData(SHEETS.LOGS);
 
     return ContentService.createTextOutput(JSON.stringify(data))
@@ -186,7 +188,7 @@ function doPost(e) {
       writeToSheet(SHEETS.LOGS, data.logs);
       
       writeToSheet(SHEETS.SYSTEM, [{ 
-        timestamp: new Date().toISOString(), 
+        timestamp: Utilities.formatDate(new Date(), "Asia/Kolkata", "yyyy-MM-dd'T'HH:mm:ssXXX"), 
         event: "BULK_SYNC", 
         status: "SUCCESS" 
       }]);

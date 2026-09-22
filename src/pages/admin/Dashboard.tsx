@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Routes, Route, Link, useLocation, useNavigate } from 'react-router-dom';
 import { 
-  BarChart2, Users, FileCheck, CreditCard, Wallet, Calendar, BookMarked, Bell, LogOut, Menu, X, Plus, Trash2, Edit2, TrendingUp, TrendingDown, DollarSign, Settings, AlertCircle, ExternalLink, Eye, MessageSquareQuote
+  BarChart2, Users, FileCheck, CreditCard, Wallet, Calendar, BookMarked, Bell, LogOut, Menu, X, Plus, Trash2, Edit2, TrendingUp, TrendingDown, DollarSign, Settings, AlertCircle, ExternalLink, Eye, MessageSquareQuote, Info
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useStorage } from '../../hooks/useStorage';
@@ -21,6 +21,7 @@ import AdminDueFees from '../../components/admin/AdminDueFees';
 import StudentFeeTracker from './views/StudentFeeTracker';
 import StudentOverview from './views/StudentOverview';
 import StudentRemarksManagement from './views/StudentRemarks';
+import AboutUsView from '../../components/AboutUsView';
 
 interface NavItemProps {
   to: string;
@@ -208,6 +209,7 @@ export default function AdminDashboard() {
     '/admin/due-fees': 'Due Fees Management',
     '/admin/student-remarks': 'Student Remarks',
     '/admin/notices': 'Notice Board',
+    '/admin/about-us': 'About Us',
   };
 
   return (
@@ -266,14 +268,42 @@ export default function AdminDashboard() {
             ))}
           </nav>
 
-          <div className="mt-6 pt-5 border-t border-white/5 space-y-3">
-             <div className="p-3.5 rounded-2xl bg-white/[0.03] border border-white/5">
-                <p className="text-[10px] text-indigo-400 font-black uppercase tracking-widest mb-0.5">Admin Support</p>
-                <p className="text-xs text-slate-400 font-medium">+91 9647046334</p>
+          <div className="mt-auto pt-5 border-t border-white/5 space-y-2.5">
+             <Link 
+               id="admin-sidebar-about-us"
+               to="/admin/about-us" 
+               onClick={() => setIsSidebarOpen(false)}
+               className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl border transition-all duration-200 group ${
+                 location.pathname === '/admin/about-us'
+                   ? 'bg-cyan-500/15 border-cyan-500/40 text-cyan-300 shadow-md shadow-cyan-950/30'
+                   : 'bg-white/[0.02] border-white/5 hover:bg-white/5 hover:border-cyan-500/20 text-slate-400 hover:text-slate-200'
+               }`}
+             >
+               <div className="flex items-center gap-2.5">
+                 <div className="w-7 h-7 rounded-lg bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400 group-hover:scale-105 transition-transform">
+                   <Info size={14} />
+                 </div>
+                 <span className="font-black text-xs uppercase tracking-wider">About Us</span>
+               </div>
+             </Link>
+
+             <div className="p-3 rounded-xl bg-white/[0.03] border border-white/5 flex items-center justify-between">
+                <div>
+                  <p className="text-[9px] text-indigo-400 font-black uppercase tracking-widest leading-none mb-1">Admin Support</p>
+                  <p className="text-xs text-slate-300 font-bold leading-none">+91 9647046334</p>
+                </div>
+                <a 
+                  href="https://wa.me/919647046334"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-2.5 py-1 rounded-lg bg-emerald-500/15 text-emerald-400 text-[10px] font-extrabold uppercase hover:bg-emerald-500/25 transition-all"
+                >
+                  WhatsApp
+                </a>
              </div>
              <button 
                 onClick={handleLogout}
-                className="w-full flex items-center justify-center gap-2.5 px-4 py-3 rounded-xl bg-rose-500/[0.08] hover:bg-rose-500/15 border border-rose-500/20 text-rose-400 hover:text-rose-300 font-bold text-xs uppercase tracking-widest transition-all"
+                className="w-full flex items-center justify-center gap-2.5 px-4 py-2.5 rounded-xl bg-rose-500/[0.08] hover:bg-rose-500/15 border border-rose-500/20 text-rose-400 hover:text-rose-300 font-bold text-xs uppercase tracking-widest transition-all"
               >
                 <LogOut size={15} />
                 <span>Sign Out</span>
@@ -380,7 +410,7 @@ export default function AdminDashboard() {
         )}
 
         {/* Scrollable content */}
-        <div className="p-8 flex-1 overflow-auto custom-scrollbar">
+        <div className="p-8 flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar">
           <Routes>
             <Route path="dashboard" element={<AdminHome />} />
             <Route path="student-fee-tracker" element={<StudentFeeTracker />} />
@@ -398,6 +428,7 @@ export default function AdminDashboard() {
             <Route path="due-fees" element={<AdminDueFees />} />
             <Route path="student-remarks" element={<StudentRemarksManagement />} />
             <Route path="notices" element={<NoticeManagement />} />
+            <Route path="about-us" element={<AboutUsView userRole="admin" />} />
             <Route path="/" element={<AdminHome />} />
           </Routes>
         </div>
@@ -406,6 +437,7 @@ export default function AdminDashboard() {
       <style>{`
         .custom-scrollbar::-webkit-scrollbar {
           width: 0px;
+          height: 0px;
         }
         .custom-scrollbar {
           scrollbar-width: none;

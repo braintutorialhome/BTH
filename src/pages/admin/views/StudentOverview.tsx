@@ -8,7 +8,7 @@ import {
   IndianRupee, Lock, UserCheck, MessageSquare, FileDown, FileSpreadsheet
 } from 'lucide-react';
 import { Student } from '../../../types';
-import { safeFormat, formatClassName, getISTToday } from '../../../lib/utils';
+import { safeFormat, formatDateIST, formatClassName, getISTToday } from '../../../lib/utils';
 import { exportStudentToPdf } from '../../../utils/studentPdfExport';
 import { exportStudentToCsv } from '../../../utils/studentCsvExport';
 import { exportStudentOverviewToPdf } from '../../../utils/studentOverviewPdfExport';
@@ -876,11 +876,11 @@ export default function StudentOverview() {
                 </div>
                 <div>
                   <p className="text-[10px] font-bold text-slate-400 uppercase">Date of Birth</p>
-                  <p className="font-bold text-white mt-0.5">{selectedStudent.dob || 'N/A'}</p>
+                  <p className="font-bold text-white mt-0.5">{selectedStudent.dob ? (formatDateIST(selectedStudent.dob) !== 'N/A' ? formatDateIST(selectedStudent.dob) : selectedStudent.dob) : 'N/A'}</p>
                 </div>
                 <div>
                   <p className="text-[10px] font-bold text-slate-400 uppercase">Joining Date</p>
-                  <p className="font-bold text-white mt-0.5">{selectedStudent.dateOfJoining || selectedStudent.admissionDate || 'N/A'}</p>
+                  <p className="font-bold text-white mt-0.5">{selectedStudent.dateOfJoining ? (formatDateIST(selectedStudent.dateOfJoining) !== 'N/A' ? formatDateIST(selectedStudent.dateOfJoining) : selectedStudent.dateOfJoining) : (selectedStudent.admissionDate && formatDateIST(selectedStudent.admissionDate) !== 'N/A' ? formatDateIST(selectedStudent.admissionDate) : 'N/A')}</p>
                 </div>
                 <div className="sm:col-span-2 md:col-span-3">
                   <p className="text-[10px] font-bold text-slate-400 uppercase">Residential Address</p>

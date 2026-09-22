@@ -3,6 +3,40 @@ import { format as dateFnsFormat } from 'date-fns';
 export const IST_TIMEZONE = 'Asia/Kolkata';
 
 /**
+ * Returns current timestamp strictly in Asia/Kolkata (IST, UTC+05:30) ISO representation:
+ * e.g., '2026-09-22T19:35:00+05:30'
+ * Ensures database logs, record creations, and audit trails accurately reflect IST.
+ */
+export function getISTTimestamp(date: Date | string | number = new Date()): string {
+  try {
+    const d = typeof date === 'string' || typeof date === 'number' ? new Date(date) : date;
+    if (isNaN(d.getTime())) return new Date().toISOString();
+
+    const formatter = new Intl.DateTimeFormat('en-GB', {
+      timeZone: IST_TIMEZONE,
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false
+    });
+    const parts = formatter.formatToParts(d);
+    const get = (type: string) => parts.find(p => p.type === type)?.value;
+    const y = get('year');
+    const m = get('month');
+    const day = get('day');
+    const h = get('hour') || '00';
+    const min = get('minute') || '00';
+    const s = get('second') || '00';
+    return `${y}-${m}-${day}T${h}:${min}:${s}+05:30`;
+  } catch {
+    return new Date().toISOString();
+  }
+}
+
+/**
  * Converts any Date, ISO string, timestamp or YYYY-MM-DD date into
  * a Date instance matching wall-clock time in Asia/Kolkata (IST).
  */

@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { Student, Fee, Expense, Attendance, Test, TestResult, StudyMaterial, Notice, User, UserRole, DueFee, ExternalTest, ResultLink, StudentRemark } from '../types';
+import { getISTTimestamp } from '../lib/utils';
 
 // Fallback for crypto.randomUUID
 const uuid = () => {
@@ -77,6 +78,9 @@ interface StorageContextType {
   deleteTest: (id: string) => void;
   deleteFee: (id: string) => void;
   clearAllData: () => void;
+  teacherPhoto: string;
+  updateTeacherPhoto: (photo: string) => Promise<boolean>;
+  removeTeacherPhoto: () => Promise<boolean>;
   scriptUrl: string;
   refreshCloudData: () => Promise<void>;
   syncToCloud: () => Promise<boolean>;
@@ -119,6 +123,13 @@ export const StorageProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [resultLinks, setResultLinks] = useState<ResultLink[]>(() => loadLocal('utc_result_links', []));
   const [remarks, setRemarks] = useState<StudentRemark[]>(() => loadLocal('utc_remarks', []));
   const [users, setUsers] = useState<User[]>(() => loadLocal('utc_users', []));
+  const [teacherPhoto, setTeacherPhoto] = useState<string>(() => {
+    try {
+      return localStorage.getItem('utc_teacher_photo') || '';
+    } catch {
+      return '';
+    }
+  });
   const [currentUser, setCurrentUser] = useState<User | null>(() => {
     try {
       const saved = localStorage.getItem('utc_current_user');
@@ -210,6 +221,13 @@ export const StorageProvider: React.FC<{ children: React.ReactNode }> = ({ child
           resultLinks,
           remarks: enrichedRemarks,
           users,
+          teacherProfile: [{
+            id: '1',
+            key: 'teacherPhoto',
+            value: teacherPhoto || '',
+            updatedAt: getISTTimestamp()
+          }],
+          teacherPhoto: teacherPhoto || '',
           logs: JSON.parse(localStorage.getItem('utc_activity_logs') || '[]')
         }
       };
@@ -248,8 +266,8 @@ export const StorageProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
       if (success) {
         setSyncError(null);
-        setLastSyncTime(new Date().toISOString());
-        localStorage.setItem('utc_last_sync', new Date().toISOString());
+        setLastSyncTime(getISTTimestamp());
+        localStorage.setItem('utc_last_sync', getISTTimestamp());
         console.log('✓ Cloud Sync Completed (including Student Remarks)');
         return true;
       }
@@ -264,12 +282,12 @@ export const StorageProvider: React.FC<{ children: React.ReactNode }> = ({ child
   useEffect(() => {
     const timer = setTimeout(() => {
       // Only sync if we have data and we're not in the middle of an initial load
-      if (!isInitialSyncing && (students.length > 0 || users.length > 0)) {
+      if (!isInitialSyncing && (students.length > 0 || users.length > 0 || teacherPhoto)) {
         syncToCloud();
       }
     }, 2000); // 2 second debounce
     return () => clearTimeout(timer);
-  }, [students, fees, expenses, attendance, tests, testResults, materials, notices, dueFees, externalTests, resultLinks, remarks, users]);
+  }, [students, fees, expenses, attendance, tests, testResults, materials, notices, dueFees, externalTests, resultLinks, remarks, users, teacherPhoto]);
 
   const refreshCloudData = useCallback(async () => {
     const cleanUrl = scriptUrl.trim();
@@ -355,7 +373,7 @@ export const StorageProvider: React.FC<{ children: React.ReactNode }> = ({ child
                 category: (r.category || r.Category || 'general') as any,
                 remark: r.remark || r.Remark || '',
                 addedBy: r.addedBy || r['Added By'] || 'Faculty',
-                date: r.date || r.Date || new Date().toISOString(),
+                date: r.date || r.Date || getISTTimestamp(),
                 updatedAt: r.updatedAt || r['Updated At'] || ''
               }));
             setRemarks(parsedRemarks);
@@ -364,14 +382,25 @@ export const StorageProvider: React.FC<{ children: React.ReactNode }> = ({ child
           if (data.tests) setTests(data.tests);
           if (data.testResults) setTestResults(data.testResults);
           if (data.attendance) setAttendance(data.attendance);
+
+          if (data.teacherPhoto !== undefined && data.teacherPhoto !== null) {
+            setTeacherPhoto(String(data.teacherPhoto));
+            localStorage.setItem('utc_teacher_photo', String(data.teacherPhoto));
+          } else if (data.teacherProfile && Array.isArray(data.teacherProfile)) {
+            const photoRow = data.teacherProfile.find((p: any) => p && (p.key === 'teacherPhoto' || p.Key === 'teacherPhoto'));
+            if (photoRow && photoRow.value !== undefined) {
+              setTeacherPhoto(String(photoRow.value));
+              localStorage.setItem('utc_teacher_photo', String(photoRow.value));
+            }
+          }
           
           if (data.logs) {
             localStorage.setItem('utc_activity_logs', JSON.stringify(data.logs.slice(0, 100)));
           }
           
           setSyncError(null);
-          setLastSyncTime(new Date().toISOString());
-          localStorage.setItem('utc_last_sync', new Date().toISOString());
+          setLastSyncTime(getISTTimestamp());
+          localStorage.setItem('utc_last_sync', getISTTimestamp());
           console.log('✓ Cloud Data Synchronized');
         }
       } catch (parseError) {
@@ -478,7 +507,7 @@ export const StorageProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const addLog = (action: string, details: string) => {
     const newLog = {
-      timestamp: new Date().toISOString(),
+      timestamp: getISTTimestamp(),
       user: currentUser ? `${currentUser.name} (${currentUser.role})` : 'System',
       action,
       details
@@ -515,7 +544,7 @@ export const StorageProvider: React.FC<{ children: React.ReactNode }> = ({ child
       id: shortId(), 
       mobile: s.mobile ? String(s.mobile).trim() : '',
       whatsapp: s.whatsapp ? String(s.whatsapp).trim() : '',
-      admissionDate: new Date().toISOString(), 
+      admissionDate: getISTTimestamp(), 
       status: 'pending',
       rollNumber: 'N/A'
     };
@@ -640,7 +669,7 @@ export const StorageProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
 
   const addMaterial = (m: Omit<StudyMaterial, 'id' | 'uploadDate'>) => {
-    const newItem = { ...m, id: uuid(), uploadDate: new Date().toISOString() };
+    const newItem = { ...m, id: uuid(), uploadDate: getISTTimestamp() };
     setMaterials([...materials, newItem]);
   };
 
@@ -658,19 +687,19 @@ export const StorageProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
 
   const updateNotice = (updated: Notice) => {
-    const updatedNotice = { ...updated, updatedAt: new Date().toISOString() };
+    const updatedNotice = { ...updated, updatedAt: getISTTimestamp() };
     setNotices(prev => prev.map(n => n.id === updated.id ? updatedNotice : n));
     addLog('NOTICE_UPDATED', `Updated notice: ${updated.title}`);
   };
 
   const addNotice = (n: Omit<Notice, 'id' | 'date'> & { date?: string }) => {
-    const newNotice = { ...n, id: uuid(), date: n.date || new Date().toISOString() };
+    const newNotice = { ...n, id: uuid(), date: n.date || getISTTimestamp() };
     setNotices(prev => [newNotice, ...prev]);
     addLog('NOTICE_POSTED', `Posted notice: ${n.title}`);
   };
 
   const addDueFee = (df: Omit<DueFee, 'id' | 'date'>) => {
-    const newDueFee = { ...df, id: uuid(), date: new Date().toISOString() };
+    const newDueFee = { ...df, id: uuid(), date: getISTTimestamp() };
     setDueFees([...dueFees, newDueFee]);
     const studentName = students.find(s => s.id === df.studentId)?.name || 'Unknown';
     addLog('DUE_FEE_ADDED', `Added due amount of ₹${df.amount} for ${studentName}: ${df.remarks}`);
@@ -687,7 +716,7 @@ export const StorageProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
 
   const addExternalTest = (t: Omit<ExternalTest, 'id' | 'date'>) => {
-    const newTest = { ...t, id: uuid(), date: new Date().toISOString() };
+    const newTest = { ...t, id: uuid(), date: getISTTimestamp() };
     setExternalTests([...externalTests, newTest]);
     addLog('EXTERNAL_TEST_ADDED', `Added new external test link: ${t.title}`);
   };
@@ -698,7 +727,7 @@ export const StorageProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
 
   const addResultLink = (t: Omit<ResultLink, 'id' | 'date'>) => {
-    const newResult = { ...t, id: uuid(), date: new Date().toISOString() };
+    const newResult = { ...t, id: uuid(), date: getISTTimestamp() };
     setResultLinks([...resultLinks, newResult]);
     addLog('RESULT_ADDED', `Added new result link: ${t.title}`);
   };
@@ -709,14 +738,14 @@ export const StorageProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
 
   const addRemark = (r: Omit<StudentRemark, 'id' | 'date'> & { date?: string }) => {
-    const newRemark: StudentRemark = { ...r, id: uuid(), date: r.date || new Date().toISOString() };
+    const newRemark: StudentRemark = { ...r, id: uuid(), date: r.date || getISTTimestamp() };
     setRemarks(prev => [newRemark, ...prev]);
     const studentName = students.find(s => s.id === r.studentId)?.name || 'Unknown';
     addLog('REMARK_ADDED', `Added remark for student ${studentName}: ${r.remark.slice(0, 50)}`);
   };
 
   const updateRemark = (r: StudentRemark) => {
-    const updatedRemark: StudentRemark = { ...r, updatedAt: new Date().toISOString() };
+    const updatedRemark: StudentRemark = { ...r, updatedAt: getISTTimestamp() };
     setRemarks(prev => prev.map(item => item.id === r.id ? updatedRemark : item));
     addLog('REMARK_UPDATED', `Updated remark ${r.id}`);
   };
@@ -726,9 +755,38 @@ export const StorageProvider: React.FC<{ children: React.ReactNode }> = ({ child
     addLog('REMARK_DELETED', `Deleted remark ${id}`);
   };
 
+  const updateTeacherPhoto = async (photo: string): Promise<boolean> => {
+    setTeacherPhoto(photo);
+    try {
+      if (photo) {
+        localStorage.setItem('utc_teacher_photo', photo);
+      } else {
+        localStorage.removeItem('utc_teacher_photo');
+      }
+    } catch (e) {
+      console.warn('LocalStorage save notice:', e);
+    }
+    addLog('TEACHER_PHOTO_UPDATED', 'Uploaded new high-quality teacher profile photo');
+    const ok = await syncToCloud();
+    return ok;
+  };
+
+  const removeTeacherPhoto = async (): Promise<boolean> => {
+    setTeacherPhoto('');
+    try {
+      localStorage.removeItem('utc_teacher_photo');
+    } catch (e) {
+      console.warn('LocalStorage remove notice:', e);
+    }
+    addLog('TEACHER_PHOTO_REMOVED', 'Removed teacher profile photo');
+    const ok = await syncToCloud();
+    return ok;
+  };
+
   return (
     <StorageContext.Provider value={{
       students, fees, expenses, attendance, tests, testResults, materials, studyMaterials: materials, notices, dueFees, externalTests, resultLinks, remarks, users, currentUser,
+      teacherPhoto, updateTeacherPhoto, removeTeacherPhoto,
       login, signup, logout, refreshCloudData, updateUser,
       scriptUrl, syncError, isInitialSyncing, syncToCloud, lastSyncTime,
       addStudent, updateStudent, deleteStudent, removeStudentPermanently, approveStudent, rejectStudent,
