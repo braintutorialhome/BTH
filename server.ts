@@ -1,5 +1,6 @@
 import express from "express";
 import path from "path";
+import fs from "fs";
 import { createServer as createViteServer } from "vite";
 
 async function startServer() {
@@ -8,6 +9,55 @@ async function startServer() {
 
   app.use(express.json({ limit: "50mb" }));
   app.use(express.text({ limit: "50mb", type: ["text/plain", "application/json"] }));
+
+  // Teacher Profile Photo Persistence across devices
+  const DATA_DIR = path.join(process.cwd(), "data");
+  const TEACHER_PHOTO_FILE = path.join(DATA_DIR, "teacher_photo.json");
+  let teacherPhotoCache: { photo: string; updatedAt: string } = { photo: "", updatedAt: "" };
+
+  try {
+    if (!fs.existsSync(DATA_DIR)) {
+      fs.mkdirSync(DATA_DIR, { recursive: true });
+    }
+    if (fs.existsSync(TEACHER_PHOTO_FILE)) {
+      const saved = JSON.parse(fs.readFileSync(TEACHER_PHOTO_FILE, "utf-8"));
+      if (saved && typeof saved.photo === "string") {
+        teacherPhotoCache = saved;
+      }
+    }
+  } catch (err) {
+    console.warn("Notice loading teacher photo cache:", err);
+  }
+
+  app.get("/api/teacher-photo", (req, res) => {
+    res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+    res.json(teacherPhotoCache);
+  });
+
+  app.post("/api/teacher-photo", (req, res) => {
+    try {
+      const { photo } = req.body;
+      const sanitized = typeof photo === "string" ? photo : "";
+      teacherPhotoCache = {
+        photo: sanitized,
+        updatedAt: new Date().toISOString()
+      };
+      fs.writeFileSync(TEACHER_PHOTO_FILE, JSON.stringify(teacherPhotoCache), "utf-8");
+      res.json({ success: true, updatedAt: teacherPhotoCache.updatedAt });
+    } catch (err: any) {
+      res.status(500).json({ error: err?.message || "Failed to save photo" });
+    }
+  });
+
+  app.delete("/api/teacher-photo", (req, res) => {
+    try {
+      teacherPhotoCache = { photo: "", updatedAt: new Date().toISOString() };
+      fs.writeFileSync(TEACHER_PHOTO_FILE, JSON.stringify(teacherPhotoCache), "utf-8");
+      res.json({ success: true });
+    } catch (err: any) {
+      res.status(500).json({ error: err?.message || "Failed to remove photo" });
+    }
+  });
 
   // API health checks for deployment and container probes
   app.get("/api/health", (req, res) => {
@@ -90,6 +140,15 @@ async function startServer() {
       res.setHeader("Content-Type", "application/json; charset=utf-8");
       try {
         const json = JSON.parse(text);
+        if (json && typeof json === 'object') {
+          // If Apps Script does not have teacherPhoto but server cache does, enrich it
+          if (!json.teacherPhoto && teacherPhotoCache.photo) {
+            json.teacherPhoto = teacherPhotoCache.photo;
+          } else if (json.teacherPhoto && !teacherPhotoCache.photo) {
+            teacherPhotoCache = { photo: json.teacherPhoto, updatedAt: new Date().toISOString() };
+            try { fs.writeFileSync(TEACHER_PHOTO_FILE, JSON.stringify(teacherPhotoCache), "utf-8"); } catch {}
+          }
+        }
         return res.json(json);
       } catch {
         return res.send(text);
@@ -106,6 +165,16 @@ async function startServer() {
       const rawTargetUrl = (req.query.scriptUrl as string) || DEFAULT_SCRIPT_URL;
       const cleanUrl = rawTargetUrl.trim();
       const bodyPayload = typeof req.body === "string" ? req.body : JSON.stringify(req.body);
+
+      // Automatically cache teacherPhoto if present in payload
+      try {
+        const parsed = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
+        const photoInPayload = parsed?.data?.teacherPhoto || (Array.isArray(parsed?.data?.teacherProfile) ? parsed.data.teacherProfile.find((p: any) => p && (p.key === 'teacherPhoto' || p.Key === 'teacherPhoto'))?.value : null);
+        if (photoInPayload && typeof photoInPayload === 'string' && photoInPayload.length > 50) {
+          teacherPhotoCache = { photo: photoInPayload, updatedAt: new Date().toISOString() };
+          try { fs.writeFileSync(TEACHER_PHOTO_FILE, JSON.stringify(teacherPhotoCache), "utf-8"); } catch {}
+        }
+      } catch {}
 
       const response = await fetch(cleanUrl, {
         method: "POST",

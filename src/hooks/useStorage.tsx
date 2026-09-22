@@ -224,10 +224,10 @@ export const StorageProvider: React.FC<{ children: React.ReactNode }> = ({ child
           teacherProfile: [{
             id: '1',
             key: 'teacherPhoto',
-            value: teacherPhoto || '',
+            value: (typeof localStorage !== 'undefined' ? localStorage.getItem('utc_teacher_photo') : null) || teacherPhoto || '',
             updatedAt: getISTTimestamp()
           }],
-          teacherPhoto: teacherPhoto || '',
+          teacherPhoto: (typeof localStorage !== 'undefined' ? localStorage.getItem('utc_teacher_photo') : null) || teacherPhoto || '',
           logs: JSON.parse(localStorage.getItem('utc_activity_logs') || '[]')
         }
       };
@@ -383,15 +383,31 @@ export const StorageProvider: React.FC<{ children: React.ReactNode }> = ({ child
           if (data.testResults) setTestResults(data.testResults);
           if (data.attendance) setAttendance(data.attendance);
 
-          if (data.teacherPhoto !== undefined && data.teacherPhoto !== null) {
-            setTeacherPhoto(String(data.teacherPhoto));
-            localStorage.setItem('utc_teacher_photo', String(data.teacherPhoto));
+          let foundPhoto = '';
+          if (data.teacherPhoto !== undefined && data.teacherPhoto !== null && String(data.teacherPhoto).trim() !== '') {
+            foundPhoto = String(data.teacherPhoto).trim();
           } else if (data.teacherProfile && Array.isArray(data.teacherProfile)) {
             const photoRow = data.teacherProfile.find((p: any) => p && (p.key === 'teacherPhoto' || p.Key === 'teacherPhoto'));
-            if (photoRow && photoRow.value !== undefined) {
-              setTeacherPhoto(String(photoRow.value));
-              localStorage.setItem('utc_teacher_photo', String(photoRow.value));
+            if (photoRow && photoRow.value && String(photoRow.value).trim() !== '') {
+              foundPhoto = String(photoRow.value).trim();
             }
+          }
+
+          if (foundPhoto) {
+            setTeacherPhoto(foundPhoto);
+            localStorage.setItem('utc_teacher_photo', foundPhoto);
+          } else {
+            // Check server API fallback if Google Apps Script had no photo
+            try {
+              const photoRes = await fetch('/api/teacher-photo');
+              if (photoRes.ok) {
+                const photoJson = await photoRes.json();
+                if (photoJson?.photo && typeof photoJson.photo === 'string' && photoJson.photo.length > 50) {
+                  setTeacherPhoto(photoJson.photo);
+                  localStorage.setItem('utc_teacher_photo', photoJson.photo);
+                }
+              }
+            } catch {}
           }
           
           if (data.logs) {
@@ -423,8 +439,25 @@ export const StorageProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
   }, [scriptUrl]);
 
-  // Initial data load from cloud
+  // Initial data load from cloud and server
   useEffect(() => {
+    // Proactively fetch teacher photo from central server for multi-device sync
+    const fetchServerPhoto = async () => {
+      try {
+        const res = await fetch('/api/teacher-photo');
+        if (res.ok) {
+          const json = await res.json();
+          if (json?.photo && typeof json.photo === 'string' && json.photo.length > 50) {
+            setTeacherPhoto(json.photo);
+            localStorage.setItem('utc_teacher_photo', json.photo);
+          }
+        }
+      } catch (err) {
+        console.warn('Notice fetching initial teacher photo:', err);
+      }
+    };
+    fetchServerPhoto();
+
     if (scriptUrl) {
       refreshCloudData().catch(e => console.warn("Initial sync note:", e));
     } else {
@@ -766,6 +799,18 @@ export const StorageProvider: React.FC<{ children: React.ReactNode }> = ({ child
     } catch (e) {
       console.warn('LocalStorage save notice:', e);
     }
+
+    // 1. Immediately push to central server API so all student devices can instantly see it
+    try {
+      await fetch('/api/teacher-photo', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ photo })
+      });
+    } catch (apiErr) {
+      console.warn('Server photo upload notice:', apiErr);
+    }
+
     addLog('TEACHER_PHOTO_UPDATED', 'Uploaded new high-quality teacher profile photo');
     const ok = await syncToCloud();
     return ok;
@@ -778,6 +823,16 @@ export const StorageProvider: React.FC<{ children: React.ReactNode }> = ({ child
     } catch (e) {
       console.warn('LocalStorage remove notice:', e);
     }
+
+    // 1. Immediately delete from central server API
+    try {
+      await fetch('/api/teacher-photo', {
+        method: 'DELETE'
+      });
+    } catch (apiErr) {
+      console.warn('Server photo delete notice:', apiErr);
+    }
+
     addLog('TEACHER_PHOTO_REMOVED', 'Removed teacher profile photo');
     const ok = await syncToCloud();
     return ok;

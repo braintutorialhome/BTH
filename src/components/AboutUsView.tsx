@@ -33,6 +33,21 @@ export default function AboutUsView({ userRole = 'student' }: AboutUsViewProps) 
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
+  // Proactively fetch picture from server on mount if not in local storage yet
+  React.useEffect(() => {
+    if (!teacherPhoto) {
+      fetch('/api/teacher-photo')
+        .then(res => res.json())
+        .then(data => {
+          if (data?.photo && typeof data.photo === 'string' && data.photo.length > 50) {
+            localStorage.setItem('utc_teacher_photo', data.photo);
+            updateTeacherPhoto(data.photo);
+          }
+        })
+        .catch(() => {});
+    }
+  }, [teacherPhoto]);
+
   const handleCopy = (text: string, key: string) => {
     navigator.clipboard.writeText(text);
     setCopiedKey(key);
@@ -75,9 +90,9 @@ export default function AboutUsView({ userRole = 'student' }: AboutUsViewProps) 
           const canvas = document.createElement('canvas');
           const ctx = canvas.getContext('2d');
           
-          // Target 4:5 vertical portrait aspect ratio at High Definition (640x800)
-          const targetWidth = 640;
-          const targetHeight = 800;
+          // Target 4:5 vertical portrait aspect ratio optimized for Google Sheets & fast multi-device loading (480x600)
+          const targetWidth = 480;
+          const targetHeight = 600;
           canvas.width = targetWidth;
           canvas.height = targetHeight;
 
@@ -103,15 +118,15 @@ export default function AboutUsView({ userRole = 'student' }: AboutUsViewProps) 
             ctx.drawImage(img, sX, sY, sW, sH, 0, 0, targetWidth, targetHeight);
           }
 
-          // Highest quality encoding capable: WebP (with JPEG fallback)
-          let highQualityDataUrl = canvas.toDataURL('image/webp', 0.92);
+          // Highest quality encoding capable: WebP (with JPEG fallback) optimized under 40k chars for Google Sheets compatibility
+          let highQualityDataUrl = canvas.toDataURL('image/webp', 0.82);
           if (!highQualityDataUrl.startsWith('data:image/webp')) {
-            highQualityDataUrl = canvas.toDataURL('image/jpeg', 0.90);
+            highQualityDataUrl = canvas.toDataURL('image/jpeg', 0.80);
           }
 
           await updateTeacherPhoto(highQualityDataUrl);
           setUploadStatus('success');
-          setStatusMessage('Picture saved in high quality & synced to Google Sheets!');
+          setStatusMessage('Picture saved in high quality & synced across all devices!');
           setTimeout(() => setUploadStatus('idle'), 4000);
         } catch (err: any) {
           setUploadStatus('error');

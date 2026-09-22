@@ -99,6 +99,8 @@ function doGet(e) {
     data.users = getSheetData(SHEETS.USERS);
     data.remarks = getSheetData(SHEETS.REMARKS);
     data.teacherProfile = getSheetData(SHEETS.TEACHER_PROFILE);
+    const photoRow = (data.teacherProfile || []).find(p => p && (p.key === 'teacherPhoto' || p.Key === 'teacherPhoto'));
+    data.teacherPhoto = photoRow ? photoRow.value : '';
     data.logs = getSheetData(SHEETS.LOGS);
 
     return ContentService.createTextOutput(JSON.stringify(data))
@@ -185,6 +187,7 @@ function doPost(e) {
       writeToSheet(SHEETS.RESULTS, data.resultLinks);
       writeToSheet(SHEETS.EXAM_PORTAL, data.externalTests);
       writeToSheet(SHEETS.REMARKS, data.remarks);
+      writeToSheet(SHEETS.TEACHER_PROFILE, data.teacherProfile || [{ id: '1', key: 'teacherPhoto', value: data.teacherPhoto || '', updatedAt: Utilities.formatDate(new Date(), "Asia/Kolkata", "yyyy-MM-dd'T'HH:mm:ssXXX") }]);
       writeToSheet(SHEETS.LOGS, data.logs);
       
       writeToSheet(SHEETS.SYSTEM, [{ 
