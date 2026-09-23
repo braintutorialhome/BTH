@@ -11,7 +11,7 @@ import AppsScriptSetupModal from '../../../components/AppsScriptSetupModal';
 export default function SystemSettings() {
   const { 
     students, users, updateUser, currentUser, refreshCloudData, 
-    syncToCloud, isInitialSyncing, syncError, lastSyncTime, scriptUrl, remarks 
+    syncToCloud, isInitialSyncing, syncError, lastSyncTime, scriptUrl 
   } = useStorage();
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [newUsername, setNewUsername] = useState('');
@@ -115,9 +115,9 @@ export default function SystemSettings() {
         </div>
       </div>
 
-      {/* Google Sheets Backend Architecture & Remarks Persistence Card */}
+      {/* Google Sheets Backend Architecture & Database Hub */}
       <div className="glass p-8 sm:p-10 rounded-[40px] border border-white/10 bg-emerald-500/[0.02]">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 pb-6 border-b border-white/5">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
           <div className="flex items-center gap-5">
             <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-3xl">
               <FileSpreadsheet size={28} />
@@ -160,67 +160,6 @@ export default function SystemSettings() {
             >
               <Code2 size={14} className="text-indigo-400" />
               <span>Backend Script & Setup</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Synced Tabs Grid */}
-        <div className="mt-6">
-          <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3">
-            Connected Google Sheet Tabs
-          </p>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <div className="p-3.5 rounded-2xl bg-indigo-500/10 border border-indigo-500/20">
-              <span className="text-[10px] font-black uppercase tracking-wider text-indigo-300">
-                Student Remarks
-              </span>
-              <p className="text-xs font-bold text-white mt-1 flex items-center justify-between">
-                <span>{remarks.length} Remarks</span>
-                <span className="text-[10px] font-bold text-emerald-400">Ready</span>
-              </p>
-            </div>
-
-            <div className="p-3.5 rounded-2xl bg-white/[0.02] border border-white/5">
-              <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">
-                Approved Students
-              </span>
-              <p className="text-xs font-bold text-white mt-1 flex items-center justify-between">
-                <span>{students.filter(s => s.status === 'approved').length} Students</span>
-                <span className="text-[10px] font-bold text-emerald-400">Synced</span>
-              </p>
-            </div>
-
-            <div className="p-3.5 rounded-2xl bg-white/[0.02] border border-white/5">
-              <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">
-                Fees & Collections
-              </span>
-              <p className="text-xs font-bold text-white mt-1 flex items-center justify-between">
-                <span>Payment Records</span>
-                <span className="text-[10px] font-bold text-emerald-400">Synced</span>
-              </p>
-            </div>
-
-            <div className="p-3.5 rounded-2xl bg-white/[0.02] border border-white/5">
-              <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">
-                Daily Attendance
-              </span>
-              <p className="text-xs font-bold text-white mt-1 flex items-center justify-between">
-                <span>Attendance Logs</span>
-                <span className="text-[10px] font-bold text-emerald-400">Synced</span>
-              </p>
-            </div>
-          </div>
-
-          <div className="mt-4 p-4 rounded-2xl bg-white/[0.02] border border-white/5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-slate-400">
-            <div>
-              <span className="text-white font-bold">Missing "Student Remarks" in your Google Sheet?</span> Click <strong>Backend Script & Setup</strong> to copy the updated script, paste into Apps Script, and deploy as a new version.
-            </div>
-            <button
-              onClick={() => setIsScriptModalOpen(true)}
-              className="text-indigo-400 hover:text-indigo-300 font-bold shrink-0 flex items-center gap-1 text-xs"
-            >
-              <span>View Update Instructions</span>
-              <ExternalLink size={12} />
             </button>
           </div>
         </div>
