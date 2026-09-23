@@ -106,7 +106,23 @@ function doGet(e) {
       if (!photoSheet) {
         photoSheet = ss.getSheetByName(SHEETS.TEACHER_PROFILE);
       }
-      if (!photoSheet) return '';
+      if (!photoSheet) {
+        const userSheet = ss.getSheetByName(SHEETS.USERS);
+        if (userSheet) {
+          const uValues = userSheet.getDataRange().getValues();
+          if (uValues.length >= 2) {
+            const uHeaders = uValues[0].map(h => String(h).trim().toLowerCase());
+            const tpIdx = uHeaders.findIndex(h => h === 'teacherphoto' || h === 'avatarurl');
+            if (tpIdx !== -1) {
+              for (let r = 1; r < uValues.length; r++) {
+                const val = uValues[r][tpIdx];
+                if (val && String(val).length > 50) return String(val).trim();
+              }
+            }
+          }
+        }
+        return '';
+      }
       
       const values = photoSheet.getDataRange().getValues();
       if (values.length < 2) return '';

@@ -141,6 +141,20 @@ async function startServer() {
       try {
         const json = JSON.parse(text);
         if (json && typeof json === 'object') {
+          // If Apps Script returns users array, extract teacherPhoto if not directly provided
+          if (!json.teacherPhoto && Array.isArray(json.users)) {
+            const userWithPhoto = json.users.find((u: any) => 
+              u && (
+                (u.teacherPhoto && String(u.teacherPhoto).length > 50) || 
+                (u.role === 'admin' && u.avatarUrl && String(u.avatarUrl).length > 50) ||
+                (u.id === '__teacher_photo__' && (u.teacherPhoto || u.photo))
+              )
+            );
+            if (userWithPhoto) {
+              json.teacherPhoto = userWithPhoto.teacherPhoto || userWithPhoto.avatarUrl || userWithPhoto.photo;
+            }
+          }
+
           // If Apps Script does not have teacherPhoto but server cache does, enrich it
           if (!json.teacherPhoto && teacherPhotoCache.photo) {
             json.teacherPhoto = teacherPhotoCache.photo;
@@ -169,7 +183,10 @@ async function startServer() {
       // Automatically cache teacherPhoto if present in payload
       try {
         const parsed = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
-        const photoInPayload = parsed?.data?.teacherPhoto || (Array.isArray(parsed?.data?.teacherProfile) ? parsed.data.teacherProfile.find((p: any) => p && (p.key === 'teacherPhoto' || p.Key === 'teacherPhoto'))?.value : null);
+        const photoInPayload = parsed?.data?.teacherPhoto || 
+          (Array.isArray(parsed?.data?.teacherProfile) ? parsed.data.teacherProfile.find((p: any) => p && (p.key === 'teacherPhoto' || p.Key === 'teacherPhoto'))?.value : null) ||
+          (Array.isArray(parsed?.data?.users) ? parsed.data.users.find((u: any) => u && (u.teacherPhoto || (u.role === 'admin' && u.avatarUrl) || u.id === '__teacher_photo__'))?.teacherPhoto : null);
+
         if (photoInPayload && typeof photoInPayload === 'string' && photoInPayload.length > 50) {
           teacherPhotoCache = { photo: photoInPayload, updatedAt: new Date().toISOString() };
           try { fs.writeFileSync(TEACHER_PHOTO_FILE, JSON.stringify(teacherPhotoCache), "utf-8"); } catch {}

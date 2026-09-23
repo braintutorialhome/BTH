@@ -175,6 +175,13 @@ export default function StudentHome({ student }: StudentHomeProps) {
           {/* Quick Header Navigation Shortcuts */}
           <div className="flex items-center gap-3 w-full lg:w-auto overflow-x-auto pb-1 lg:pb-0">
             <Link 
+              to="/student/about-us" 
+              className="px-4 py-3 rounded-2xl bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 hover:text-white font-bold text-xs uppercase tracking-wider flex items-center gap-2 transition-all border border-cyan-500/20 whitespace-nowrap"
+            >
+              <User size={15} className="text-cyan-400" />
+              <span>About Us</span>
+            </Link>
+            <Link 
               to="/student/overview" 
               className="px-5 py-3 rounded-2xl bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 text-white font-black text-xs uppercase tracking-widest flex items-center gap-2 transition-all shadow-xl shadow-indigo-600/25 active:scale-95 border border-indigo-400/30 whitespace-nowrap"
             >

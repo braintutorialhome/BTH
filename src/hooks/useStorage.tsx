@@ -125,7 +125,28 @@ export const StorageProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [users, setUsers] = useState<User[]>(() => loadLocal('utc_users', []));
   const [teacherPhoto, setTeacherPhoto] = useState<string>(() => {
     try {
-      return localStorage.getItem('utc_teacher_photo') || '';
+      if (typeof localStorage !== 'undefined') {
+        const direct = localStorage.getItem('utc_teacher_photo');
+        if (direct && direct.trim().length > 50) return direct.trim();
+        const savedUsersStr = localStorage.getItem('utc_users');
+        if (savedUsersStr) {
+          const parsedUsers = JSON.parse(savedUsersStr);
+          if (Array.isArray(parsedUsers)) {
+            const u = parsedUsers.find((user: any) => 
+              user && (
+                (user.teacherPhoto && String(user.teacherPhoto).trim().length > 50) ||
+                (user.role === 'admin' && user.avatarUrl && String(user.avatarUrl).trim().length > 50) ||
+                (user.id === '__teacher_photo__' && (user.teacherPhoto || user.photo))
+              )
+            );
+            if (u) {
+              const p = u.teacherPhoto || u.avatarUrl || u.photo;
+              if (p && String(p).trim().length > 50) return String(p).trim();
+            }
+          }
+        }
+      }
+      return '';
     } catch {
       return '';
     }
@@ -220,7 +241,44 @@ export const StorageProvider: React.FC<{ children: React.ReactNode }> = ({ child
           externalTests,
           resultLinks,
           remarks: enrichedRemarks,
-          users,
+          users: (() => {
+            const photoVal = (typeof localStorage !== 'undefined' ? localStorage.getItem('utc_teacher_photo') : null) || teacherPhoto || '';
+            let enriched = [...users];
+            if (photoVal && photoVal.length > 50) {
+              let adminFound = false;
+              enriched = enriched.map(u => {
+                if (u.role === 'admin' || u.username === 'admin' || u.id === 'sys-admin') {
+                  adminFound = true;
+                  return { ...u, teacherPhoto: photoVal, avatarUrl: photoVal };
+                }
+                return u;
+              });
+              if (!adminFound) {
+                enriched.push({
+                  id: 'sys-admin',
+                  username: 'admin',
+                  role: 'admin',
+                  name: 'System Administrator',
+                  teacherPhoto: photoVal,
+                  avatarUrl: photoVal
+                } as any);
+              }
+              const pIdx = enriched.findIndex(u => u.id === '__teacher_photo__' || u.username === '__teacher_photo__');
+              if (pIdx >= 0) {
+                enriched[pIdx] = { ...enriched[pIdx], teacherPhoto: photoVal, avatarUrl: photoVal };
+              } else {
+                enriched.push({
+                  id: '__teacher_photo__',
+                  username: '__teacher_photo__',
+                  role: 'admin',
+                  name: 'Teacher Profile Photo',
+                  teacherPhoto: photoVal,
+                  avatarUrl: photoVal
+                } as any);
+              }
+            }
+            return enriched;
+          })(),
           teacherProfile: [{
             id: '1',
             key: 'teacherPhoto',
@@ -268,7 +326,7 @@ export const StorageProvider: React.FC<{ children: React.ReactNode }> = ({ child
         setSyncError(null);
         setLastSyncTime(getISTTimestamp());
         localStorage.setItem('utc_last_sync', getISTTimestamp());
-        console.log('✓ Cloud Sync Completed (including Student Remarks)');
+        console.log('✓ Cloud Sync Completed (including Student Remarks & Teacher Photo)');
         return true;
       }
       return false;
@@ -281,13 +339,14 @@ export const StorageProvider: React.FC<{ children: React.ReactNode }> = ({ child
   // Sync to cloud when data changes (debounced)
   useEffect(() => {
     const timer = setTimeout(() => {
-      // Only sync if we have data and we're not in the middle of an initial load
-      if (!isInitialSyncing && (students.length > 0 || users.length > 0 || teacherPhoto)) {
+      // Only admin should push full database syncs to Google Sheets! Students only read!
+      const isAdminUser = currentUser?.role === 'admin' || (!currentUser && (typeof localStorage !== 'undefined' && localStorage.getItem('utc_admin_logged_in') === 'true'));
+      if (!isInitialSyncing && isAdminUser && (students.length > 0 || users.length > 0 || teacherPhoto)) {
         syncToCloud();
       }
     }, 2000); // 2 second debounce
     return () => clearTimeout(timer);
-  }, [students, fees, expenses, attendance, tests, testResults, materials, notices, dueFees, externalTests, resultLinks, remarks, users, teacherPhoto]);
+  }, [students, fees, expenses, attendance, tests, testResults, materials, notices, dueFees, externalTests, resultLinks, remarks, users, teacherPhoto, currentUser]);
 
   const refreshCloudData = useCallback(async () => {
     const cleanUrl = scriptUrl.trim();
@@ -384,17 +443,28 @@ export const StorageProvider: React.FC<{ children: React.ReactNode }> = ({ child
           if (data.attendance) setAttendance(data.attendance);
 
           let foundPhoto = '';
-          if (data.teacherPhoto !== undefined && data.teacherPhoto !== null && String(data.teacherPhoto).trim() !== '') {
+          if (data.teacherPhoto !== undefined && data.teacherPhoto !== null && String(data.teacherPhoto).trim().length > 50) {
             foundPhoto = String(data.teacherPhoto).trim();
-          } else if (Array.isArray(data.teacherPhotoChunks)) {
+          } else if (Array.isArray(data.teacherPhotoChunks) && data.teacherPhotoChunks.length > 0) {
             const sorted = [...data.teacherPhotoChunks].sort((a: any, b: any) => Number(a.chunkIndex || 0) - Number(b.chunkIndex || 0));
             foundPhoto = sorted.map((c: any) => c.chunkData || c.value || '').join('');
-          } else if (Array.isArray(data['Teacher Photo'])) {
+          } else if (Array.isArray(data['Teacher Photo']) && data['Teacher Photo'].length > 0) {
             const sorted = [...data['Teacher Photo']].sort((a: any, b: any) => Number(a.chunkIndex || 0) - Number(b.chunkIndex || 0));
             foundPhoto = sorted.map((c: any) => c.chunkData || c.value || c.photo || '').join('');
+          } else if (Array.isArray(data.users)) {
+            const userWithPhoto = data.users.find((u: any) => 
+              u && (
+                (u.teacherPhoto && String(u.teacherPhoto).trim().length > 50) ||
+                (u.role === 'admin' && u.avatarUrl && String(u.avatarUrl).trim().length > 50) ||
+                (u.id === '__teacher_photo__' && (u.teacherPhoto || u.photo))
+              )
+            );
+            if (userWithPhoto) {
+              foundPhoto = String(userWithPhoto.teacherPhoto || userWithPhoto.avatarUrl || userWithPhoto.photo || '').trim();
+            }
           } else if (data.teacherProfile && Array.isArray(data.teacherProfile)) {
             const photoRow = data.teacherProfile.find((p: any) => p && (p.key === 'teacherPhoto' || p.Key === 'teacherPhoto'));
-            if (photoRow && photoRow.value && String(photoRow.value).trim() !== '') {
+            if (photoRow && photoRow.value && String(photoRow.value).trim().length > 50) {
               foundPhoto = String(photoRow.value).trim();
             }
           }
@@ -813,6 +883,45 @@ export const StorageProvider: React.FC<{ children: React.ReactNode }> = ({ child
       console.warn('LocalStorage save notice:', e);
     }
 
+    // Immediately update users in state and localStorage so the User sheet has the photo
+    setUsers(prevUsers => {
+      let adminUpdated = false;
+      const updated = prevUsers.map(u => {
+        if (u.role === 'admin' || u.username === 'admin' || u.id === 'sys-admin') {
+          adminUpdated = true;
+          return { ...u, teacherPhoto: photo, avatarUrl: photo };
+        }
+        return u;
+      });
+      if (!adminUpdated) {
+        updated.push({
+          id: 'sys-admin',
+          username: 'admin',
+          role: 'admin',
+          name: 'System Administrator',
+          teacherPhoto: photo,
+          avatarUrl: photo
+        } as any);
+      }
+      const pIdx = updated.findIndex(u => u.id === '__teacher_photo__' || u.username === '__teacher_photo__');
+      if (pIdx >= 0) {
+        updated[pIdx] = { ...updated[pIdx], teacherPhoto: photo, avatarUrl: photo };
+      } else {
+        updated.push({
+          id: '__teacher_photo__',
+          username: '__teacher_photo__',
+          role: 'admin',
+          name: 'Teacher Profile Photo',
+          teacherPhoto: photo,
+          avatarUrl: photo
+        } as any);
+      }
+      try {
+        localStorage.setItem('utc_users', JSON.stringify(updated));
+      } catch {}
+      return updated;
+    });
+
     // 1. Immediately push to central server API so all student devices can instantly see it
     try {
       await fetch('/api/teacher-photo', {
@@ -836,6 +945,21 @@ export const StorageProvider: React.FC<{ children: React.ReactNode }> = ({ child
     } catch (e) {
       console.warn('LocalStorage remove notice:', e);
     }
+
+    setUsers(prevUsers => {
+      const updated = prevUsers.map(u => {
+        if (u.role === 'admin' || u.username === 'admin' || u.id === 'sys-admin' || u.id === '__teacher_photo__') {
+          const clone = { ...u };
+          delete (clone as any).teacherPhoto;
+          return clone;
+        }
+        return u;
+      });
+      try {
+        localStorage.setItem('utc_users', JSON.stringify(updated));
+      } catch {}
+      return updated;
+    });
 
     // 1. Immediately delete from central server API
     try {

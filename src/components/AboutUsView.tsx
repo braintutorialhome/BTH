@@ -17,8 +17,15 @@ interface AboutUsViewProps {
 type TabType = 'overview' | 'academics' | 'methodology' | 'contact';
 
 export default function AboutUsView({ userRole = 'student' }: AboutUsViewProps) {
-  const { teacherPhoto, updateTeacherPhoto, removeTeacherPhoto, currentUser, syncToCloud, scriptUrl } = useStorage();
+  const { teacherPhoto, updateTeacherPhoto, removeTeacherPhoto, currentUser, syncToCloud, scriptUrl, users, refreshCloudData } = useStorage();
   const isAdmin = userRole === 'admin' || currentUser?.role === 'admin';
+
+  // Effective teacher photo resolution across multiple local & cloud sources
+  const effectiveTeacherPhoto = teacherPhoto || 
+    (typeof localStorage !== 'undefined' ? localStorage.getItem('utc_teacher_photo') : null) || 
+    (Array.isArray(users) ? users.find(u => u && (u.teacherPhoto || (u.role === 'admin' && u.avatarUrl) || u.id === '__teacher_photo__'))?.teacherPhoto : '') ||
+    (Array.isArray(users) ? users.find(u => u && u.role === 'admin')?.avatarUrl : '') ||
+    '';
 
   const [activeTab, setActiveTab] = useState<TabType>('overview');
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
@@ -36,20 +43,26 @@ export default function AboutUsView({ userRole = 'student' }: AboutUsViewProps) 
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  // Proactively fetch picture from server on mount if not in local storage yet
+  // Proactively fetch picture from server & Google Sheets on mount if not in local storage yet
   React.useEffect(() => {
-    if (!teacherPhoto) {
+    if (!effectiveTeacherPhoto) {
+      // 1. Trigger cloud sync refresh to pull latest data from Google Sheet
+      refreshCloudData().catch(() => {});
+
+      // 2. Fetch from server cache
       fetch('/api/teacher-photo')
         .then(res => res.json())
         .then(data => {
           if (data?.photo && typeof data.photo === 'string' && data.photo.length > 50) {
             localStorage.setItem('utc_teacher_photo', data.photo);
-            updateTeacherPhoto(data.photo);
+            if (isAdmin) {
+              updateTeacherPhoto(data.photo);
+            }
           }
         })
         .catch(() => {});
     }
-  }, [teacherPhoto]);
+  }, [effectiveTeacherPhoto, isAdmin, refreshCloudData, updateTeacherPhoto]);
 
   const handleCopy = (text: string, key: string) => {
     navigator.clipboard.writeText(text);
@@ -93,9 +106,9 @@ export default function AboutUsView({ userRole = 'student' }: AboutUsViewProps) 
           const canvas = document.createElement('canvas');
           const ctx = canvas.getContext('2d');
           
-          // Target 4:5 vertical portrait aspect ratio optimized for Google Sheets & fast multi-device loading (400x500)
-          const targetWidth = 400;
-          const targetHeight = 500;
+          // Target 4:5 vertical portrait aspect ratio (360x450) optimized for fast loading and cell limits
+          const targetWidth = 360;
+          const targetHeight = 450;
           canvas.width = targetWidth;
           canvas.height = targetHeight;
 
@@ -121,15 +134,24 @@ export default function AboutUsView({ userRole = 'student' }: AboutUsViewProps) 
             ctx.drawImage(img, sX, sY, sW, sH, 0, 0, targetWidth, targetHeight);
           }
 
-          // Highest quality encoding capable: WebP (with JPEG fallback) optimized for Google Sheets compatibility
-          let highQualityDataUrl = canvas.toDataURL('image/webp', 0.78);
-          if (!highQualityDataUrl.startsWith('data:image/webp')) {
-            highQualityDataUrl = canvas.toDataURL('image/jpeg', 0.76);
+          // Highest quality encoding capable with adaptive compression:
+          // Strictly guarantees output is < 42,000 characters to ensure safe single-cell Google Sheet storage
+          let highQualityDataUrl = '';
+          const qualities = [0.76, 0.70, 0.62, 0.54, 0.46];
+          for (const q of qualities) {
+            let encoded = canvas.toDataURL('image/webp', q);
+            if (!encoded.startsWith('data:image/webp')) {
+              encoded = canvas.toDataURL('image/jpeg', q);
+            }
+            if (encoded.length < 42000 || q === qualities[qualities.length - 1]) {
+              highQualityDataUrl = encoded;
+              break;
+            }
           }
 
           await updateTeacherPhoto(highQualityDataUrl);
           setUploadStatus('success');
-          setStatusMessage('Picture saved & synced to Google Sheet ("Teacher Photo" tab)!');
+          setStatusMessage('Picture saved & synced to Google Sheet ("Teacher Photo" & "User" tab)!');
           setTimeout(() => setUploadStatus('idle'), 4000);
         } catch (err: any) {
           setUploadStatus('error');
@@ -301,10 +323,10 @@ export default function AboutUsView({ userRole = 'student' }: AboutUsViewProps) 
                 <div className="relative group w-full max-w-[280px] sm:max-w-[320px]">
                   <div className="absolute -inset-1 bg-gradient-to-tr from-cyan-500/30 to-indigo-500/30 rounded-3xl blur-md opacity-60 group-hover:opacity-90 transition duration-500 pointer-events-none" />
 
-                  {teacherPhoto ? (
+                  {effectiveTeacherPhoto ? (
                     <div className="relative rounded-3xl overflow-hidden border-2 border-cyan-500/40 shadow-2xl bg-slate-900 ring-4 ring-cyan-500/10 aspect-[4/5] flex items-center justify-center">
                       <img 
-                        src={teacherPhoto} 
+                        src={effectiveTeacherPhoto} 
                         alt="Afiur Rahaman, M.Sc., B.Ed." 
                         referrerPolicy="no-referrer"
                         className="w-full h-full object-cover object-center block rounded-3xl"
@@ -382,7 +404,7 @@ export default function AboutUsView({ userRole = 'student' }: AboutUsViewProps) 
                 {/* Admin Management Controls (Change / Remove / Status) */}
                 {isAdmin && (
                   <div className="mt-4 w-full max-w-[280px] sm:max-w-[320px] flex flex-col items-center space-y-2">
-                    {teacherPhoto ? (
+                    {effectiveTeacherPhoto ? (
                       <div className="flex items-center gap-2 w-full">
                         <button
                           type="button"
@@ -417,7 +439,7 @@ export default function AboutUsView({ userRole = 'student' }: AboutUsViewProps) 
                       </button>
                     )}
 
-                    {teacherPhoto && (
+                    {effectiveTeacherPhoto && (
                       <button
                         type="button"
                         onClick={async () => {
@@ -426,7 +448,7 @@ export default function AboutUsView({ userRole = 'student' }: AboutUsViewProps) 
                             const ok = await syncToCloud();
                             if (ok) {
                               setUploadStatus('success');
-                              setStatusMessage('Photo pushed to Google Sheet ("Teacher Photo" tab)!');
+                              setStatusMessage('Photo pushed to Google Sheet ("Teacher Photo" & "User" tab)!');
                             } else {
                               setUploadStatus('success');
                               setStatusMessage('Photo saved locally and dispatched to sync.');
