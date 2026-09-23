@@ -267,6 +267,9 @@ export default function StudentDashboard() {
                    About Us
                  </span>
                </div>
+               <span className="text-[9px] font-black text-slate-500 group-hover:text-cyan-400 uppercase tracking-widest">
+                 INFO
+               </span>
              </Link>
 
              <a 

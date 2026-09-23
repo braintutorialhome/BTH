@@ -21,7 +21,7 @@ async function startServer() {
     }
     if (fs.existsSync(TEACHER_PHOTO_FILE)) {
       const saved = JSON.parse(fs.readFileSync(TEACHER_PHOTO_FILE, "utf-8"));
-      if (saved && typeof saved.photo === "string") {
+      if (saved && typeof saved.photo === "string" && saved.photo.length > 50) {
         teacherPhotoCache = saved;
       }
     }
@@ -43,7 +43,7 @@ async function startServer() {
         updatedAt: new Date().toISOString()
       };
       fs.writeFileSync(TEACHER_PHOTO_FILE, JSON.stringify(teacherPhotoCache), "utf-8");
-      res.json({ success: true, updatedAt: teacherPhotoCache.updatedAt });
+      res.json({ success: true, photo: sanitized, updatedAt: teacherPhotoCache.updatedAt });
     } catch (err: any) {
       res.status(500).json({ error: err?.message || "Failed to save photo" });
     }
