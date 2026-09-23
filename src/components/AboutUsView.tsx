@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useStorage } from '../hooks/useStorage';
+import AppsScriptSetupModal from './AppsScriptSetupModal';
 
 interface AboutUsViewProps {
   userRole?: 'admin' | 'student';
@@ -16,7 +17,7 @@ interface AboutUsViewProps {
 type TabType = 'overview' | 'academics' | 'methodology' | 'contact';
 
 export default function AboutUsView({ userRole = 'student' }: AboutUsViewProps) {
-  const { teacherPhoto, updateTeacherPhoto, removeTeacherPhoto, currentUser } = useStorage();
+  const { teacherPhoto, updateTeacherPhoto, removeTeacherPhoto, currentUser, syncToCloud, scriptUrl } = useStorage();
   const isAdmin = userRole === 'admin' || currentUser?.role === 'admin';
 
   const [activeTab, setActiveTab] = useState<TabType>('overview');
@@ -25,6 +26,8 @@ export default function AboutUsView({ userRole = 'student' }: AboutUsViewProps) 
   const [isDragging, setIsDragging] = useState(false);
   const [uploadStatus, setUploadStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [statusMessage, setStatusMessage] = useState<string>('');
+  const [showScriptModal, setShowScriptModal] = useState(false);
+  const [isSyncingSheet, setIsSyncingSheet] = useState(false);
 
   // Inquiry message generator
   const [inquiryTopic, setInquiryTopic] = useState('Admission Information');
@@ -90,9 +93,9 @@ export default function AboutUsView({ userRole = 'student' }: AboutUsViewProps) 
           const canvas = document.createElement('canvas');
           const ctx = canvas.getContext('2d');
           
-          // Target 4:5 vertical portrait aspect ratio optimized for Google Sheets & fast multi-device loading (480x600)
-          const targetWidth = 480;
-          const targetHeight = 600;
+          // Target 4:5 vertical portrait aspect ratio optimized for Google Sheets & fast multi-device loading (400x500)
+          const targetWidth = 400;
+          const targetHeight = 500;
           canvas.width = targetWidth;
           canvas.height = targetHeight;
 
@@ -118,15 +121,15 @@ export default function AboutUsView({ userRole = 'student' }: AboutUsViewProps) 
             ctx.drawImage(img, sX, sY, sW, sH, 0, 0, targetWidth, targetHeight);
           }
 
-          // Highest quality encoding capable: WebP (with JPEG fallback) optimized under 40k chars for Google Sheets compatibility
-          let highQualityDataUrl = canvas.toDataURL('image/webp', 0.82);
+          // Highest quality encoding capable: WebP (with JPEG fallback) optimized for Google Sheets compatibility
+          let highQualityDataUrl = canvas.toDataURL('image/webp', 0.78);
           if (!highQualityDataUrl.startsWith('data:image/webp')) {
-            highQualityDataUrl = canvas.toDataURL('image/jpeg', 0.80);
+            highQualityDataUrl = canvas.toDataURL('image/jpeg', 0.76);
           }
 
           await updateTeacherPhoto(highQualityDataUrl);
           setUploadStatus('success');
-          setStatusMessage('Picture saved in high quality & synced across all devices!');
+          setStatusMessage('Picture saved & synced to Google Sheet ("Teacher Photo" tab)!');
           setTimeout(() => setUploadStatus('idle'), 4000);
         } catch (err: any) {
           setUploadStatus('error');
@@ -414,9 +417,50 @@ export default function AboutUsView({ userRole = 'student' }: AboutUsViewProps) 
                       </button>
                     )}
 
+                    {teacherPhoto && (
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          setIsSyncingSheet(true);
+                          try {
+                            const ok = await syncToCloud();
+                            if (ok) {
+                              setUploadStatus('success');
+                              setStatusMessage('Photo pushed to Google Sheet ("Teacher Photo" tab)!');
+                            } else {
+                              setUploadStatus('success');
+                              setStatusMessage('Photo saved locally and dispatched to sync.');
+                            }
+                          } catch {
+                            setUploadStatus('error');
+                            setStatusMessage('Sync encountered network issue.');
+                          } finally {
+                            setIsSyncingSheet(false);
+                            setTimeout(() => setUploadStatus('idle'), 4000);
+                          }
+                        }}
+                        disabled={isSyncingSheet || isProcessing}
+                        className="w-full py-2 px-3 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 hover:border-emerald-400 text-emerald-300 text-xs font-black uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all shadow-sm active:scale-95 disabled:opacity-50"
+                        title="Force sync teacher picture to Google Sheets"
+                      >
+                        <FileSpreadsheet size={13} className={isSyncingSheet ? 'animate-spin' : ''} />
+                        <span>{isSyncingSheet ? 'Syncing to Sheet...' : 'Sync Photo to Google Sheet'}</span>
+                      </button>
+                    )}
+
+                    <button
+                      type="button"
+                      onClick={() => setShowScriptModal(true)}
+                      className="w-full py-1.5 px-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-cyan-500/40 text-slate-300 hover:text-cyan-300 text-[11px] font-bold flex items-center justify-center gap-1.5 transition-all"
+                      title="View Google Apps Script setup for Teacher Photo tab"
+                    >
+                      <FileSpreadsheet size={12} className="text-cyan-400" />
+                      <span>Google Sheet Script (Teacher Photo Tab)</span>
+                    </button>
+
                     <div className="flex items-center justify-center gap-1.5 text-[11px] font-bold text-slate-400 pt-1">
                       <FileSpreadsheet size={12} className="text-emerald-400" />
-                      <span>Backend: Google Sheet Sync</span>
+                      <span>Dedicated "Teacher Photo" Sheet Tab</span>
                     </div>
                   </div>
                 )}
@@ -940,6 +984,12 @@ export default function AboutUsView({ userRole = 'student' }: AboutUsViewProps) 
           </div>
         </div>
       )}
+
+      {/* Google Apps Script Setup Modal for Teacher Photo & Remarks */}
+      <AppsScriptSetupModal 
+        isOpen={showScriptModal} 
+        onClose={() => setShowScriptModal(false)} 
+      />
 
     </div>
   );

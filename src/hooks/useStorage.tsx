@@ -386,6 +386,12 @@ export const StorageProvider: React.FC<{ children: React.ReactNode }> = ({ child
           let foundPhoto = '';
           if (data.teacherPhoto !== undefined && data.teacherPhoto !== null && String(data.teacherPhoto).trim() !== '') {
             foundPhoto = String(data.teacherPhoto).trim();
+          } else if (Array.isArray(data.teacherPhotoChunks)) {
+            const sorted = [...data.teacherPhotoChunks].sort((a: any, b: any) => Number(a.chunkIndex || 0) - Number(b.chunkIndex || 0));
+            foundPhoto = sorted.map((c: any) => c.chunkData || c.value || '').join('');
+          } else if (Array.isArray(data['Teacher Photo'])) {
+            const sorted = [...data['Teacher Photo']].sort((a: any, b: any) => Number(a.chunkIndex || 0) - Number(b.chunkIndex || 0));
+            foundPhoto = sorted.map((c: any) => c.chunkData || c.value || c.photo || '').join('');
           } else if (data.teacherProfile && Array.isArray(data.teacherProfile)) {
             const photoRow = data.teacherProfile.find((p: any) => p && (p.key === 'teacherPhoto' || p.Key === 'teacherPhoto'));
             if (photoRow && photoRow.value && String(photoRow.value).trim() !== '') {
@@ -396,6 +402,13 @@ export const StorageProvider: React.FC<{ children: React.ReactNode }> = ({ child
           if (foundPhoto) {
             setTeacherPhoto(foundPhoto);
             localStorage.setItem('utc_teacher_photo', foundPhoto);
+            try {
+              fetch('/api/teacher-photo', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ photo: foundPhoto })
+              }).catch(() => {});
+            } catch {}
           } else {
             // Check server API fallback if Google Apps Script had no photo
             try {

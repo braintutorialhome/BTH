@@ -144,7 +144,7 @@ async function startServer() {
           // If Apps Script does not have teacherPhoto but server cache does, enrich it
           if (!json.teacherPhoto && teacherPhotoCache.photo) {
             json.teacherPhoto = teacherPhotoCache.photo;
-          } else if (json.teacherPhoto && !teacherPhotoCache.photo) {
+          } else if (json.teacherPhoto && typeof json.teacherPhoto === 'string' && json.teacherPhoto.length > 50) {
             teacherPhotoCache = { photo: json.teacherPhoto, updatedAt: new Date().toISOString() };
             try { fs.writeFileSync(TEACHER_PHOTO_FILE, JSON.stringify(teacherPhotoCache), "utf-8"); } catch {}
           }

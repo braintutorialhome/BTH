@@ -32,6 +32,7 @@ const SHEETS = {
   RESULTS: "Results",
   EXAM_PORTAL: "Exam Portal",
   REMARKS: "Student Remarks",
+  TEACHER_PHOTO: "Teacher Photo",
   TEACHER_PROFILE: "Teacher Profile",
   SYSTEM: "System Logs"
 };
@@ -61,7 +62,7 @@ function doGet(e) {
           }
           const cleanHeader = String(header).trim();
           obj[cleanHeader] = val;
-          const lower = cleanHeader.toLowerCase().replace(/[\\s_-]/g, '');
+          const lower = cleanHeader.toLowerCase().replace(/[\s_-]/g, '');
           if (lower === 'whatsapp' || lower === 'whatsappnumber') {
             obj['whatsapp'] = val !== undefined && val !== null ? String(val).trim() : '';
           }
@@ -98,9 +99,51 @@ function doGet(e) {
     data.attendance = getSheetData(SHEETS.ATTENDANCE);
     data.users = getSheetData(SHEETS.USERS);
     data.remarks = getSheetData(SHEETS.REMARKS);
-    data.teacherProfile = getSheetData(SHEETS.TEACHER_PROFILE);
-    const photoRow = (data.teacherProfile || []).find(p => p && (p.key === 'teacherPhoto' || p.Key === 'teacherPhoto'));
-    data.teacherPhoto = photoRow ? photoRow.value : '';
+    
+    // Dedicated Teacher Photo Reader (stitches chunks to safely support any photo resolution)
+    const readTeacherPhoto = () => {
+      let photoSheet = ss.getSheetByName(SHEETS.TEACHER_PHOTO);
+      if (!photoSheet) {
+        photoSheet = ss.getSheetByName(SHEETS.TEACHER_PROFILE);
+      }
+      if (!photoSheet) return '';
+      
+      const values = photoSheet.getDataRange().getValues();
+      if (values.length < 2) return '';
+      
+      const headers = values[0].map(h => String(h).trim().toLowerCase());
+      const chunkDataIdx = headers.indexOf('chunkdata');
+      const chunkIdx = headers.indexOf('chunkindex');
+      const valueIdx = headers.indexOf('value');
+      const photoIdx = headers.indexOf('photo');
+
+      if (chunkDataIdx !== -1) {
+        const chunks = [];
+        for (let r = 1; r < values.length; r++) {
+          const row = values[r];
+          const cIdx = chunkIdx !== -1 ? Number(row[chunkIdx]) : (r - 1);
+          const chunkStr = String(row[chunkDataIdx] || '');
+          if (chunkStr) {
+            chunks.push({ index: isNaN(cIdx) ? 0 : cIdx, data: chunkStr });
+          }
+        }
+        chunks.sort((a, b) => a.index - b.index);
+        const joined = chunks.map(c => c.data).join('');
+        if (joined) return joined;
+      }
+
+      for (let r = 1; r < values.length; r++) {
+        const row = values[r];
+        if (photoIdx !== -1 && row[photoIdx]) return String(row[photoIdx]);
+        if (valueIdx !== -1 && row[valueIdx]) return String(row[valueIdx]);
+      }
+      return '';
+    };
+
+    data.teacherPhoto = readTeacherPhoto();
+    data.teacherProfile = [
+      { id: '1', key: 'teacherPhoto', value: data.teacherPhoto, updatedAt: Utilities.formatDate(new Date(), "Asia/Kolkata", "yyyy-MM-dd'T'HH:mm:ssXXX") }
+    ];
     data.logs = getSheetData(SHEETS.LOGS);
 
     return ContentService.createTextOutput(JSON.stringify(data))
@@ -172,6 +215,45 @@ function doPost(e) {
         }
       };
 
+      // Dedicated Teacher Photo Sheet Writer with auto-chunking (ensures cell length <= 25,000 chars to avoid 50,000 cell limit)
+      const writeTeacherPhotoSheet = (rawPhoto, updatedAt) => {
+        const photoStr = typeof rawPhoto === 'string' ? rawPhoto.trim() : '';
+        const targetSheets = [SHEETS.TEACHER_PHOTO, SHEETS.TEACHER_PROFILE];
+
+        targetSheets.forEach(sheetName => {
+          let sheet = ss.getSheetByName(sheetName);
+          if (!sheet) {
+            sheet = ss.insertSheet(sheetName);
+          } else {
+            sheet.clear();
+          }
+
+          sheet.appendRow(['id', 'key', 'chunkIndex', 'totalChunks', 'chunkData', 'updatedAt']);
+
+          if (!photoStr) return;
+
+          const CHUNK_SIZE = 25000;
+          const totalChunks = Math.ceil(photoStr.length / CHUNK_SIZE);
+          const rows = [];
+
+          for (let i = 0; i < totalChunks; i++) {
+            const chunk = photoStr.substring(i * CHUNK_SIZE, (i + 1) * CHUNK_SIZE);
+            rows.push([
+              String(i + 1),
+              'teacherPhoto',
+              i,
+              totalChunks,
+              chunk,
+              updatedAt || Utilities.formatDate(new Date(), "Asia/Kolkata", "yyyy-MM-dd'T'HH:mm:ssXXX")
+            ]);
+          }
+
+          if (rows.length > 0) {
+            sheet.getRange(2, 1, rows.length, 6).setValues(rows);
+          }
+        });
+      };
+
       writeToSheet(SHEETS.APPROVED, data.approvedStudents);
       writeToSheet(SHEETS.PENDING, data.pendingAdmissions);
       writeToSheet(SHEETS.DELETED, data.deletedStudents);
@@ -187,7 +269,11 @@ function doPost(e) {
       writeToSheet(SHEETS.RESULTS, data.resultLinks);
       writeToSheet(SHEETS.EXAM_PORTAL, data.externalTests);
       writeToSheet(SHEETS.REMARKS, data.remarks);
-      writeToSheet(SHEETS.TEACHER_PROFILE, data.teacherProfile || [{ id: '1', key: 'teacherPhoto', value: data.teacherPhoto || '', updatedAt: Utilities.formatDate(new Date(), "Asia/Kolkata", "yyyy-MM-dd'T'HH:mm:ssXXX") }]);
+      
+      // Store Teacher Photo in dedicated "Teacher Photo" & "Teacher Profile" sheets
+      const photoPayload = data.teacherPhoto || (Array.isArray(data.teacherProfile) ? data.teacherProfile.find(p => p && (p.key === 'teacherPhoto' || p.Key === 'teacherPhoto'))?.value : '') || '';
+      writeTeacherPhotoSheet(photoPayload, data.lastUpdated);
+
       writeToSheet(SHEETS.LOGS, data.logs);
       
       writeToSheet(SHEETS.SYSTEM, [{ 
@@ -251,14 +337,14 @@ export default function AppsScriptSetupModal({ isOpen, onClose }: AppsScriptSetu
             <div>
               <div className="flex items-center gap-2">
                 <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/20">
-                  Student Remarks Ready
+                  Teacher Photo &amp; Student Remarks Ready
                 </span>
               </div>
               <h3 className="text-xl font-black text-white uppercase tracking-tight mt-1">
-                Google Sheets Backend Code & Setup
+                Google Sheets Backend Code &amp; Setup
               </h3>
               <p className="text-xs text-slate-400">
-                Update your Google Apps Script deployment to enable the <strong>Student Remarks</strong> sheet tab.
+                Update your Google Apps Script deployment to automatically create the <strong>Teacher Photo</strong> and <strong>Student Remarks</strong> sheets.
               </p>
             </div>
           </div>
@@ -277,7 +363,7 @@ export default function AppsScriptSetupModal({ isOpen, onClose }: AppsScriptSetu
           <div className="p-4 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-start gap-3">
             <CheckCircle2 size={18} className="text-indigo-400 mt-0.5 shrink-0" />
             <div className="text-xs text-slate-300 leading-relaxed">
-              <strong>Why update?</strong> The backend script now includes full persistence for the <span className="text-indigo-300 font-bold">"Student Remarks"</span> sheet. Once deployed, every academic note, behavioral remark, and teacher feedback note is backed up automatically with student names and classes.
+              <strong>Why update?</strong> The backend script automatically creates the dedicated <span className="text-cyan-300 font-bold">"Teacher Photo"</span> and <span className="text-indigo-300 font-bold">"Student Remarks"</span> tabs in your Google Sheet. It safely stores the teacher picture in structured chunks so it never exceeds Google Sheet cell limits, ensuring every student on any device can see the teacher picture immediately!
             </div>
           </div>
 
