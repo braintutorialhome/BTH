@@ -227,11 +227,7 @@ export default function AboutUsView({ userRole = 'student' }: AboutUsViewProps) 
         </div>
 
         {/* Quick Metrics Bar */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-8 pt-6 border-t border-white/10">
-          <div className="p-3 rounded-2xl bg-white/[0.03] border border-white/5 text-center">
-            <p className="text-2xl sm:text-3xl font-black text-cyan-400">10+</p>
-            <p className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-slate-400 mt-0.5">Years of Mentorship</p>
-          </div>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-8 pt-6 border-t border-white/10">
           <div className="p-3 rounded-2xl bg-white/[0.03] border border-white/5 text-center">
             <p className="text-2xl sm:text-3xl font-black text-indigo-400">M.Sc., B.Ed.</p>
             <p className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-slate-400 mt-0.5">Qualification</p>
@@ -862,7 +858,7 @@ export default function AboutUsView({ userRole = 'student' }: AboutUsViewProps) 
                         <option value="Class 8">Class 8</option>
                         <option value="Class 9">Class 9</option>
                         <option value="Class 10">Class 10 (Madhyamik)</option>
-                        <option value="Class 11">Class 11 (Science)</option>
+                        <option value="Class 11">Class 11</option>
                         <option value="Class 12">Class 12 (Higher Secondary)</option>
                       </select>
                     </div>
@@ -936,10 +932,10 @@ export default function AboutUsView({ userRole = 'student' }: AboutUsViewProps) 
 
               <div className="pt-4 border-t border-white/10 flex flex-col sm:flex-row gap-3">
                 <a
-                  href="https://www.google.com/maps/search/?api=1&query=Nangla+Satbhaiya+Kashipur+West+Bengal+700135"
+                  href="https://www.google.com/maps/place/BRAIN+TUTORIAL+HOME+(BTH)/@22.565879,88.6105813,17z/data=!3m1!4b1!4m6!3m5!1s0x3a0209005d8d8659:0xae3123f683699458!8m2!3d22.5658741!4d88.6131562!16s%2Fg%2F11xnyn9lmn?entry=ttu&g_ep=EgoyMDI2MDkyMS4wIKXMDSoASAFQAw%3D%3D"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex-1 py-3 px-4 rounded-2xl bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-500/40 text-cyan-300 font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all"
+                  className="flex-1 py-3 px-4 rounded-2xl bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-500/40 text-cyan-300 font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all hover:bg-cyan-500/35 hover:scale-[1.01] active:scale-95 shadow-lg shadow-cyan-950/20"
                 >
                   <Navigation size={14} />
                   <span>Open in Google Maps</span>
