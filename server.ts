@@ -1,11 +1,10 @@
 import express from "express";
 import path from "path";
 import fs from "fs";
-import { createServer as createViteServer } from "vite";
 
 async function startServer() {
   const app = express();
-  const PORT = 3000;
+  const PORT = Number(process.env.PORT) || 3000;
 
   app.use(express.json({ limit: "50mb" }));
   app.use(express.text({ limit: "50mb", type: ["text/plain", "application/json"] }));
@@ -66,6 +65,10 @@ async function startServer() {
 
   app.get("/health", (req, res) => {
     res.json({ status: "ok", timestamp: new Date().toISOString() });
+  });
+
+  app.get("/_ah/health", (req, res) => {
+    res.status(200).send("ok");
   });
 
   // Staging for generated documents (PDF / CSV) to enable Android APK WebViews to download via standard HTTPS
@@ -215,7 +218,13 @@ async function startServer() {
   });
 
   // Vite middleware for development vs static production serving
-  if (process.env.NODE_ENV !== "production") {
+  const isProduction =
+    process.env.NODE_ENV === "production" ||
+    (Boolean(process.env.PORT) && Number(process.env.PORT) !== 3000) ||
+    !fs.existsSync(path.join(process.cwd(), "src"));
+
+  if (!isProduction) {
+    const { createServer: createViteServer } = await import("vite");
     const vite = await createViteServer({
       server: { middlewareMode: true },
       appType: "spa",
@@ -225,13 +234,29 @@ async function startServer() {
     const distPath = path.join(process.cwd(), "dist");
     app.use(express.static(distPath));
     app.get("*", (req, res) => {
-      res.sendFile(path.join(distPath, "index.html"));
+      const indexPath = path.join(distPath, "index.html");
+      if (fs.existsSync(indexPath)) {
+        res.sendFile(indexPath);
+      } else {
+        res.status(404).send("Application assets not found. Please ensure build has completed.");
+      }
     });
   }
 
-  app.listen(PORT, "0.0.0.0", () => {
-    console.log(`Server running on http://localhost:${PORT}`);
+  const server = app.listen(PORT, "0.0.0.0", () => {
+    console.log(`Server running on http://0.0.0.0:${PORT} (${isProduction ? "production" : "development"})`);
   });
+
+  const handleShutdown = (signal: string) => {
+    console.log(`${signal} received, closing server gracefully...`);
+    server.close(() => {
+      console.log("Server closed.");
+      process.exit(0);
+    });
+  };
+
+  process.on("SIGTERM", () => handleShutdown("SIGTERM"));
+  process.on("SIGINT", () => handleShutdown("SIGINT"));
 }
 
 startServer();
