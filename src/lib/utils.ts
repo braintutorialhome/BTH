@@ -120,8 +120,11 @@ export function formatDateIST(
     let d: Date;
     if (typeof date === 'string') {
       const trimmed = date.trim();
-      if (!trimmed) return 'N/A';
-      if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
+      const dmyMatch = trimmed.match(/^(\d{1,2})[-/](\d{1,2})[-/](\d{4})$/);
+      if (dmyMatch) {
+        const [, day, m, y] = dmyMatch.map(Number);
+        d = new Date(Date.UTC(y, m - 1, day, 6, 0, 0));
+      } else if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
         const [y, m, day] = trimmed.split('-').map(Number);
         d = new Date(Date.UTC(y, m - 1, day, 6, 0, 0)); // Midday IST in UTC
       } else {

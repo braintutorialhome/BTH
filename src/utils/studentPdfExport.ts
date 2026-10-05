@@ -1,7 +1,7 @@
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { Student, Fee, DueFee } from '../types';
-import { safeFormat, formatClassName } from '../lib/utils';
+import { safeFormat, formatClassName, formatDateIST } from '../lib/utils';
 import { exportPdfDocument } from './mobileExportHelper';
 
 export async function exportStudentToPdf(
@@ -89,6 +89,16 @@ export async function exportStudentToPdf(
     doc.text(safeVal, x + labelWidth + 1.2, y);
   };
 
+  // Date of Birth and Date of Joining formatted matching student View Info (day, month, year)
+  const formattedDob = student.dob
+    ? (formatDateIST(student.dob) !== 'N/A' ? formatDateIST(student.dob) : student.dob)
+    : 'N/A';
+
+  const rawJoining = student.dateOfJoining || student.admissionDate;
+  const formattedJoining = rawJoining
+    ? (formatDateIST(rawJoining) !== 'N/A' ? formatDateIST(rawJoining) : rawJoining)
+    : 'N/A';
+
   // Row 1
   drawField(col1X, infoY, 'Full Name', student.name);
   drawField(col2X, infoY, "Father's Name", student.fatherName || 'N/A');
@@ -106,7 +116,7 @@ export async function exportStudentToPdf(
   // Row 4
   infoY += rowSpacing;
   drawField(col1X, infoY, 'Subject(s)', student.subject || 'All Subjects');
-  drawField(col2X, infoY, 'Admission / Joining', student.dateOfJoining || student.admissionDate || 'N/A');
+  drawField(col2X, infoY, 'Date of Joining', formattedJoining);
 
   // Row 5
   infoY += rowSpacing;
@@ -116,7 +126,7 @@ export async function exportStudentToPdf(
   // Row 6
   infoY += rowSpacing;
   drawField(col1X, infoY, 'Gender', student.gender || 'N/A');
-  drawField(col2X, infoY, 'Date of Birth', student.dob || 'N/A');
+  drawField(col2X, infoY, 'Date of Birth', formattedDob);
 
   // Row 7
   infoY += rowSpacing;

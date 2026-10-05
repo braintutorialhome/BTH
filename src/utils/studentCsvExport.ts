@@ -1,5 +1,5 @@
 import { Student, Fee, DueFee } from '../types';
-import { safeFormat, formatClassName, getISTToday } from '../lib/utils';
+import { safeFormat, formatClassName, formatDateIST, getISTToday } from '../lib/utils';
 import { exportCsvData } from './mobileExportHelper';
 
 /**
@@ -27,6 +27,15 @@ export async function exportStudentToCsv(
   lines.push(`"Generated On",${sanitize(safeFormat(new Date(), 'dd MMM yyyy, hh:mm a') + ' IST')}`);
   lines.push('');
 
+  const formattedDob = student.dob
+    ? (formatDateIST(student.dob) !== 'N/A' ? formatDateIST(student.dob) : student.dob)
+    : 'N/A';
+
+  const rawJoining = student.dateOfJoining || student.admissionDate;
+  const formattedJoining = rawJoining
+    ? (formatDateIST(rawJoining) !== 'N/A' ? formatDateIST(rawJoining) : rawJoining)
+    : 'N/A';
+
   // Section 1: Student Profile Information
   lines.push(`"=== 1. STUDENT PROFILE & ACADEMIC INFORMATION ==="`);
   lines.push(`"Full Name",${sanitize(student.name)}`);
@@ -39,8 +48,8 @@ export async function exportStudentToCsv(
   lines.push(`"Mobile Number",${sanitize(student.mobile || 'N/A')}`);
   lines.push(`"WhatsApp Number",${sanitize(student.whatsapp || 'N/A')}`);
   lines.push(`"Gender",${sanitize(student.gender || 'N/A')}`);
-  lines.push(`"Date of Birth",${sanitize(student.dob || 'N/A')}`);
-  lines.push(`"Date of Joining",${sanitize(student.dateOfJoining || student.admissionDate || 'N/A')}`);
+  lines.push(`"Date of Birth",${sanitize(formattedDob)}`);
+  lines.push(`"Date of Joining",${sanitize(formattedJoining)}`);
   lines.push(`"Residential Address",${sanitize(student.address || 'N/A')}`);
   lines.push('');
 
